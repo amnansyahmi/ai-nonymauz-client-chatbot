@@ -1,4 +1,4 @@
-import ChatWidget from '@/components/ChatWidget';
+import ChatWidget from '../components/ChatWidget';
 
 const features = [
   'RAG-lite knowledge retrieval from data/knowledge.json',

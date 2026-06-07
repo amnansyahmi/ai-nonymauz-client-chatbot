@@ -161,3 +161,30 @@ data/knowledge.json       Client knowledge base
 public/widget.js          Embeddable website widget
 .env.example              Env reference
 ```
+
+
+## Vercel build troubleshooting
+
+If Vercel shows `Module not found: Can't resolve "@/..."`, this patched version uses relative imports and also includes `baseUrl` + `paths` in `tsconfig.json`. Make sure your GitHub repo root is the folder that contains `package.json`, `app/`, `components/`, `lib/`, and `data/`.
+
+Correct repo root:
+
+```text
+ai-nonymauz-client-chatbot/
+  package.json
+  app/
+  components/
+  lib/
+  data/
+```
+
+Wrong repo root example:
+
+```text
+repo/
+  something-else/
+  ai-nonymauz-client-chatbot/
+    package.json
+```
+
+If you use the wrong root, set Vercel **Root Directory** to `ai-nonymauz-client-chatbot`.

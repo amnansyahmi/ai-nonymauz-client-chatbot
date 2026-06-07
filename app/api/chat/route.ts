@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { askAiNonymauz } from '@/lib/aiNonymauz';
-import { formatContext, getClientName, retrieveContext } from '@/lib/retrieval';
+import { askAiNonymauz } from '../../../lib/aiNonymauz';
+import { formatContext, getClientName, retrieveContext } from '../../../lib/retrieval';
 
 export const runtime = 'nodejs';
 

@@ -1,4 +1,4 @@
-import ChatWidget from '@/components/ChatWidget';
+import ChatWidget from '../../components/ChatWidget';
 
 export const metadata = {
   title: 'Chat | AI-nonymauz Client Chatbot'

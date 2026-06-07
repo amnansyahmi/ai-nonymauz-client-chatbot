@@ -1,4 +1,4 @@
-import knowledge from '@/data/knowledge.json';
+import knowledge from '../data/knowledge.json';
 
 type KnowledgeDoc = {
   id: string;
