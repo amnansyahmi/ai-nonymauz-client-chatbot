@@ -1,0 +1,48 @@
+{
+  "clientName": "DemoCare Sdn Bhd",
+  "lastUpdated": "2026-06-07",
+  "documents": [
+    {
+      "id": "company-overview",
+      "title": "Company Overview",
+      "category": "company",
+      "content": "DemoCare Sdn Bhd is a sample SME service company. We provide customer support, product consultation, installation booking, warranty assistance, and after-sales service for customers in Malaysia. Operating hours are Monday to Friday, 9:00 AM to 6:00 PM, excluding Malaysia public holidays."
+    },
+    {
+      "id": "contact-support",
+      "title": "Contact and Escalation",
+      "category": "support",
+      "content": "Customers can contact support at support@example.com. For urgent issues, customers should include their full name, phone number, order number, product model, issue description, and photos if relevant. Critical cases should be escalated to the support manager within 2 working hours."
+    },
+    {
+      "id": "warranty-policy",
+      "title": "Warranty Policy",
+      "category": "policy",
+      "content": "Standard warranty is 12 months from invoice date. Warranty covers manufacturing defects only. Warranty does not cover misuse, accidental damage, water damage, unauthorized repair, missing proof of purchase, or damage caused by power surge. Customers must provide invoice or order number before warranty validation."
+    },
+    {
+      "id": "refund-policy",
+      "title": "Refund and Return Policy",
+      "category": "policy",
+      "content": "Return requests must be submitted within 7 calendar days from delivery date. Items must be unused, in original packaging, and include all accessories. Refund processing normally takes 7 to 14 working days after approval. Shipping fees are non-refundable unless the return is caused by our mistake."
+    },
+    {
+      "id": "installation-booking",
+      "title": "Installation Booking SOP",
+      "category": "sop",
+      "content": "For installation booking, collect customer name, address, preferred date, preferred time slot, product model, order number, and phone number. Available time slots are morning 9 AM to 1 PM or afternoon 2 PM to 6 PM. Booking confirmation must be sent by email or WhatsApp. Rescheduling requires at least 24 hours notice."
+    },
+    {
+      "id": "pricing-faq",
+      "title": "Pricing FAQ",
+      "category": "faq",
+      "content": "The chatbot should not invent prices. If the customer asks for pricing and the price is not listed in the knowledge base, ask the customer to contact sales or provide their requirements so the sales team can quote accurately."
+    },
+    {
+      "id": "human-handover",
+      "title": "Human Handover Rules",
+      "category": "sop",
+      "content": "Handover to a human when the customer is angry, asks for legal action, reports safety risk, requests refund approval, needs a custom quotation, provides sensitive personal data, or asks for something not covered by the knowledge base. The assistant should be polite, summarize the case, and ask for contact details if needed."
+    }
+  ]
+}
