@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title>MajlisMate.ai</title>
+  <rect width="512" height="512" rx="112" fill="#2a201b"/>
+  <circle cx="256" cy="256" r="174" fill="#fdf9f5"/>
+  <path d="M168 318c38 34 138 34 176 0" fill="none" stroke="#b87a5a" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="208" cy="224" r="24" fill="#2a201b"/>
+  <circle cx="304" cy="224" r="24" fill="#2a201b"/>
+  <path d="M156 154h200c32 0 58 26 58 58v130c0 32-26 58-58 58H224l-68 50v-50c-32 0-58-26-58-58V212c0-32 26-58 58-58Z" fill="none" stroke="#2a201b" stroke-width="18" stroke-linejoin="round"/>
+</svg>
