@@ -1,6 +1,6 @@
 import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type { ActivityItem, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
-import { money, rsvpLabel } from './utils';
+import { money, rsvpLabel, statusLabel } from './utils';
 
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
@@ -184,44 +184,104 @@ export function BudgetPanel({
   totalActual,
   totalPaid
 }: BudgetPanelProps) {
+  const remainingToPay = Math.max(totalActual - totalPaid, 0);
+  const plannedBalance = totalPlanned - totalActual;
+  const paidProgress = totalActual > 0 ? Math.min(100, Math.round((totalPaid / totalActual) * 100)) : 0;
+  const overBudgetItems = budgetItems.filter((item) => item.actual > item.planned && item.planned > 0);
+  const activeBudgetItems = budgetItems.filter((item) => item.status !== 'done').length;
+
   return (
-    <div className="planner-panel">
-      <div className="planner-panel-header">
+    <div className="planner-panel budget-panel">
+      <div className="planner-panel-header budget-hero">
         <div>
           <p className="eyebrow">Budget tracker</p>
-          <h3>Planned vs actual vs paid</h3>
+          <h3>Wedding budget overview</h3>
+          <p>Track estimates, real costs, payments, and notes by category.</p>
         </div>
         <button type="button" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>Export CSV</button>
       </div>
 
-      <div className="dashboard-grid compact">
-        <article className="metric-card"><span>Planned</span><strong>{money(totalPlanned)}</strong></article>
-        <article className="metric-card"><span>Actual</span><strong>{money(totalActual)}</strong></article>
-        <article className="metric-card"><span>Paid</span><strong>{money(totalPaid)}</strong></article>
+      <div className="budget-overview">
+        <article className="budget-primary-card">
+          <span>Total paid</span>
+          <strong>{money(totalPaid)}</strong>
+          <div className="progress-track"><span style={{ width: `${paidProgress}%` }} /></div>
+          <p>{paidProgress}% of actual costs paid</p>
+        </article>
+        <article className="budget-stat-card">
+          <span>Planned</span>
+          <strong>{money(totalPlanned)}</strong>
+          <p>{plannedBalance >= 0 ? `${money(plannedBalance)} still within plan` : `${money(Math.abs(plannedBalance))} over plan`}</p>
+        </article>
+        <article className="budget-stat-card">
+          <span>Actual</span>
+          <strong>{money(totalActual)}</strong>
+          <p>{overBudgetItems.length} categor{overBudgetItems.length === 1 ? 'y' : 'ies'} over budget</p>
+        </article>
+        <article className="budget-stat-card">
+          <span>To pay</span>
+          <strong>{money(remainingToPay)}</strong>
+          <p>{activeBudgetItems} active categor{activeBudgetItems === 1 ? 'y' : 'ies'}</p>
+        </article>
       </div>
 
-      <form className="planner-form" onSubmit={addBudgetItem}>
-        <input value={budgetDraft.category} onChange={(event) => setBudgetDraft((current) => ({ ...current, category: event.target.value }))} placeholder="Category" aria-label="Budget category" />
-        <input type="number" value={budgetDraft.planned} onChange={(event) => setBudgetDraft((current) => ({ ...current, planned: Number(event.target.value) }))} placeholder="Planned RM" aria-label="Planned budget" />
-        <input type="number" value={budgetDraft.actual} onChange={(event) => setBudgetDraft((current) => ({ ...current, actual: Number(event.target.value) }))} placeholder="Actual RM" aria-label="Actual cost" />
-        <input type="number" value={budgetDraft.paid} onChange={(event) => setBudgetDraft((current) => ({ ...current, paid: Number(event.target.value) }))} placeholder="Paid RM" aria-label="Paid amount" />
-        <button type="submit" disabled={!budgetDraft.category.trim()}>Add</button>
+      <form className="budget-add-card" onSubmit={addBudgetItem}>
+        <div>
+          <p className="eyebrow">New category</p>
+          <h4>Add a budget item</h4>
+        </div>
+        <label>
+          <span>Category</span>
+          <input value={budgetDraft.category} onChange={(event) => setBudgetDraft((current) => ({ ...current, category: event.target.value }))} placeholder="e.g. Door gift" aria-label="Budget category" />
+        </label>
+        <label>
+          <span>Planned</span>
+          <input type="number" value={budgetDraft.planned} onChange={(event) => setBudgetDraft((current) => ({ ...current, planned: Number(event.target.value) }))} placeholder="RM" aria-label="Planned budget" />
+        </label>
+        <label>
+          <span>Actual</span>
+          <input type="number" value={budgetDraft.actual} onChange={(event) => setBudgetDraft((current) => ({ ...current, actual: Number(event.target.value) }))} placeholder="RM" aria-label="Actual cost" />
+        </label>
+        <label>
+          <span>Paid</span>
+          <input type="number" value={budgetDraft.paid} onChange={(event) => setBudgetDraft((current) => ({ ...current, paid: Number(event.target.value) }))} placeholder="RM" aria-label="Paid amount" />
+        </label>
+        <button type="submit" disabled={!budgetDraft.category.trim()}>Add item</button>
       </form>
 
-      <div className="data-list">
+      <div className="budget-list">
         {budgetItems.map((item) => (
-          <article key={item.id} className={`data-row ${item.actual > item.planned && item.planned > 0 ? 'warning' : ''}`}>
-            <input value={item.category} onChange={(event) => updateBudgetItem(item.id, { category: event.target.value })} aria-label="Budget category" />
-            <input type="number" value={item.planned} onChange={(event) => updateBudgetItem(item.id, { planned: Number(event.target.value) })} aria-label="Planned budget" />
-            <input type="number" value={item.actual} onChange={(event) => updateBudgetItem(item.id, { actual: Number(event.target.value) })} aria-label="Actual cost" />
-            <input type="number" value={item.paid} onChange={(event) => updateBudgetItem(item.id, { paid: Number(event.target.value) })} aria-label="Paid amount" />
-            <select value={item.status} onChange={(event) => updateBudgetItem(item.id, { status: event.target.value as BudgetItem['status'] })} aria-label="Budget status">
-              <option value="not-started">Belum Mula</option>
-              <option value="in-progress">Sedang Diurus</option>
-              <option value="done">Selesai</option>
-            </select>
-            <input value={item.note} onChange={(event) => updateBudgetItem(item.id, { note: event.target.value })} placeholder="Note" aria-label="Budget note" />
-            <button type="button" onClick={() => removeBudgetItem(item.id)}>Remove</button>
+          <article key={item.id} className={`budget-item-card ${item.actual > item.planned && item.planned > 0 ? 'warning' : ''}`}>
+            <div className="budget-item-top">
+              <input value={item.category} onChange={(event) => updateBudgetItem(item.id, { category: event.target.value })} aria-label="Budget category" />
+              <span className={`budget-status ${item.status}`}>{statusLabel(item.status)}</span>
+            </div>
+            <div className="budget-fields">
+              <label>
+                <span>Planned</span>
+                <input type="number" value={item.planned} onChange={(event) => updateBudgetItem(item.id, { planned: Number(event.target.value) })} aria-label="Planned budget" />
+              </label>
+              <label>
+                <span>Actual</span>
+                <input type="number" value={item.actual} onChange={(event) => updateBudgetItem(item.id, { actual: Number(event.target.value) })} aria-label="Actual cost" />
+              </label>
+              <label>
+                <span>Paid</span>
+                <input type="number" value={item.paid} onChange={(event) => updateBudgetItem(item.id, { paid: Number(event.target.value) })} aria-label="Paid amount" />
+              </label>
+              <label>
+                <span>Status</span>
+                <select value={item.status} onChange={(event) => updateBudgetItem(item.id, { status: event.target.value as BudgetItem['status'] })} aria-label="Budget status">
+                  <option value="not-started">Belum Mula</option>
+                  <option value="in-progress">Sedang Diurus</option>
+                  <option value="done">Selesai</option>
+                </select>
+              </label>
+            </div>
+            <div className="budget-note-row">
+              <input value={item.note} onChange={(event) => updateBudgetItem(item.id, { note: event.target.value })} placeholder="Add vendor, due date, or payment note..." aria-label="Budget note" />
+              <button type="button" onClick={() => removeBudgetItem(item.id)}>Remove</button>
+            </div>
             {item.actual > item.planned && item.planned > 0 ? <small>Over budget by {money(item.actual - item.planned)}</small> : null}
           </article>
         ))}

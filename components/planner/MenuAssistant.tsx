@@ -7,34 +7,40 @@ export type MenuAssistantTab = Exclude<ActiveTab, 'chat'>;
 
 export const menuAssistantTabs: MenuAssistantTab[] = ['dashboard', 'checklist', 'calendar', 'budget', 'rsvp', 'vendors'];
 
-export const menuAssistantPrompts: Record<MenuAssistantTab, { title: string; placeholder: string; quick: string[] }> = {
+export const menuAssistantPrompts: Record<MenuAssistantTab, { title: string; description: string; placeholder: string; quick: string[] }> = {
   dashboard: {
     title: 'Dashboard assistant',
+    description: 'Review your planning status and choose what to handle next.',
     placeholder: 'Ask what needs attention this week...',
     quick: ['What should I do next?', 'Summarize my planning status', 'What is urgent?']
   },
   checklist: {
     title: 'Checklist assistant',
+    description: 'Create, organize, and prioritize wedding tasks for this menu.',
     placeholder: 'Ask to create, improve, or prioritize checklist items...',
     quick: ['Create final week checklist', 'Prioritize incomplete tasks', 'Add vendor follow-up tasks']
   },
   calendar: {
     title: 'Calendar assistant',
+    description: 'Schedule appointments and plan timely wedding follow-ups.',
     placeholder: 'Ask to schedule a wedding appointment...',
     quick: ['Add appointment tomorrow at 3pm for vendor follow-up', 'What should I schedule next?', 'Plan vendor confirmation week']
   },
   budget: {
     title: 'Budget assistant',
+    description: 'Review spending, payment progress, and possible missing costs.',
     placeholder: 'Ask about budget categories, overages, or payment planning...',
     quick: ['Review my budget', 'Suggest payment priorities', 'What might be missing?']
   },
   rsvp: {
     title: 'RSVP assistant',
+    description: 'Prepare guest follow-ups and translate replies into headcount decisions.',
     placeholder: 'Ask about guest follow-up or caterer headcount...',
     quick: ['Draft RSVP reminder', 'Summarize guest status', 'What headcount should I confirm?']
   },
   vendors: {
     title: 'Vendor assistant',
+    description: 'Shortlist vendors, prepare questions, and draft outreach messages.',
     placeholder: 'Ask for vendor questions, shortlist help, or message drafts...',
     quick: ['Draft message to a caterer', 'What should I ask a photographer?', 'Compare saved vendors']
   }
@@ -84,46 +90,53 @@ export default function MenuAssistant({
   onSubmit
 }: MenuAssistantProps) {
   const promptConfig = menuAssistantPrompts[activeMenuTab];
+  const conversationMessages = messages.slice(1).slice(-3);
 
   return (
     <section className="menu-assistant" aria-label={`${promptConfig.title} chat`}>
-      <div className="menu-assistant-header">
+      <div className="menu-assistant-copy">
+        <div className="assistant-orb" aria-hidden="true">AI</div>
         <div>
-          <p className="eyebrow">Menu chatbot</p>
+          <p className="assistant-kicker">Context assistant</p>
           <h3>{promptConfig.title}</h3>
+          <p>{promptConfig.description}</p>
         </div>
-        <button type="button" onClick={onOpenMainChat}>
-          Open main chat
-        </button>
       </div>
 
-      <div className="menu-assistant-messages">
-        {messages.slice(-3).map((message, index) => (
-          <article key={`${activeMenuTab}-${message.role}-${index}`} className={`mini-message ${message.role}`}>
-            {message.content || 'AI is typing...'}
-          </article>
-        ))}
-      </div>
-
-      <div className="menu-assistant-quick">
-        {promptConfig.quick.map((prompt) => (
-          <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)}>
-            {prompt}
+      <div className="menu-assistant-workflow">
+        <div className="menu-assistant-actions">
+          {promptConfig.quick.map((prompt) => (
+            <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)}>
+              {prompt}
+            </button>
+          ))}
+          <button type="button" className="secondary-action" onClick={onOpenMainChat}>
+            Main chat
           </button>
-        ))}
-      </div>
+        </div>
 
-      <form className="menu-assistant-form" onSubmit={onSubmit}>
-        <input
-          value={input}
-          onChange={(event) => onInputChange(event.target.value)}
-          placeholder={promptConfig.placeholder}
-          aria-label={`${promptConfig.title} question`}
-        />
-        <button type="submit" disabled={loading || input.trim().length < 2}>
-          {loading ? 'Thinking...' : 'Ask'}
-        </button>
-      </form>
+        {conversationMessages.length > 0 ? (
+          <div className="menu-assistant-messages">
+            {conversationMessages.map((message, index) => (
+              <article key={`${activeMenuTab}-${message.role}-${index}`} className={`mini-message ${message.role}`}>
+                {message.content || 'AI is typing...'}
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        <form className="menu-assistant-form" onSubmit={onSubmit}>
+          <input
+            value={input}
+            onChange={(event) => onInputChange(event.target.value)}
+            placeholder={promptConfig.placeholder}
+            aria-label={`${promptConfig.title} question`}
+          />
+          <button type="submit" disabled={loading || input.trim().length < 2}>
+            {loading ? 'Thinking' : 'Ask'}
+          </button>
+        </form>
+      </div>
     </section>
   );
 }
