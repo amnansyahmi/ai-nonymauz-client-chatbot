@@ -134,7 +134,7 @@ export default function PlannerWorkspace() {
     ) {
       setActiveTab(storedActiveTab);
     }
-    setPlannerProfile(storedPlannerProfile);
+    setPlannerProfile({ ...defaultPlannerProfile, ...storedPlannerProfile });
     if (storedChecklistTitle) setChecklistTitle(storedChecklistTitle);
     setChecklistItems(storedChecklistItems.map((item) => ({ ...item, status: item.status || (item.completed ? 'done' : 'not-started') })));
     setAppointments(storedAppointments);
@@ -238,7 +238,10 @@ export default function PlannerWorkspace() {
 
   function completeOnboarding(event: FormEvent) {
     event.preventDefault();
-    const completedProfile = { ...plannerProfile, completed: true };
+    const coupleName =
+      plannerProfile.coupleName.trim() ||
+      [plannerProfile.groomName.trim(), plannerProfile.brideName.trim()].filter(Boolean).join(' & ');
+    const completedProfile = { ...plannerProfile, coupleName, completed: true };
     setPlannerProfile(completedProfile);
     if (checklistItems.length === 0) {
       setChecklistTitle('Majlis planning checklist');
@@ -263,6 +266,8 @@ export default function PlannerWorkspace() {
   function buildPlannerContext() {
     return {
       majlisDate: plannerProfile.majlisDate,
+      groomName: plannerProfile.groomName,
+      brideName: plannerProfile.brideName,
       negeri: plannerProfile.negeri,
       totalBudget: plannerProfile.totalBudget,
       guestTarget: plannerProfile.guestTarget,
@@ -511,16 +516,11 @@ export default function PlannerWorkspace() {
 
   function startAppointmentAssistant() {
     setAppointmentAssistantActive(true);
-    setActiveTab('chat');
-    setInput('Create an appointment on ');
-    setMessages((current) => [
+    setMenuInputs((current) => ({
       ...current,
-      {
-        role: 'assistant',
-        content:
-          'Sure. Tell me the wedding appointment date, time, and title. Example: Create an appointment on 20 June at 3pm for food tasting.'
-      }
-    ]);
+      calendar: `Create an appointment on ${selectedDate} at `
+    }));
+    setStatusMessage('Tell the calendar assistant what to schedule.');
   }
 
   function changeCalendarMonth(direction: -1 | 1) {
@@ -826,7 +826,7 @@ export default function PlannerWorkspace() {
     const categoryMatch = vendorFilter.category === 'All' || vendor.category === vendorFilter.category;
     return negeriMatch && categoryMatch;
   });
-  const activeMenuTab = activeTab === 'chat' ? null : activeTab;
+  const activeMenuTab = activeTab === 'dashboard' || activeTab === 'chat' ? null : activeTab;
 
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
@@ -854,7 +854,7 @@ export default function PlannerWorkspace() {
 
       {statusMessage ? <div className="pwa-banner success">{statusMessage}</div> : null}
 
-      <div className="planner-body">
+      <div className={`planner-body ${activeMenuTab ? 'has-assistant' : ''}`}>
         <aside className="planner-sidebar" aria-label="Planner menu">
           <div className="sidebar-header">
             <span className="sidebar-mark" aria-hidden="true">M</span>
@@ -936,19 +936,6 @@ export default function PlannerWorkspace() {
         </aside>
 
         <div className="planner-content">
-          {activeMenuTab ? (
-            <MenuAssistant
-              activeMenuTab={activeMenuTab}
-              messages={menuMessages[activeMenuTab]}
-              input={menuInputs[activeMenuTab]}
-              loading={menuLoading === activeMenuTab}
-              onOpenMainChat={() => setActiveTab('chat')}
-              onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
-              onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
-              onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
-            />
-          ) : null}
-
           {activeTab === 'dashboard' ? (
         <DashboardPanel
           plannerProfile={plannerProfile}
@@ -1090,6 +1077,7 @@ export default function PlannerWorkspace() {
             <div>
               <p className="eyebrow">Calendar menu</p>
               <h3>{monthLabel(calendarMonth)}</h3>
+              <p>Click any day to view or add appointments for that date.</p>
             </div>
             <div className="calendar-actions">
               <button type="button" onClick={() => changeCalendarMonth(-1)} aria-label="Previous month">
@@ -1106,62 +1094,6 @@ export default function PlannerWorkspace() {
               </button>
             </div>
           </div>
-
-          <form className="appointment-form" onSubmit={addManualAppointment}>
-            <input
-              value={appointmentDraft.title}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, title: event.target.value }))}
-              placeholder="Appointment title"
-              aria-label="Appointment title"
-            />
-            <input
-              type="date"
-              value={appointmentDraft.date}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, date: event.target.value }))}
-              aria-label="Appointment date"
-            />
-            <input
-              type="time"
-              value={appointmentDraft.time}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, time: event.target.value }))}
-              aria-label="Appointment time"
-            />
-            <input
-              value={appointmentDraft.vendor}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, vendor: event.target.value }))}
-              placeholder="Vendor"
-              aria-label="Appointment vendor"
-            />
-            <input
-              value={appointmentDraft.location}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, location: event.target.value }))}
-              placeholder="Location"
-              aria-label="Appointment location"
-            />
-            <select
-              value={appointmentDraft.status}
-              onChange={(event) =>
-                setAppointmentDraft((current) => ({
-                  ...current,
-                  status: event.target.value as AppointmentDraft['status']
-                }))
-              }
-              aria-label="Appointment status"
-            >
-              <option value="planned">Planned</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="done">Done</option>
-            </select>
-            <input
-              value={appointmentDraft.note}
-              onChange={(event) => setAppointmentDraft((current) => ({ ...current, note: event.target.value }))}
-              placeholder="Notes"
-              aria-label="Appointment notes"
-            />
-            <button type="submit" disabled={!appointmentDraft.title.trim() || !appointmentDraft.date}>
-              Add
-            </button>
-          </form>
 
           <div className="calendar-workspace">
             <div className="calendar-grid" aria-label={`${monthLabel(calendarMonth)} calendar`}>
@@ -1188,6 +1120,7 @@ export default function PlannerWorkspace() {
                     className={`calendar-day ${day.isCurrentMonth ? '' : 'muted'} ${day.isToday ? 'today' : ''} ${selectedDate === day.key ? 'selected' : ''}`}
                   >
                     <span className="calendar-date">{day.date.getDate()}</span>
+                    <span className="calendar-add-hint">Select</span>
                     {dayAppointments.length > 0 ? (
                       <span className={`calendar-count ${dayStatus}`}>{dayAppointments.length}</span>
                     ) : null}
@@ -1257,6 +1190,75 @@ export default function PlannerWorkspace() {
               ) : (
                 <p className="empty-state">No appointment on this day. Add one manually or use AI Add.</p>
               )}
+
+              <form className="appointment-form" onSubmit={addManualAppointment}>
+                <div>
+                  <p className="eyebrow">Add appointment</p>
+                  <h5>{selectedDateLabel}</h5>
+                </div>
+                <input
+                  value={appointmentDraft.title}
+                  onChange={(event) => setAppointmentDraft((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="Appointment title"
+                  aria-label="Appointment title"
+                />
+                <div className="appointment-form-row">
+                  <input
+                    type="date"
+                    value={appointmentDraft.date}
+                    onChange={(event) => {
+                      setAppointmentDraft((current) => ({ ...current, date: event.target.value }));
+                      setSelectedDate(event.target.value);
+                      if (event.target.value) {
+                        const nextDate = new Date(`${event.target.value}T00:00:00`);
+                        setCalendarMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+                      }
+                    }}
+                    aria-label="Appointment date"
+                  />
+                  <input
+                    type="time"
+                    value={appointmentDraft.time}
+                    onChange={(event) => setAppointmentDraft((current) => ({ ...current, time: event.target.value }))}
+                    aria-label="Appointment time"
+                  />
+                </div>
+                <input
+                  value={appointmentDraft.vendor}
+                  onChange={(event) => setAppointmentDraft((current) => ({ ...current, vendor: event.target.value }))}
+                  placeholder="Vendor"
+                  aria-label="Appointment vendor"
+                />
+                <input
+                  value={appointmentDraft.location}
+                  onChange={(event) => setAppointmentDraft((current) => ({ ...current, location: event.target.value }))}
+                  placeholder="Location"
+                  aria-label="Appointment location"
+                />
+                <select
+                  value={appointmentDraft.status}
+                  onChange={(event) =>
+                    setAppointmentDraft((current) => ({
+                      ...current,
+                      status: event.target.value as AppointmentDraft['status']
+                    }))
+                  }
+                  aria-label="Appointment status"
+                >
+                  <option value="planned">Planned</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="done">Done</option>
+                </select>
+                <input
+                  value={appointmentDraft.note}
+                  onChange={(event) => setAppointmentDraft((current) => ({ ...current, note: event.target.value }))}
+                  placeholder="Notes"
+                  aria-label="Appointment notes"
+                />
+                <button type="submit" disabled={!appointmentDraft.title.trim() || !appointmentDraft.date}>
+                  Add to selected day
+                </button>
+              </form>
             </aside>
           </div>
 
@@ -1339,6 +1341,20 @@ export default function PlannerWorkspace() {
         />
       ) : null}
         </div>
+        {activeMenuTab ? (
+          <aside className="planner-assistant-rail" aria-label="Menu assistant">
+            <MenuAssistant
+              activeMenuTab={activeMenuTab}
+              messages={menuMessages[activeMenuTab]}
+              input={menuInputs[activeMenuTab]}
+              loading={menuLoading === activeMenuTab}
+              onOpenMainChat={() => setActiveTab('chat')}
+              onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
+              onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
+              onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
+            />
+          </aside>
+        ) : null}
       </div>
 
     </section>

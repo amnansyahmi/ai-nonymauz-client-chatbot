@@ -2,6 +2,25 @@ import type { Dispatch, FormEvent, SetStateAction } from 'react';
 import type { ActivityItem, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
 
+const malaysiaStates = [
+  'Johor',
+  'Kedah',
+  'Kelantan',
+  'Melaka',
+  'Negeri Sembilan',
+  'Pahang',
+  'Perak',
+  'Perlis',
+  'Pulau Pinang',
+  'Sabah',
+  'Sarawak',
+  'Selangor',
+  'Terengganu',
+  'Kuala Lumpur',
+  'Labuan',
+  'Putrajaya'
+];
+
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
   setPlannerProfile: Dispatch<SetStateAction<PlannerProfile>>;
@@ -41,47 +60,94 @@ export function DashboardPanel({
   fallbackUrgent,
   activity
 }: DashboardPanelProps) {
+  const setupSteps = [
+    plannerProfile.groomName.trim(),
+    plannerProfile.brideName.trim(),
+    plannerProfile.majlisDate,
+    plannerProfile.negeri,
+    plannerProfile.totalBudget > 0 || plannerProfile.guestTarget > 0 ? 'planning-scale' : ''
+  ];
+  const setupProgress = setupSteps.filter(Boolean).length;
+
   return (
     <div className="dashboard-panel">
-      <form className="onboarding-panel" onSubmit={completeOnboarding}>
-        <div>
-          <p className="eyebrow">5-step setup</p>
-          <h3>{plannerProfile.completed ? 'Majlis profile' : 'Start your planner'}</h3>
-          <p>Set the key details once, then MajlisMate.ai can calculate deadlines and personalize suggestions.</p>
+      <form className="wedding-profile-card" onSubmit={completeOnboarding}>
+        <div className="profile-card-intro">
+          <p className="eyebrow">Wedding profile</p>
+          <h3>{plannerProfile.completed ? 'Majlis details' : 'Set up your planner'}</h3>
+          <p>These details personalize deadlines, budget suggestions, RSVP targets, and appointment planning.</p>
+          <div className="setup-progress" aria-label={`${setupProgress} of 5 setup steps completed`}>
+            <span>{setupProgress}/5 complete</span>
+            <div className="progress-track"><span style={{ width: `${(setupProgress / 5) * 100}%` }} /></div>
+          </div>
         </div>
-        <input
-          value={plannerProfile.coupleName}
-          onChange={(event) => setPlannerProfile((current) => ({ ...current, coupleName: event.target.value }))}
-          placeholder="Couple / majlis name"
-          aria-label="Couple or majlis name"
-        />
-        <input
-          type="date"
-          value={plannerProfile.majlisDate}
-          onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
-          aria-label="Majlis date"
-        />
-        <input
-          value={plannerProfile.negeri}
-          onChange={(event) => setPlannerProfile((current) => ({ ...current, negeri: event.target.value }))}
-          placeholder="Negeri"
-          aria-label="Majlis negeri"
-        />
-        <input
-          type="number"
-          value={plannerProfile.totalBudget}
-          onChange={(event) => setPlannerProfile((current) => ({ ...current, totalBudget: Number(event.target.value) }))}
-          placeholder="Total budget"
-          aria-label="Total budget"
-        />
-        <input
-          type="number"
-          value={plannerProfile.guestTarget}
-          onChange={(event) => setPlannerProfile((current) => ({ ...current, guestTarget: Number(event.target.value) }))}
-          placeholder="Guest target"
-          aria-label="Guest target"
-        />
-        <button type="submit">Save setup</button>
+
+        <div className="profile-fields">
+          <label>
+            <span>Groom name</span>
+            <input
+              value={plannerProfile.groomName}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, groomName: event.target.value }))}
+              placeholder="e.g. Amir"
+              aria-label="Groom name"
+            />
+          </label>
+          <label>
+            <span>Bride name</span>
+            <input
+              value={plannerProfile.brideName}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, brideName: event.target.value }))}
+              placeholder="e.g. Aisyah"
+              aria-label="Bride name"
+            />
+          </label>
+          <label>
+            <span>Majlis date</span>
+            <input
+              type="date"
+              value={plannerProfile.majlisDate}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
+              aria-label="Majlis date"
+            />
+          </label>
+          <label>
+            <span>Location</span>
+            <select
+              value={plannerProfile.negeri}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, negeri: event.target.value }))}
+              aria-label="Majlis location"
+            >
+              {malaysiaStates.map((state) => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Total budget</span>
+            <input
+              type="number"
+              value={plannerProfile.totalBudget}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, totalBudget: Number(event.target.value) }))}
+              placeholder="RM"
+              aria-label="Total budget"
+            />
+          </label>
+          <label>
+            <span>Guest target</span>
+            <input
+              type="number"
+              value={plannerProfile.guestTarget}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, guestTarget: Number(event.target.value) }))}
+              placeholder="Pax"
+              aria-label="Guest target"
+            />
+          </label>
+        </div>
+
+        <div className="profile-card-footer">
+          <span>{plannerProfile.coupleName || 'Saved locally on this device'}</span>
+          <button type="submit">{plannerProfile.completed ? 'Update profile' : 'Save profile'}</button>
+        </div>
       </form>
 
       <div className="dashboard-grid">
