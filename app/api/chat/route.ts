@@ -24,54 +24,25 @@ type PlannerContext = {
   upcomingAppointments?: Array<{ title: string; date: string; time?: string; vendor?: string; location?: string }>;
 };
 
-const WEDDING_KEYWORDS = [
-  'akad',
-  'andaman',
-  'appointment',
-  'baju',
-  'budget',
-  'calendar',
-  'catering',
-  'ceremony',
-  'checklist',
-  'dewan',
-  'engagement',
-  'event',
-  'fitting',
-  'florist',
-  'guest',
-  'hantaran',
-  'invitation',
-  'jemputan',
-  'kahwin',
-  'makeup',
-  'majlis',
-  'meeting',
-  'nikah',
-  'pelamin',
-  'photographer',
-  'planner',
-  'reception',
-  'rsvp',
-  'sanding',
-  'schedule',
-  'seating',
-  'temujanji',
-  'timeline',
-  'vendor',
-  'venue',
-  'wedding'
-];
+const WEDDING_RELATED_PATTERN =
+  /\b(akad|andaman|baju|banquet|bride|bridal|budget|caterer|catering|ceremony|checklist|decor|dewan|engagement|event|florist|groom|guest|hantaran|hotel|invitation|jemputan|kahwin|kenduri|majlis|makeup|nikah|pelamin|photographer|reception|rsvp|sanding|seating|venue|vendor|wedding)\b/i;
+
+const CODING_REQUEST_PATTERN =
+  /\b(html|css|javascript|typescript|react|next\.?js|nextjs|python|php|java|c\+\+|c#|sql|api|code|coding|script|component|function|class|website|landing page|web app|app|software|program)\b/i;
+
+const CREATION_REQUEST_PATTERN =
+  /\b(create|buat|generate|write|build|make|design)\b[\s\S]{0,80}\b(prompt|copy|template|caption|message|wording|content)\b/i;
 
 function sse(payload: unknown) {
   return `data: ${JSON.stringify(payload)}\n\n`;
 }
 
-function isWeddingPlanningMessage(message: string) {
-  const normalized = message.toLowerCase();
-  if (/^(hi|hello|hey|salam|assalamualaikum|hai|helo)\b/.test(normalized.trim())) return true;
+function isCodingRequest(message: string) {
+  return CODING_REQUEST_PATTERN.test(message);
+}
 
-  return WEDDING_KEYWORDS.some((keyword) => normalized.includes(keyword));
+function isUnrelatedCreationRequest(message: string) {
+  return CREATION_REQUEST_PATTERN.test(message) && !WEDDING_RELATED_PATTERN.test(message);
 }
 
 function extractTextFromJson(data: any): string {
@@ -211,11 +182,25 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (!isWeddingPlanningMessage(latestUserMessage)) {
-      const refusal =
-        'MajlisMate.ai is focused on wedding planning only. I can help with wedding checklists, majlis timelines, vendors, budgets, guest planning, seating, and appointments. Please ask me something related to your wedding or event planning.';
+    if (isCodingRequest(latestUserMessage)) {
+      const redirectMessage =
+        'I cannot help create code, HTML, CSS, scripts, apps, or websites. I can still help with non-code wedding planning, such as invitation wording, vendor messages, checklists, timelines, budgets, RSVP planning, and appointment planning.';
 
-      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: refusal })}${sse({ type: 'done' })}`, {
+      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no'
+        }
+      });
+    }
+
+    if (isUnrelatedCreationRequest(latestUserMessage)) {
+      const redirectMessage =
+        'I can help create non-code prompts, copy, wording, and templates when they are for your wedding or majlis planning. For example, ask me to write invitation wording, a vendor-message template, a majlis checklist prompt, or RSVP reminder copy.';
+
+      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
         headers: {
           'Content-Type': 'text/event-stream; charset=utf-8',
           'Cache-Control': 'no-cache, no-transform',
@@ -233,13 +218,15 @@ export async function POST(request: NextRequest) {
     const systemPrompt = `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
 Rules:
-1. Only answer wedding planning and event planning questions.
-2. You may help with majlis planning, nikah, sanding, reception, engagement, budgets, vendors, guest lists, seating, timelines, checklists, and appointment planning.
-3. If the user asks about unrelated topics, politely refuse and redirect them to wedding planning.
-4. Use the internal knowledge context first.
-5. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice.
-6. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
-7. Support English and Malay. Reply in the same language as the customer where possible.
+1. Stay focused on wedding and event planning, but treat adjacent questions as in-scope when they can help the user's wedding.
+2. You may help with majlis planning, nikah, sanding, reception, engagement, budgets, vendors, guest lists, seating, timelines, checklists, appointment planning, venue discovery, nearby venue shortlisting, vendor questions, and location-based planning.
+3. If the user asks for nearby venues or vendors and no exact location is available, ask for the city/negeri or use the workspace Negeri if it is set. Do not reject the question.
+4. Never create or explain code, HTML, CSS, JavaScript, scripts, apps, websites, APIs, or software, even when the subject is wedding-related. Briefly redirect to non-code wedding planning help.
+5. If the user asks to create generic prompts, copy, wording, or templates that are not related to wedding, majlis, kahwin, vendor, event, or planning work, do not fulfill it. Briefly redirect them to a wedding-planning version of the request.
+6. Use the internal knowledge context first.
+7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
+8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
+9. Support English and Malay. Reply in the same language as the customer where possible.
 
 Internal knowledge context:
 ${context}

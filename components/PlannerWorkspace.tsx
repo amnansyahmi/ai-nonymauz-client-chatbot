@@ -829,11 +829,11 @@ export default function PlannerWorkspace() {
   const activeMenuTab = activeTab === 'chat' ? null : activeTab;
 
   return (
-    <section className="chat-shell" aria-label="MajlisMate.ai wedding planner chatbot">
-      <div className="chat-header">
+    <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
+      <div className="planner-topbar">
         <div>
           <p className="eyebrow">MajlisMate.ai</p>
-          <h2>Wedding Chat, Checklist, and Calendar Assistant</h2>
+          <h2>Wedding Planner Workspace</h2>
         </div>
         <div className="header-actions">
           <span className="status-dot">{isOffline ? 'Offline' : 'Live demo'}</span>
@@ -854,107 +854,102 @@ export default function PlannerWorkspace() {
 
       {statusMessage ? <div className="pwa-banner success">{statusMessage}</div> : null}
 
-      <div className="chat-tabs" role="tablist" aria-label="Chat tools">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'dashboard'}
-          className={activeTab === 'dashboard' ? 'active' : ''}
-          onClick={() => setActiveTab('dashboard')}
-        >
-          Dashboard
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'chat'}
-          className={activeTab === 'chat' ? 'active' : ''}
-          onClick={() => setActiveTab('chat')}
-        >
-          Chat
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'checklist'}
-          className={activeTab === 'checklist' ? 'active' : ''}
-          onClick={() => setActiveTab('checklist')}
-        >
-          Checklist
-          {checklistItems.length > 0 ? <span>{completedCount}/{checklistItems.length}</span> : null}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'calendar'}
-          className={activeTab === 'calendar' ? 'active' : ''}
-          onClick={() => setActiveTab('calendar')}
-        >
-          Calendar
-          {appointments.length > 0 ? <span>{appointments.length}</span> : null}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'budget'}
-          className={activeTab === 'budget' ? 'active' : ''}
-          onClick={() => setActiveTab('budget')}
-        >
-          Budget
-          {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : null}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'rsvp'}
-          className={activeTab === 'rsvp' ? 'active' : ''}
-          onClick={() => setActiveTab('rsvp')}
-        >
-          RSVP
-          {guests.length > 0 ? <span>{confirmedGuests}</span> : null}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeTab === 'vendors'}
-          className={activeTab === 'vendors' ? 'active' : ''}
-          onClick={() => setActiveTab('vendors')}
-        >
-          Vendors
-          {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : null}
-        </button>
-      </div>
+      <div className="planner-body">
+        <aside className="planner-sidebar" aria-label="Planner menu">
+          <div className="sidebar-header">
+            <span className="sidebar-mark" aria-hidden="true">M</span>
+            <div>
+              <p>Workspace</p>
+              <strong>Wedding tools</strong>
+            </div>
+          </div>
+          <nav className="planner-menu" role="tablist" aria-label="Planner menu">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'dashboard'}
+              className={activeTab === 'dashboard' ? 'active' : ''}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              Dashboard
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'chat'}
+              className={activeTab === 'chat' ? 'active' : ''}
+              onClick={() => setActiveTab('chat')}
+            >
+              Chat
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'checklist'}
+              className={activeTab === 'checklist' ? 'active' : ''}
+              onClick={() => setActiveTab('checklist')}
+            >
+              Checklist
+              {checklistItems.length > 0 ? <span>{completedCount}/{checklistItems.length}</span> : null}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'calendar'}
+              className={activeTab === 'calendar' ? 'active' : ''}
+              onClick={() => setActiveTab('calendar')}
+            >
+              Calendar
+              {appointments.length > 0 ? <span>{appointments.length}</span> : null}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'budget'}
+              className={activeTab === 'budget' ? 'active' : ''}
+              onClick={() => setActiveTab('budget')}
+            >
+              Budget
+              {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : null}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'rsvp'}
+              className={activeTab === 'rsvp' ? 'active' : ''}
+              onClick={() => setActiveTab('rsvp')}
+            >
+              RSVP
+              {guests.length > 0 ? <span>{confirmedGuests}</span> : null}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'vendors'}
+              className={activeTab === 'vendors' ? 'active' : ''}
+              onClick={() => setActiveTab('vendors')}
+            >
+              Vendors
+              {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : null}
+            </button>
+          </nav>
+        </aside>
 
-      <div className="starter-grid">
-        {starterQuestions.map((question) => (
-          <button key={question} type="button" onClick={() => ask(question)} disabled={loading}>
-            {question}
-          </button>
-        ))}
-      </div>
+        <div className="planner-content">
+          {activeMenuTab ? (
+            <MenuAssistant
+              activeMenuTab={activeMenuTab}
+              messages={menuMessages[activeMenuTab]}
+              input={menuInputs[activeMenuTab]}
+              loading={menuLoading === activeMenuTab}
+              onOpenMainChat={() => setActiveTab('chat')}
+              onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
+              onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
+              onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
+            />
+          ) : null}
 
-      <div className="template-strip" aria-label="Wedding templates">
-        {checklistTemplates.map((template) => (
-          <button key={template.title} type="button" onClick={() => applyChecklistTemplate(template)}>
-            {template.title}
-          </button>
-        ))}
-      </div>
-
-      {activeMenuTab ? (
-        <MenuAssistant
-          activeMenuTab={activeMenuTab}
-          messages={menuMessages[activeMenuTab]}
-          input={menuInputs[activeMenuTab]}
-          loading={menuLoading === activeMenuTab}
-          onOpenMainChat={() => setActiveTab('chat')}
-          onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
-          onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
-          onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
-        />
-      ) : null}
-
-      {activeTab === 'dashboard' ? (
+          {activeTab === 'dashboard' ? (
         <DashboardPanel
           plannerProfile={plannerProfile}
           setPlannerProfile={setPlannerProfile}
@@ -975,15 +970,24 @@ export default function PlannerWorkspace() {
           activity={activity}
         />
       ) : activeTab === 'chat' ? (
-        <ChatWidget
-          messages={messages}
-          input={input}
-          loading={loading}
-          placeholder="Ask about majlis, vendors, budget, checklist, appointment..."
-          messagesEndRef={messagesEndRef}
-          onInputChange={setInput}
-          onSubmit={onSubmit}
-        />
+        <div className="main-chat-panel">
+          <div className="starter-grid">
+            {starterQuestions.map((question) => (
+              <button key={question} type="button" onClick={() => ask(question)} disabled={loading}>
+                {question}
+              </button>
+            ))}
+          </div>
+          <ChatWidget
+            messages={messages}
+            input={input}
+            loading={loading}
+            placeholder="Ask about majlis, vendors, budget, checklist, appointment..."
+            messagesEndRef={messagesEndRef}
+            onInputChange={setInput}
+            onSubmit={onSubmit}
+          />
+        </div>
       ) : activeTab === 'checklist' ? (
         <div className="checklist-panel">
           <div className="checklist-summary">
@@ -992,6 +996,14 @@ export default function PlannerWorkspace() {
               <h3>{checklistTitle}</h3>
             </div>
             <span>{completedCount}/{checklistItems.length} done</span>
+          </div>
+
+          <div className="template-strip" aria-label="Wedding checklist templates">
+            {checklistTemplates.map((template) => (
+              <button key={template.title} type="button" onClick={() => applyChecklistTemplate(template)}>
+                {template.title}
+              </button>
+            ))}
           </div>
 
           <div className="tool-actions">
@@ -1326,6 +1338,8 @@ export default function PlannerWorkspace() {
           askVendorMessage={askVendorMessage}
         />
       ) : null}
+        </div>
+      </div>
 
     </section>
   );
