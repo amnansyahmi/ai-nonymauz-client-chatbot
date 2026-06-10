@@ -14,8 +14,64 @@ type ChatMessage = {
   content: string;
 };
 
+type PlannerContext = {
+  majlisDate?: string;
+  negeri?: string;
+  totalBudget?: number;
+  guestTarget?: number;
+  checklistSummary?: string;
+  budgetSummary?: string[];
+  upcomingAppointments?: Array<{ title: string; date: string; time?: string; vendor?: string; location?: string }>;
+};
+
+const WEDDING_KEYWORDS = [
+  'akad',
+  'andaman',
+  'appointment',
+  'baju',
+  'budget',
+  'calendar',
+  'catering',
+  'ceremony',
+  'checklist',
+  'dewan',
+  'engagement',
+  'event',
+  'fitting',
+  'florist',
+  'guest',
+  'hantaran',
+  'invitation',
+  'jemputan',
+  'kahwin',
+  'makeup',
+  'majlis',
+  'meeting',
+  'nikah',
+  'pelamin',
+  'photographer',
+  'planner',
+  'reception',
+  'rsvp',
+  'sanding',
+  'schedule',
+  'seating',
+  'temujanji',
+  'timeline',
+  'vendor',
+  'venue',
+  'wedding'
+];
+
 function sse(payload: unknown) {
   return `data: ${JSON.stringify(payload)}\n\n`;
+}
+
+function isWeddingPlanningMessage(message: string) {
+  const normalized = message.toLowerCase();
+  if (/^(hi|hello|hey|salam|assalamualaikum|hai|helo)\b/.test(normalized.trim())) return true;
+
+  return WEDDING_KEYWORDS.some((keyword) => normalized.includes(keyword));
 }
 
 function extractTextFromJson(data: any): string {
@@ -45,7 +101,7 @@ async function forwardAiNonymauzStream(
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
     const demoAnswer =
       `Demo mode aktif kerana AI_NONYMAUZ_BASE_URL / AI_NONYMAUZ_API_KEY belum diset.\n\n` +
-      `Saya sudah terima soalan: "${userMessage}". Selepas env diset di Vercel, jawapan sebenar akan dijana melalui AI-nonymauz backend menggunakan knowledge base client.`;
+      `MajlisMate.ai sudah terima soalan wedding planner anda: "${userMessage}". Selepas env diset di Vercel, jawapan sebenar akan dijana menggunakan knowledge base MajlisMate.ai.`;
 
     for (const word of demoAnswer.split(/(\s+)/)) {
       controller.enqueue(encoder.encode(sse({ type: 'delta', text: word })));
@@ -72,7 +128,7 @@ async function forwardAiNonymauzStream(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`AI-nonymauz error ${response.status}: ${errorText}`);
+    throw new Error(`MajlisMate.ai backend error ${response.status}: ${errorText}`);
   }
 
   const contentType = response.headers.get('content-type') || '';
@@ -145,6 +201,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const messages = Array.isArray(body.messages) ? (body.messages as IncomingMessage[]) : [];
+    const plannerContext = (body.plannerContext || {}) as PlannerContext;
     const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content;
 
     if (!latestUserMessage || latestUserMessage.trim().length < 2) {
@@ -154,24 +211,49 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (!isWeddingPlanningMessage(latestUserMessage)) {
+      const refusal =
+        'MajlisMate.ai is focused on wedding planning only. I can help with wedding checklists, majlis timelines, vendors, budgets, guest planning, seating, and appointments. Please ask me something related to your wedding or event planning.';
+
+      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: refusal })}${sse({ type: 'done' })}`, {
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+          'X-Accel-Buffering': 'no'
+        }
+      });
+    }
+
     const selectedDocs = retrieveContext(latestUserMessage, 3);
     const context = formatContext(selectedDocs);
     const clientName = getClientName();
-    const chatbotName = process.env.CHATBOT_NAME || `${clientName} AI Assistant`;
-    const supportEmail = process.env.SUPPORT_EMAIL || 'support@example.com';
+    const chatbotName = process.env.CHATBOT_NAME || 'MajlisMate.ai';
 
-    const systemPrompt = `You are ${chatbotName}, a website support and company knowledge chatbot for ${clientName}.
+    const systemPrompt = `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
 Rules:
-1. Answer using the internal knowledge context first.
-2. If the knowledge base does not contain the answer, say you do not have enough information and suggest contacting ${supportEmail}.
-3. Do not invent prices, policies, warranty decisions, refund approvals, or legal advice.
-4. Be friendly, concise, and helpful. Prefer 3-6 short bullets unless the user asks for details.
-5. Support English and Malay. Reply in the same language as the customer where possible.
-6. If human handover is needed, summarize what information the customer should provide.
+1. Only answer wedding planning and event planning questions.
+2. You may help with majlis planning, nikah, sanding, reception, engagement, budgets, vendors, guest lists, seating, timelines, checklists, and appointment planning.
+3. If the user asks about unrelated topics, politely refuse and redirect them to wedding planning.
+4. Use the internal knowledge context first.
+5. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice.
+6. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
+7. Support English and Malay. Reply in the same language as the customer where possible.
 
 Internal knowledge context:
-${context}`;
+${context}
+
+Current planner context from the local MajlisMate.ai workspace:
+- Majlis date: ${plannerContext.majlisDate || 'not set'}
+- Negeri: ${plannerContext.negeri || 'not set'}
+- Total budget: ${plannerContext.totalBudget ? `RM${plannerContext.totalBudget}` : 'not set'}
+- Guest target: ${plannerContext.guestTarget || 'not set'}
+- Checklist progress: ${plannerContext.checklistSummary || 'not set'}
+- Budget snapshot: ${(plannerContext.budgetSummary || []).join('; ') || 'not set'}
+- Upcoming appointments: ${(plannerContext.upcomingAppointments || [])
+      .map((appointment) => `${appointment.date}${appointment.time ? ` ${appointment.time}` : ''} - ${appointment.title}`)
+      .join('; ') || 'not set'}`;
 
     const aiMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },

@@ -1,48 +1,54 @@
 {
-  "clientName": "DemoCare Sdn Bhd",
-  "lastUpdated": "2026-06-07",
+  "clientName": "MajlisMate.ai",
+  "lastUpdated": "2026-06-10",
   "documents": [
     {
-      "id": "company-overview",
-      "title": "Company Overview",
+      "id": "majlis-overview",
+      "title": "MajlisMate.ai Overview",
       "category": "company",
-      "content": "DemoCare Sdn Bhd is a sample SME service company. We provide customer support, product consultation, installation booking, warranty assistance, and after-sales service for customers in Malaysia. Operating hours are Monday to Friday, 9:00 AM to 6:00 PM, excluding Malaysia public holidays."
+      "content": "MajlisMate.ai is an AI wedding planning assistant for couples, families, and wedding vendors. It helps with wedding checklists, majlis timelines, guest planning, vendor preparation, budget planning, ceremony and reception ideas, appointment scheduling, and bilingual English/Malay wedding planning guidance."
     },
     {
-      "id": "contact-support",
-      "title": "Contact and Escalation",
-      "category": "support",
-      "content": "Customers can contact support at support@example.com. For urgent issues, customers should include their full name, phone number, order number, product model, issue description, and photos if relevant. Critical cases should be escalated to the support manager within 2 working hours."
+      "id": "planning-scope",
+      "title": "Wedding Planning Scope",
+      "category": "scope",
+      "content": "MajlisMate.ai should answer only wedding and event-planning topics, including nikah, sanding, reception, engagement ceremony, vendor booking, decor, catering, photography, invitation planning, guest list, RSVP, seating, budget, event timeline, task checklist, and appointment scheduling. For unrelated topics, politely say it can only help with wedding planning."
     },
     {
-      "id": "warranty-policy",
-      "title": "Warranty Policy",
-      "category": "policy",
-      "content": "Standard warranty is 12 months from invoice date. Warranty covers manufacturing defects only. Warranty does not cover misuse, accidental damage, water damage, unauthorized repair, missing proof of purchase, or damage caused by power surge. Customers must provide invoice or order number before warranty validation."
+      "id": "wedding-checklist",
+      "title": "Wedding Checklist Guidance",
+      "category": "planning",
+      "content": "A wedding checklist can include budget confirmation, guest count, venue shortlist, nikah or ceremony requirements, catering, decor, attire, photographer, videographer, makeup artist, invitation design, RSVP tracking, seating plan, transport, event timeline, payment deadlines, and final vendor confirmation."
     },
     {
-      "id": "refund-policy",
-      "title": "Refund and Return Policy",
-      "category": "policy",
-      "content": "Return requests must be submitted within 7 calendar days from delivery date. Items must be unused, in original packaging, and include all accessories. Refund processing normally takes 7 to 14 working days after approval. Shipping fees are non-refundable unless the return is caused by our mistake."
+      "id": "appointment-scheduling",
+      "title": "Appointment Scheduling",
+      "category": "calendar",
+      "content": "MajlisMate.ai can help create wedding-related appointments such as venue viewing, fitting session, food tasting, vendor meeting, photography consultation, makeup trial, family discussion, rehearsal, and final coordination meeting. Ask for date, time, vendor or task name, location, and notes if missing."
     },
     {
-      "id": "installation-booking",
-      "title": "Installation Booking SOP",
-      "category": "sop",
-      "content": "For installation booking, collect customer name, address, preferred date, preferred time slot, product model, order number, and phone number. Available time slots are morning 9 AM to 1 PM or afternoon 2 PM to 6 PM. Booking confirmation must be sent by email or WhatsApp. Rescheduling requires at least 24 hours notice."
+      "id": "budget-planning",
+      "title": "Budget Planning",
+      "category": "planning",
+      "content": "For wedding budget planning, help the couple list major categories such as venue, catering, decor, attire, photography, videography, makeup, invitation, gifts, entertainment, transport, contingency, and vendor deposits. Do not invent exact vendor prices unless the user provides them."
     },
     {
-      "id": "pricing-faq",
-      "title": "Pricing FAQ",
+      "id": "timeline-planning",
+      "title": "Wedding Timeline Planning",
+      "category": "planning",
+      "content": "A wedding timeline should include preparation, vendor arrival, makeup and attire, family photos, ceremony or nikah, guest arrival, reception entrance, meal service, speeches, cake cutting, photography sessions, vendor teardown, and final payment or handover checks."
+    },
+    {
+      "id": "vendor-faq",
+      "title": "Vendor FAQ",
       "category": "faq",
-      "content": "The chatbot should not invent prices. If the customer asks for pricing and the price is not listed in the knowledge base, ask the customer to contact sales or provide their requirements so the sales team can quote accurately."
+      "content": "When helping with vendors, suggest questions the couple should ask, such as availability, package inclusions, payment schedule, cancellation policy, setup timing, overtime fee, portfolio examples, venue restrictions, backup plans, and contact person on the event day."
     },
     {
-      "id": "human-handover",
-      "title": "Human Handover Rules",
-      "category": "sop",
-      "content": "Handover to a human when the customer is angry, asks for legal action, reports safety risk, requests refund approval, needs a custom quotation, provides sensitive personal data, or asks for something not covered by the knowledge base. The assistant should be polite, summarize the case, and ask for contact details if needed."
+      "id": "boundaries",
+      "title": "Advice Boundaries",
+      "category": "policy",
+      "content": "MajlisMate.ai can provide planning guidance, templates, checklists, and suggested questions. It should not provide legal, medical, financial, religious rulings, or binding contract advice. For those topics, suggest consulting the relevant professional or authority."
     }
   ]
 }
