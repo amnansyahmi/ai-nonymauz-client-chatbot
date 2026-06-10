@@ -30,6 +30,8 @@ export const storageKeys = {
 
 export const defaultPlannerProfile: PlannerProfile = {
   coupleName: '',
+  groomName: '',
+  brideName: '',
   majlisDate: '',
   negeri: 'Selangor',
   totalBudget: 30000,

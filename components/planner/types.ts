@@ -24,6 +24,8 @@ export type ChecklistItem = {
 
 export type PlannerProfile = {
   coupleName: string;
+  groomName: string;
+  brideName: string;
   majlisDate: string;
   negeri: string;
   totalBudget: number;

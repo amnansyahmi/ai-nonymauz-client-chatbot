@@ -15,6 +15,8 @@ type ChatMessage = {
 };
 
 type PlannerContext = {
+  groomName?: string;
+  brideName?: string;
   majlisDate?: string;
   negeri?: string;
   totalBudget?: number;
@@ -232,6 +234,8 @@ Internal knowledge context:
 ${context}
 
 Current planner context from the local MajlisMate.ai workspace:
+- Groom name: ${plannerContext.groomName || 'not set'}
+- Bride name: ${plannerContext.brideName || 'not set'}
 - Majlis date: ${plannerContext.majlisDate || 'not set'}
 - Negeri: ${plannerContext.negeri || 'not set'}
 - Total budget: ${plannerContext.totalBudget ? `RM${plannerContext.totalBudget}` : 'not set'}

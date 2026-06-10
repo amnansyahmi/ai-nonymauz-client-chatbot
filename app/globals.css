@@ -492,6 +492,10 @@ footer {
   min-height: 0;
 }
 
+.planner-body.has-assistant {
+  grid-template-columns: 232px minmax(0, 1fr) minmax(320px, 0.36fr);
+}
+
 .planner-sidebar {
   border-right: 1px solid rgba(42, 32, 27, 0.08);
   background:
@@ -550,6 +554,16 @@ footer {
 .planner-content > :last-child {
   flex: 1;
   min-height: 0;
+}
+
+.planner-assistant-rail {
+  min-width: 0;
+  overflow-y: auto;
+  border-left: 1px solid rgba(42, 32, 27, 0.08);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(184, 122, 90, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 253, 251, 0.96), rgba(255, 248, 242, 0.92));
+  padding: 14px;
 }
 
 .planner-menu {
@@ -659,14 +673,14 @@ footer {
 
 .menu-assistant {
   display: grid;
-  grid-template-columns: minmax(260px, 0.36fr) minmax(0, 1fr);
-  align-items: stretch;
-  gap: 20px;
-  border-bottom: 1px solid var(--border);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(184, 122, 90, 0.12), transparent 30%),
-    linear-gradient(180deg, #fffdfb 0%, #fff8f2 100%);
-  padding: 20px 22px;
+  align-content: start;
+  gap: 16px;
+  min-height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 16px;
+  box-shadow: 0 16px 38px rgba(80, 48, 31, 0.07);
 }
 
 .main-chat-panel {
@@ -689,8 +703,7 @@ footer {
 }
 
 .menu-assistant-copy {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
   gap: 14px;
   min-width: 0;
 }
@@ -740,8 +753,7 @@ footer {
 }
 
 .menu-assistant-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 8px;
 }
 
@@ -791,7 +803,7 @@ footer {
 }
 
 .menu-assistant-actions .secondary-action {
-  margin-left: auto;
+  margin-left: 0;
   border-color: var(--border);
   background: transparent;
   color: var(--accent-dark);
@@ -800,6 +812,8 @@ footer {
 .menu-assistant-form {
   position: relative;
   display: block;
+  align-self: end;
+  margin-top: auto;
 }
 
 .menu-assistant-form input {
@@ -964,6 +978,116 @@ footer {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
   padding: 14px;
+}
+
+.wedding-profile-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.3fr);
+  gap: 18px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(184, 122, 90, 0.14), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 248, 242, 0.9));
+  padding: 18px;
+  box-shadow: 0 18px 44px rgba(80, 48, 31, 0.08);
+}
+
+.profile-card-intro {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.profile-card-intro h3 {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.profile-card-intro p:not(.eyebrow) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.setup-progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.setup-progress > span {
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.profile-fields label span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.profile-fields input,
+.profile-fields select {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid rgba(42, 32, 27, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  padding: 11px 12px;
+  outline: none;
+}
+
+.profile-fields input:focus,
+.profile-fields select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(184, 122, 90, 0.11);
+}
+
+.profile-card-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid rgba(42, 32, 27, 0.08);
+  padding-top: 14px;
+}
+
+.profile-card-footer span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.profile-card-footer button {
+  cursor: pointer;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 16px;
+  font-weight: 850;
 }
 
 .onboarding-panel > div {
@@ -1428,6 +1552,12 @@ footer {
   gap: 16px;
 }
 
+.calendar-toolbar p:not(.eyebrow) {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .checklist-summary h3,
 .calendar-toolbar h3,
 .appointment-list-header h4 {
@@ -1510,20 +1640,31 @@ footer {
 
 .appointment-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1.2fr) 150px 120px minmax(140px, 0.85fr) minmax(140px, 0.85fr) 130px minmax(180px, 1fr) auto;
   gap: 10px;
   border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.62);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.76);
   padding: 12px;
+}
+
+.appointment-form h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.appointment-form-row {
+  display: grid;
+  grid-template-columns: 1fr 0.72fr;
+  gap: 10px;
 }
 
 .appointment-form input,
 .appointment-form select {
   min-width: 0;
   border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
+  border-radius: 12px;
+  background: var(--card);
   color: var(--ink);
   padding: 11px 13px;
   outline: none;
@@ -1570,10 +1711,11 @@ footer {
 }
 
 .calendar-day {
+  position: relative;
   display: grid;
   align-content: start;
   gap: 6px;
-  min-height: 94px;
+  min-height: 106px;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
   border-right: 0;
@@ -1583,6 +1725,16 @@ footer {
   padding: 8px;
   text-align: left;
   cursor: pointer;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.calendar-day:hover {
+  background: #fffaf5;
+  box-shadow: inset 0 0 0 2px rgba(184, 122, 90, 0.24);
+  transform: translateY(-1px);
 }
 
 .calendar-day:nth-child(7n + 1) {
@@ -1599,8 +1751,27 @@ footer {
 }
 
 .calendar-day.selected {
-  background: #fef3c7;
-  box-shadow: inset 0 0 0 2px var(--accent);
+  background: #fff7ed;
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
+.calendar-add-hint {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 3px 7px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  transition: opacity 160ms ease;
+}
+
+.calendar-day:hover .calendar-add-hint,
+.calendar-day.selected .calendar-add-hint {
+  opacity: 1;
 }
 
 .calendar-date {
@@ -1670,11 +1841,15 @@ footer {
 
 .day-agenda {
   display: grid;
+  align-content: start;
   gap: 12px;
   border: 1px solid var(--border);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(184, 122, 90, 0.12), transparent 34%),
+    rgba(255, 255, 255, 0.82);
   padding: 14px;
+  box-shadow: 0 14px 34px rgba(80, 48, 31, 0.06);
 }
 
 .day-agenda-header {
@@ -1825,6 +2000,7 @@ footer {
   .budget-overview,
   .budget-list,
   .planner-body,
+  .planner-body.has-assistant,
   .planner-columns,
   .vendor-grid {
     grid-template-columns: 1fr;
@@ -1845,6 +2021,7 @@ footer {
   .appointment-item,
   .appointment-form,
   .onboarding-panel,
+  .wedding-profile-card,
   .planner-form,
   .budget-add-card,
   .data-row,
@@ -1863,8 +2040,15 @@ footer {
     border-bottom: 1px solid var(--border);
   }
 
+  .planner-assistant-rail {
+    border-left: 0;
+    border-top: 1px solid rgba(42, 32, 27, 0.08);
+    padding: 12px;
+  }
+
   .menu-assistant {
     grid-template-columns: 1fr;
+    min-height: auto;
   }
 
   .menu-assistant-messages {
@@ -1891,6 +2075,10 @@ footer {
   }
 
   .budget-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1957,6 +2145,8 @@ footer {
   }
 
   .budget-add-card,
+  .profile-fields,
+  .profile-card-footer,
   .budget-fields,
   .budget-note-row,
   .budget-item-top {
@@ -1965,6 +2155,10 @@ footer {
 
   .budget-item-top {
     display: grid;
+  }
+
+  .profile-card-footer {
+    justify-items: start;
   }
 
   .calendar-weekday {
