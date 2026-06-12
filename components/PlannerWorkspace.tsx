@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
+  budgetSuggestions,
   checklistTemplates,
   defaultAssistantMessage,
   defaultBudgetItems,
@@ -118,18 +119,76 @@ function RobotIcon() {
   );
 }
 
+function HistoryIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M4 12a8 8 0 1 0 2.34-5.66L4 8.68" />
+      <path d="M4 4v4.68h4.68M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+const profileStates = [
+  'Johor',
+  'Kedah',
+  'Kelantan',
+  'Melaka',
+  'Negeri Sembilan',
+  'Pahang',
+  'Perak',
+  'Perlis',
+  'Pulau Pinang',
+  'Sabah',
+  'Sarawak',
+  'Selangor',
+  'Terengganu',
+  'Kuala Lumpur',
+  'Labuan',
+  'Putrajaya'
+];
+
+type ChatSession = {
+  id: string;
+  title: string;
+  updatedAt: string;
+  messages: Message[];
+};
+
 export default function PlannerWorkspace() {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [currentChatId, setCurrentChatId] = useState('');
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState<AppLanguage>('ms');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isContextAssistantOpen, setIsContextAssistantOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [menuMessages, setMenuMessages] = useState<Record<MenuAssistantTab, Message[]>>(() => createMenuAssistantMessages());
   const [menuInputs, setMenuInputs] = useState<Record<MenuAssistantTab, string>>(() => createMenuInputs());
   const [menuLoading, setMenuLoading] = useState<MenuAssistantTab | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('chat');
   const [plannerProfile, setPlannerProfile] = useState<PlannerProfile>(defaultPlannerProfile);
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
@@ -178,10 +237,12 @@ export default function PlannerWorkspace() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const storedMessages = safeJsonParse<Message[]>(localStorage.getItem(storageKeys.messages), [defaultAssistantMessage]);
-    const storedActiveTab = localStorage.getItem(storageKeys.activeTab) as ActiveTab | null;
+    const storedChatSessions = safeJsonParse<ChatSession[]>(localStorage.getItem(storageKeys.chatSessions), []);
+    const storedCurrentChatId = localStorage.getItem(storageKeys.currentChatId) || '';
     const storedChecklistTitle = localStorage.getItem(storageKeys.checklistTitle);
     const storedChecklistItems = safeJsonParse<ChecklistItem[]>(localStorage.getItem(storageKeys.checklistItems), []);
     const storedAppointments = safeJsonParse<Appointment[]>(localStorage.getItem(storageKeys.appointments), []);
@@ -192,21 +253,24 @@ export default function PlannerWorkspace() {
     const storedSavedVendors = safeJsonParse<string[]>(localStorage.getItem(storageKeys.savedVendors), []);
     const storedActivity = safeJsonParse<ActivityItem[]>(localStorage.getItem(storageKeys.activity), []);
     const storedLanguage = localStorage.getItem(storageKeys.language);
+    const hasStoredConversation = storedMessages.some(
+      (message) => message.role === 'user' || (message.role === 'assistant' && message.content !== defaultAssistantMessage.content)
+    );
+    const restoredSessions = hasStoredConversation && storedCurrentChatId && !storedChatSessions.some((session) => session.id === storedCurrentChatId)
+      ? [{
+          id: storedCurrentChatId,
+          title: storedMessages.find((message) => message.role === 'user')?.content.slice(0, 48) || 'Previous chat',
+          updatedAt: new Date().toISOString(),
+          messages: storedMessages
+        }, ...storedChatSessions]
+      : storedChatSessions;
 
-    setMessages(storedMessages.length > 0 ? storedMessages : [defaultAssistantMessage]);
+    setMessages([defaultAssistantMessage]);
+    setChatSessions(restoredSessions);
+    setCurrentChatId(`chat-${Date.now()}`);
     if (storedLanguage === 'ms' || storedLanguage === 'en') setLanguage(storedLanguage);
-    if (
-      storedActiveTab === 'dashboard' ||
-      storedActiveTab === 'chat' ||
-      storedActiveTab === 'checklist' ||
-      storedActiveTab === 'calendar' ||
-      storedActiveTab === 'budget' ||
-      storedActiveTab === 'rsvp' ||
-      storedActiveTab === 'vendors'
-    ) {
-      setActiveTab(storedActiveTab);
-    }
-    setPlannerProfile({ ...defaultPlannerProfile, ...storedPlannerProfile });
+    setActiveTab('chat');
+    setPlannerProfile({ ...defaultPlannerProfile, ...storedPlannerProfile, weddingStyle: storedPlannerProfile.weddingStyle || '', keyContact: storedPlannerProfile.keyContact || '' });
     if (storedChecklistTitle) {
       setChecklistTitle(storedChecklistTitle.replace(/Checklist Perkahwinan Ila/g, 'Checklist MajlisMate').replace(/Ila's Wedding Checklist/g, 'MajlisMate wedding checklist'));
     }
@@ -228,7 +292,42 @@ export default function PlannerWorkspace() {
   useEffect(() => {
     if (!isHydrated) return;
     localStorage.setItem(storageKeys.messages, JSON.stringify(messages));
-  }, [isHydrated, messages]);
+    const hasConversation = messages.some(
+      (message) => message.role === 'user' || (message.role === 'assistant' && message.content !== defaultAssistantMessage.content)
+    );
+
+    if (!hasConversation) return;
+
+    const sessionId = currentChatId || `chat-${Date.now()}`;
+    if (!currentChatId) {
+      setCurrentChatId(sessionId);
+    }
+    const firstUserMessage = messages.find((message) => message.role === 'user')?.content.trim();
+    const fallbackTitle = messages.find((message) => message.content && message.content !== defaultAssistantMessage.content)?.content.trim();
+    const titleSource = firstUserMessage || fallbackTitle || 'Wedding planning chat';
+    const sessionTitle = titleSource.length > 56 ? `${titleSource.slice(0, 53)}...` : titleSource;
+    const nextSession: ChatSession = {
+      id: sessionId,
+      title: sessionTitle,
+      updatedAt: new Date().toISOString(),
+      messages
+    };
+
+    setChatSessions((current) => {
+      const withoutCurrent = current.filter((session) => session.id !== sessionId);
+      return [nextSession, ...withoutCurrent].slice(0, 20);
+    });
+  }, [currentChatId, isHydrated, messages]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem(storageKeys.chatSessions, JSON.stringify(chatSessions));
+  }, [chatSessions, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem(storageKeys.currentChatId, currentChatId);
+  }, [currentChatId, isHydrated]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -361,6 +460,38 @@ export default function PlannerWorkspace() {
     setActiveTab('checklist');
     addActivity('Default checklist generated.');
     setStatusMessage(`${copy.defaultTemplate} loaded.`);
+  }
+
+  function startFreshChat(options?: { silent?: boolean }) {
+    setMessages([defaultAssistantMessage]);
+    setInput('');
+    setCurrentChatId(`chat-${Date.now()}`);
+    setActiveTab('chat');
+    setIsChatHistoryOpen(false);
+    if (!options?.silent) {
+      setStatusMessage(language === 'ms' ? 'Chat baru dibuka.' : 'New chat started.');
+    }
+  }
+
+  function startNewChat() {
+    startFreshChat();
+  }
+
+  function openChatSession(session: ChatSession) {
+    setMessages(session.messages.length > 0 ? session.messages : [defaultAssistantMessage]);
+    setCurrentChatId(session.id);
+    setInput('');
+    setActiveTab('chat');
+    setIsChatHistoryOpen(false);
+  }
+
+  function deleteChatSession(sessionId: string) {
+    setChatSessions((current) => current.filter((session) => session.id !== sessionId));
+    if (currentChatId === sessionId) {
+      setMessages([defaultAssistantMessage]);
+      setCurrentChatId(`chat-${Date.now()}`);
+    }
+    setStatusMessage(language === 'ms' ? 'Chat history dibuang.' : 'Chat history removed.');
   }
 
   function buildPlannerContext() {
@@ -731,6 +862,31 @@ export default function PlannerWorkspace() {
     addActivity(`Budget item added: ${category}.`);
   }
 
+  function addSuggestedBudgetItem(item: BudgetItem) {
+    const category = item.category.trim();
+    if (!category) return;
+
+    setBudgetItems((current) => {
+      if (current.some((budgetItem) => budgetItem.category.trim().toLowerCase() === category.toLowerCase())) {
+        return current;
+      }
+
+      return [
+        ...current,
+        {
+          ...item,
+          id: `suggested-${Date.now()}`,
+          category,
+          actual: 0,
+          paid: 0,
+          status: 'not-started'
+        }
+      ];
+    });
+    addActivity(`Budget suggestion added: ${category}.`);
+    setStatusMessage(`Budget suggestion added: ${category}.`);
+  }
+
   function updateBudgetItem(id: string, patch: Partial<BudgetItem>) {
     setBudgetItems((current) => current.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   }
@@ -916,6 +1072,110 @@ export default function PlannerWorkspace() {
     setStatusMessage('Calendar file created. Open it on your phone to add the appointment.');
   }
 
+  function addAllAppointmentsToPhoneCalendar() {
+    const weddingEvent: Appointment[] = plannerProfile.majlisDate
+      ? [{
+          id: 'wedding-day',
+          title: language === 'ms' ? 'Hari majlis' : 'Wedding day',
+          date: plannerProfile.majlisDate,
+          status: 'confirmed',
+          location: plannerProfile.negeri,
+          note: plannerProfile.coupleName || [plannerProfile.groomName, plannerProfile.brideName].filter(Boolean).join(' & ')
+        }]
+      : [];
+    const allEvents = [...weddingEvent, ...appointments];
+    if (allEvents.length === 0) {
+      setStatusMessage('No appointments to export yet.');
+      return;
+    }
+
+    const escapeIcs = (value: string | undefined) =>
+      (value || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const createdAt = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const toLocalIcs = (date: Date) => {
+      const pad = (value: number) => String(value).padStart(2, '0');
+      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+    };
+    const events = allEvents.map((appointment) => {
+      const compactDate = appointment.date.replace(/-/g, '');
+      const timeMatch = appointment.time?.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+      let dateLines = '';
+      if (timeMatch) {
+        const start = new Date(`${appointment.date}T${appointment.time}:00`);
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        dateLines = `DTSTART:${toLocalIcs(start)}\nDTEND:${toLocalIcs(end)}`;
+      } else {
+        const end = new Date(`${appointment.date}T00:00:00`);
+        end.setDate(end.getDate() + 1);
+        dateLines = `DTSTART;VALUE=DATE:${compactDate}\nDTEND;VALUE=DATE:${dateKey(end).replace(/-/g, '')}`;
+      }
+      return [
+        'BEGIN:VEVENT',
+        `UID:${appointment.id}@majlismate.local`,
+        `DTSTAMP:${createdAt}`,
+        dateLines,
+        `SUMMARY:${escapeIcs(appointment.title)}`,
+        appointment.location ? `LOCATION:${escapeIcs(appointment.location)}` : '',
+        appointment.note ? `DESCRIPTION:${escapeIcs(appointment.note)}` : '',
+        'END:VEVENT'
+      ].filter(Boolean).join('\n');
+    });
+
+    downloadTextFile('majlismate-calendar.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MajlisMate//Wedding Planner//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...events, 'END:VCALENDAR'].join('\n'), 'text/calendar;charset=utf-8');
+    setStatusMessage('Calendar file created for all appointments.');
+  }
+
+  function exportPlannerBackup() {
+    const backup = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      plannerProfile,
+      checklistTitle,
+      checklistItems,
+      appointments,
+      budgetItems,
+      guests,
+      savedVendors,
+      activity,
+      language
+    };
+    downloadTextFile('majlismate-backup.json', JSON.stringify(backup, null, 2), 'application/json');
+    setStatusMessage('Planner backup exported.');
+  }
+
+  function importPlannerBackup(file: File | undefined) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const backup = JSON.parse(String(reader.result || '{}')) as Partial<{
+          plannerProfile: PlannerProfile;
+          checklistTitle: string;
+          checklistItems: ChecklistItem[];
+          appointments: Appointment[];
+          budgetItems: BudgetItem[];
+          guests: Guest[];
+          savedVendors: string[];
+          activity: ActivityItem[];
+          language: AppLanguage;
+        }>;
+        if (backup.plannerProfile) setPlannerProfile({ ...defaultPlannerProfile, ...backup.plannerProfile });
+        if (backup.checklistTitle) setChecklistTitle(backup.checklistTitle);
+        if (Array.isArray(backup.checklistItems)) setChecklistItems(backup.checklistItems);
+        if (Array.isArray(backup.appointments)) setAppointments(backup.appointments);
+        if (Array.isArray(backup.budgetItems)) setBudgetItems(backup.budgetItems);
+        if (Array.isArray(backup.guests)) setGuests(backup.guests);
+        if (Array.isArray(backup.savedVendors)) setSavedVendors(backup.savedVendors);
+        if (Array.isArray(backup.activity)) setActivity(backup.activity);
+        if (backup.language === 'ms' || backup.language === 'en') setLanguage(backup.language);
+        setStatusMessage('Planner backup imported.');
+      } catch {
+        setStatusMessage('Could not import that backup file.');
+      }
+    };
+    reader.readAsText(file);
+  }
+
   function exportGuestsCsv() {
     const rows = [
       ['name', 'phone', 'group', 'pax', 'status'],
@@ -923,6 +1183,78 @@ export default function PlannerWorkspace() {
     ];
     const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
     downloadTextFile('majlismate-guests.csv', csv, 'text/csv');
+  }
+
+  function importGuestsCsv(file: File | undefined) {
+    if (!file) return;
+
+    const parseCsvLine = (line: string) => {
+      const cells: string[] = [];
+      let current = '';
+      let isQuoted = false;
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        const nextChar = line[index + 1];
+        if (char === '"' && isQuoted && nextChar === '"') {
+          current += '"';
+          index += 1;
+        } else if (char === '"') {
+          isQuoted = !isQuoted;
+        } else if (char === ',' && !isQuoted) {
+          cells.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    };
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const lines = String(reader.result || '')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+      if (lines.length === 0) {
+        setStatusMessage('No guest rows found in that CSV.');
+        return;
+      }
+
+      const firstRow = parseCsvLine(lines[0]).map((cell) => cell.toLowerCase());
+      const hasHeader = firstRow.some((cell) => ['name', 'phone', 'group', 'pax', 'status'].includes(cell));
+      const dataLines = hasHeader ? lines.slice(1) : lines;
+      const importedGuests = dataLines
+        .map((line, index) => {
+          const [name, phone = '', group = 'Kawan-kawan', pax = '1', status = 'pending'] = parseCsvLine(line);
+          const normalizedStatus = status.toLowerCase();
+          const guestStatus: Guest['status'] =
+            normalizedStatus.includes('confirm') || normalizedStatus.includes('hadir')
+              ? 'confirmed'
+              : normalizedStatus.includes('decline') || normalizedStatus.includes('tidak')
+                ? 'declined'
+                : 'pending';
+          return {
+            id: `${Date.now()}-${index}`,
+            name: name?.trim(),
+            phone: phone.trim(),
+            group: group.trim() || 'Kawan-kawan',
+            pax: Math.max(Number(pax) || 1, 1),
+            status: guestStatus
+          };
+        })
+        .filter((guest): guest is Guest => Boolean(guest.name));
+
+      if (importedGuests.length === 0) {
+        setStatusMessage('No valid guest names found in that CSV.');
+        return;
+      }
+
+      setGuests((current) => [...current, ...importedGuests]);
+      setStatusMessage(`${importedGuests.length} guest${importedGuests.length === 1 ? '' : 's'} imported.`);
+    };
+    reader.readAsText(file);
   }
 
   function exportBudgetCsv() {
@@ -1285,6 +1617,29 @@ export default function PlannerWorkspace() {
         : totalActual > 0
           ? 'On track'
           : 'Ready to plan';
+  const planningPhase =
+    daysLeft === null
+      ? 'Setup phase'
+      : daysLeft > 365
+        ? 'Early planning'
+        : daysLeft > 180
+          ? 'Booking phase'
+          : daysLeft > 90
+            ? 'Preparation phase'
+            : daysLeft > 30
+              ? 'Confirmation phase'
+              : daysLeft >= 0
+                ? 'Final countdown'
+                : 'Post-wedding';
+  const smartReminders = [
+    urgentChecklistCount > 0 ? `${urgentChecklistCount} urgent checklist item${urgentChecklistCount === 1 ? '' : 's'} need attention` : '',
+    soonChecklistCount > 0 ? `${soonChecklistCount} checklist item${soonChecklistCount === 1 ? '' : 's'} coming soon` : '',
+    pendingGuests > 0 ? `${pendingGuests} pending RSVP pax to follow up` : '',
+    remainingToPay > 0 ? `${money(remainingToPay)} remaining payment to track` : '',
+    !globalNextAppointment ? 'Schedule the next vendor or family follow-up' : '',
+    !plannerProfile.majlisDate ? 'Set wedding date to unlock timeline guidance' : ''
+  ].filter(Boolean).slice(0, 5);
+  if (smartReminders.length === 0) smartReminders.push('Everything looks calm. Review today view and keep progress updated.');
   const coupleDisplayName =
     plannerProfile.coupleName.trim() ||
     [plannerProfile.groomName.trim(), plannerProfile.brideName.trim()].filter(Boolean).join(' & ') ||
@@ -1299,6 +1654,12 @@ export default function PlannerWorkspace() {
     plannerProfile.majlisDate ||
     (plannerProfile.negeri ? `${plannerProfile.negeri} - ${plannerProfile.guestTarget} pax` : `${plannerProfile.guestTarget} pax`);
   const selectTab = (tab: ActiveTab) => {
+    if (tab === 'chat') {
+      startFreshChat({ silent: true });
+      setIsSidebarOpen(false);
+      setIsContextAssistantOpen(false);
+      return;
+    }
     setActiveTab(tab);
     setIsSidebarOpen(false);
     setIsContextAssistantOpen(false);
@@ -1351,6 +1712,7 @@ export default function PlannerWorkspace() {
     { tab: 'chat', label: copy.chat, icon: 'chat' },
     { tab: 'checklist', label: copy.checklist, icon: 'checklist' },
     { tab: 'calendar', label: copy.calendar, icon: 'calendar' },
+    { tab: 'budget', label: copy.budget, icon: 'budget' },
     { tab: 'vendors', label: copy.vendors, icon: 'vendors' }
   ];
   const commandItems = [
@@ -1480,7 +1842,7 @@ export default function PlannerWorkspace() {
             <div>
               <strong>{copy.weddingPlanner}</strong>
             </div>
-            <button type="button" aria-label="Close menu" onClick={() => setIsSidebarOpen(false)}>
+            <button type="button" className="sidebar-close-button" aria-label="Close menu" onClick={() => setIsSidebarOpen(false)}>
               ×
             </button>
           </div>
@@ -1565,11 +1927,13 @@ export default function PlannerWorkspace() {
             </button>
           </nav>
           <div className="couple-profile-card">
-            <div className="couple-avatar" aria-hidden="true">{coupleInitials}</div>
-            <div className="couple-profile-copy">
-              <strong>{coupleDisplayName}</strong>
-              <span>{coupleMeta}</span>
-            </div>
+            <button type="button" className="couple-profile-main" onClick={() => setIsSettingsOpen(true)}>
+              <div className="couple-avatar" aria-hidden="true">{coupleInitials}</div>
+              <div className="couple-profile-copy">
+                <strong>{coupleDisplayName}</strong>
+                <span>{coupleMeta}</span>
+              </div>
+            </button>
             <div className="language-toggle compact" aria-label="Language">
               {(['ms', 'en'] as AppLanguage[]).map((option) => (
                 <button
@@ -1610,6 +1974,18 @@ export default function PlannerWorkspace() {
               <strong>MajlisMate</strong>
             </div>
             <div className="workspace-title-actions">
+              {activeTab === 'chat' ? (
+                <button
+                  type="button"
+                  className="workspace-chat-action workspace-history-button"
+                  aria-label="Open chat history"
+                  aria-expanded={isChatHistoryOpen}
+                  title={language === 'ms' ? 'Chat history' : 'Chat history'}
+                  onClick={() => setIsChatHistoryOpen(true)}
+                >
+                  <HistoryIcon />
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="workspace-command-button"
@@ -1632,6 +2008,14 @@ export default function PlannerWorkspace() {
               ) : null}
               <button
                 type="button"
+                className="workspace-profile-button"
+                aria-label="Open couple profile and settings"
+                onClick={() => setIsSettingsOpen(true)}
+              >
+                {coupleInitials}
+              </button>
+              <button
+                type="button"
                 className="workspace-checklist-shortcut"
                 aria-label={copy.checklistShortcut}
                 onClick={() => selectTab('checklist')}
@@ -1643,8 +2027,6 @@ export default function PlannerWorkspace() {
           {activeTab === 'dashboard' ? (
         <DashboardPanel
           plannerProfile={plannerProfile}
-          setPlannerProfile={setPlannerProfile}
-          completeOnboarding={completeOnboarding}
           daysLeft={daysLeft}
           planningProgress={planningProgress}
           completedCount={completedCount}
@@ -1661,6 +2043,8 @@ export default function PlannerWorkspace() {
           activity={activity}
           nextAppointment={globalNextAppointment}
           budgetAlert={budgetAlert}
+          planningPhase={planningPhase}
+          smartReminders={smartReminders}
           onAskToday={() => {
             setActiveTab('chat');
             setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');
@@ -1675,19 +2059,6 @@ export default function PlannerWorkspace() {
               {greetingName}
             </h2>
             <p>{copy.welcomeText}</p>
-            {isProfileIncomplete ? (
-              <div className="chat-onboarding-card">
-                <strong>{language === 'ms' ? 'Setup cepat untuk planner you' : 'Quick setup for your planner'}</strong>
-                <p>
-                  {language === 'ms'
-                    ? 'Tambah nama pasangan, tarikh, tetamu, dan bajet supaya checklist dan cadangan jadi lebih tepat.'
-                    : 'Add couple names, date, guests, and budget so checklists and suggestions become more accurate.'}
-                </p>
-                <button type="button" onClick={() => selectTab('dashboard')}>
-                  {language === 'ms' ? 'Lengkapkan setup' : 'Complete setup'}
-                </button>
-              </div>
-            ) : null}
           </div>
           <div className="starter-grid">
             {quickActionPills.map((pill) => (
@@ -1984,6 +2355,9 @@ export default function PlannerWorkspace() {
               <button type="button" onClick={() => changeCalendarMonth(1)} aria-label="Next month">
                 &gt;
               </button>
+              <button type="button" className="utility-action" onClick={addAllAppointmentsToPhoneCalendar} title="Download a calendar file for all appointments">
+                Download calendar
+              </button>
               <button type="button" className="primary-action" onClick={startAppointmentAssistant}>
                 Schedule with AI
               </button>
@@ -2033,6 +2407,54 @@ export default function PlannerWorkspace() {
               </button>
             ))}
           </div>
+
+          <section className="mobile-calendar-agenda" aria-label="Mobile calendar agenda">
+            <div className="mobile-agenda-header">
+              <div>
+                <p className="eyebrow">{language === 'ms' ? 'Agenda' : 'Agenda'}</p>
+                <h4>{language === 'ms' ? 'Perkara terdekat' : 'Coming up'}</h4>
+              </div>
+              <button type="button" onClick={startAppointmentAssistant}>
+                {language === 'ms' ? 'Tambah' : 'Add'}
+              </button>
+            </div>
+            {plannerProfile.majlisDate ? (
+              <button
+                type="button"
+                className="mobile-agenda-card wedding"
+                onClick={() => {
+                  const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
+                  setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
+                  setSelectedDate(plannerProfile.majlisDate);
+                }}
+              >
+                <span>{language === 'ms' ? 'Hari majlis' : 'Wedding day'}</span>
+                <strong>{plannerProfile.coupleName || [plannerProfile.groomName, plannerProfile.brideName].filter(Boolean).join(' & ') || 'MajlisMate'}</strong>
+                <small>{plannerProfile.majlisDate}</small>
+              </button>
+            ) : null}
+            {selectedMonthAppointments.slice(0, 4).map((appointment) => (
+              <button
+                key={appointment.id}
+                type="button"
+                className="mobile-agenda-card"
+                onClick={() => {
+                  setSelectedDate(appointment.date);
+                  setAppointmentDraft((current) => ({ ...current, date: appointment.date }));
+                }}
+              >
+                <span>{appointment.date}{appointment.time ? `, ${appointment.time}` : ''}</span>
+                <strong>{appointment.title}</strong>
+                <small>{appointment.vendor || appointment.location || appointment.status || 'Planned'}</small>
+              </button>
+            ))}
+            {selectedMonthAppointments.length === 0 && !plannerProfile.majlisDate ? (
+              <div className="mobile-agenda-empty">
+                <strong>{language === 'ms' ? 'Belum ada jadual.' : 'No schedule yet.'}</strong>
+                <span>{language === 'ms' ? 'Tambah appointment vendor atau tarikh majlis.' : 'Add a vendor appointment or wedding date.'}</span>
+              </div>
+            ) : null}
+          </section>
 
           <div className="calendar-workspace">
             <div className="calendar-grid" aria-label={`${monthLabel(calendarMonth)} calendar`}>
@@ -2152,8 +2574,8 @@ export default function PlannerWorkspace() {
                     </div>
                   </dl>
                   <div className="agenda-actions">
-                    <button type="button" onClick={() => addAppointmentToPhoneCalendar(weddingDayAppointment)}>
-                      Add to phone calendar
+                    <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(weddingDayAppointment)} title="Download this event as a calendar file">
+                      Add to calendar
                     </button>
                     <button type="button" onClick={() => selectTab('dashboard')}>
                       Edit wedding details
@@ -2197,8 +2619,8 @@ export default function PlannerWorkspace() {
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'done')}>
                           Done
                         </button>
-                        <button type="button" onClick={() => addAppointmentToPhoneCalendar(appointment)}>
-                          Add to phone calendar
+                        <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(appointment)} title="Download this event as a calendar file">
+                          Add to calendar
                         </button>
                         <button type="button" onClick={() => removeAppointment(appointment.id)}>
                           Remove
@@ -2292,13 +2714,13 @@ export default function PlannerWorkspace() {
             </div>
             {appointments.length > 0 ? (
               <div className="tool-actions">
-                <button type="button" onClick={copyAppointments}>
+                <button type="button" className="utility-action" onClick={copyAppointments}>
                   Copy
                 </button>
-                <button type="button" onClick={() => exportAppointments('csv')}>
+                <button type="button" className="utility-action" onClick={() => exportAppointments('csv')}>
                   Export CSV
                 </button>
-                <button type="button" onClick={() => exportAppointments('json')}>
+                <button type="button" className="utility-action" onClick={() => exportAppointments('json')}>
                   Export JSON
                 </button>
               </div>
@@ -2320,8 +2742,8 @@ export default function PlannerWorkspace() {
                   <button type="button" onClick={() => removeAppointment(appointment.id)}>
                     Remove
                   </button>
-                  <button type="button" onClick={() => addAppointmentToPhoneCalendar(appointment)}>
-                    Phone calendar
+                  <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(appointment)} title="Download this event as a calendar file">
+                    Add to calendar
                   </button>
                 </article>
               ))
@@ -2336,9 +2758,11 @@ export default function PlannerWorkspace() {
       ) : activeTab === 'budget' ? (
         <BudgetPanel
           budgetItems={budgetItems}
+          budgetSuggestions={budgetSuggestions}
           budgetDraft={budgetDraft}
           setBudgetDraft={setBudgetDraft}
           addBudgetItem={addBudgetItem}
+          addSuggestedBudgetItem={addSuggestedBudgetItem}
           updateBudgetItem={updateBudgetItem}
           removeBudgetItem={removeBudgetItem}
           exportBudgetCsv={exportBudgetCsv}
@@ -2355,6 +2779,7 @@ export default function PlannerWorkspace() {
           updateGuest={updateGuest}
           removeGuest={removeGuest}
           exportGuestsCsv={exportGuestsCsv}
+          importGuestsCsv={importGuestsCsv}
           confirmedGuests={confirmedGuests}
           pendingGuests={pendingGuests}
           declinedGuests={declinedGuests}
@@ -2385,11 +2810,11 @@ export default function PlannerWorkspace() {
             <aside className="planner-assistant-rail assistant-drawer" aria-label="Menu assistant">
               <div className="assistant-drawer-header">
                 <div>
-                  <span>Context assistant</span>
+                  <span><RobotIcon /> {language === 'ms' ? 'Planner AI' : 'Planner AI'}</span>
                   <strong>{menuAssistantPrompts[activeMenuTab].title}</strong>
                 </div>
                 <button type="button" aria-label="Close context assistant" onClick={() => setIsContextAssistantOpen(false)}>
-                  Close
+                  <CloseIcon />
                 </button>
               </div>
               <MenuAssistant
@@ -2405,6 +2830,214 @@ export default function PlannerWorkspace() {
                 onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
                 onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
               />
+            </aside>
+          </>
+        ) : null}
+        {isChatHistoryOpen ? (
+          <>
+            <button
+              type="button"
+              className="chat-history-backdrop"
+              aria-label="Close chat history"
+              onClick={() => setIsChatHistoryOpen(false)}
+            />
+            <aside className="chat-history-drawer" aria-label="Chat history">
+              <div className="chat-history-header">
+                <div>
+                  <p className="eyebrow">{language === 'ms' ? 'Chat history' : 'Chat history'}</p>
+                  <h3>{language === 'ms' ? 'Perbualan lama' : 'Previous chats'}</h3>
+                </div>
+                <button type="button" aria-label="Close chat history" onClick={() => setIsChatHistoryOpen(false)}>
+                  <CloseIcon />
+                </button>
+              </div>
+              <div className="chat-history-list">
+                {chatSessions.length > 0 ? (
+                  chatSessions.map((session) => (
+                    <article key={session.id} className={session.id === currentChatId ? 'active' : ''}>
+                      <button type="button" onClick={() => openChatSession(session)}>
+                        <strong>{session.title}</strong>
+                        <span>
+                          {new Date(session.updatedAt).toLocaleString(language === 'ms' ? 'ms-MY' : 'en-MY', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short'
+                          })}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        className="chat-history-delete"
+                        aria-label={`Delete ${session.title}`}
+                        onClick={() => deleteChatSession(session.id)}
+                      >
+                        <TrashIcon />
+                      </button>
+                    </article>
+                  ))
+                ) : (
+                  <div className="empty-state action-empty">
+                    <strong>{language === 'ms' ? 'Belum ada chat history.' : 'No chat history yet.'}</strong>
+                    <span>{language === 'ms' ? 'Mula chat dan ia akan disimpan di sini.' : 'Start chatting and conversations will appear here.'}</span>
+                  </div>
+                )}
+              </div>
+            </aside>
+          </>
+        ) : null}
+        {isSettingsOpen ? (
+          <>
+            <button
+              type="button"
+              className="settings-drawer-backdrop"
+              aria-label="Close couple profile"
+              onClick={() => setIsSettingsOpen(false)}
+            />
+            <aside className="settings-drawer" aria-label="Couple profile and planner settings">
+              <div className="settings-drawer-header">
+                <div>
+                  <p className="eyebrow">{language === 'ms' ? 'Profil pasangan' : 'Couple profile'}</p>
+                  <h3>{language === 'ms' ? 'Tetapan MajlisMate' : 'MajlisMate settings'}</h3>
+                </div>
+                <button type="button" className="settings-close-button" onClick={() => setIsSettingsOpen(false)} aria-label="Close settings">
+                  <CloseIcon />
+                </button>
+              </div>
+
+              <form
+                className="settings-form"
+                onSubmit={(event) => {
+                  completeOnboarding(event);
+                  setIsSettingsOpen(false);
+                }}
+              >
+                <div className="settings-section">
+                  <span>{language === 'ms' ? 'Maklumat utama' : 'Core details'}</span>
+                  <label>
+                    Couple display name
+                    <input
+                      value={plannerProfile.coupleName}
+                      onChange={(event) => setPlannerProfile((current) => ({ ...current, coupleName: event.target.value }))}
+                      placeholder="Aiman & Nabila"
+                    />
+                  </label>
+                  <div className="settings-two-column">
+                    <label>
+                      Groom
+                      <input
+                        value={plannerProfile.groomName}
+                        onChange={(event) => setPlannerProfile((current) => ({ ...current, groomName: event.target.value }))}
+                        placeholder="Groom name"
+                      />
+                    </label>
+                    <label>
+                      Bride
+                      <input
+                        value={plannerProfile.brideName}
+                        onChange={(event) => setPlannerProfile((current) => ({ ...current, brideName: event.target.value }))}
+                        placeholder="Bride name"
+                      />
+                    </label>
+                  </div>
+                  <div className="settings-two-column">
+                    <label>
+                      Wedding date
+                      <input
+                        type="date"
+                        value={plannerProfile.majlisDate}
+                        onChange={(event) => {
+                          setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }));
+                          if (event.target.value) {
+                            const weddingDate = new Date(`${event.target.value}T00:00:00`);
+                            setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
+                            setSelectedDate(event.target.value);
+                          }
+                        }}
+                      />
+                    </label>
+                    <label>
+                      Negeri
+                      <select
+                        value={plannerProfile.negeri}
+                        onChange={(event) => setPlannerProfile((current) => ({ ...current, negeri: event.target.value }))}
+                      >
+                        <option value="">Select negeri</option>
+                        {profileStates.map((state) => <option key={state} value={state}>{state}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="settings-section">
+                  <span>{language === 'ms' ? 'Perancangan' : 'Planning'}</span>
+                  <div className="settings-two-column">
+                    <label>
+                      Budget target
+                      <input
+                        type="number"
+                        min="0"
+                        value={plannerProfile.totalBudget}
+                        onChange={(event) => setPlannerProfile((current) => ({ ...current, totalBudget: Number(event.target.value) || 0 }))}
+                      />
+                    </label>
+                    <label>
+                      Guest target
+                      <input
+                        type="number"
+                        min="0"
+                        value={plannerProfile.guestTarget}
+                        onChange={(event) => setPlannerProfile((current) => ({ ...current, guestTarget: Number(event.target.value) || 0 }))}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    Wedding style
+                    <input
+                      value={plannerProfile.weddingStyle}
+                      onChange={(event) => setPlannerProfile((current) => ({ ...current, weddingStyle: event.target.value }))}
+                      placeholder="Classic, garden, hotel, intimate..."
+                    />
+                  </label>
+                  <label>
+                    Key contact
+                    <input
+                      value={plannerProfile.keyContact}
+                      onChange={(event) => setPlannerProfile((current) => ({ ...current, keyContact: event.target.value }))}
+                      placeholder="Planner, family contact, or PIC"
+                    />
+                  </label>
+                  <div className="settings-language-row">
+                    <span>Language</span>
+                    <div className="language-toggle compact" aria-label="Language">
+                      {(['ms', 'en'] as AppLanguage[]).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={language === option ? 'active' : ''}
+                          onClick={() => setLanguage(option)}
+                          aria-pressed={language === option}
+                        >
+                          {languageLabels[option]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-primary-actions">
+                  <button type="submit">{language === 'ms' ? 'Simpan profil' : 'Save profile'}</button>
+                  <button type="button" onClick={() => {
+                    if (plannerProfile.majlisDate) {
+                      const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
+                      setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
+                      setSelectedDate(plannerProfile.majlisDate);
+                      setActiveTab('calendar');
+                      setIsSettingsOpen(false);
+                    }
+                  }} disabled={!plannerProfile.majlisDate}>
+                    {language === 'ms' ? 'Lihat hari majlis' : 'View wedding day'}
+                  </button>
+                </div>
+              </form>
             </aside>
           </>
         ) : null}

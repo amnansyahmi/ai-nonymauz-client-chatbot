@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
+import { useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
 import type { ActivityItem, Appointment, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
 
@@ -23,8 +23,6 @@ const malaysiaStates = [
 
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
-  setPlannerProfile: Dispatch<SetStateAction<PlannerProfile>>;
-  completeOnboarding: (event: FormEvent) => void;
   daysLeft: number | null;
   planningProgress: number;
   completedCount: number;
@@ -41,13 +39,13 @@ type DashboardPanelProps = {
   activity: ActivityItem[];
   nextAppointment?: Appointment;
   budgetAlert: string;
+  planningPhase: string;
+  smartReminders: string[];
   onAskToday: () => void;
 };
 
 export function DashboardPanel({
   plannerProfile,
-  setPlannerProfile,
-  completeOnboarding,
   daysLeft,
   planningProgress,
   completedCount,
@@ -64,18 +62,10 @@ export function DashboardPanel({
   activity,
   nextAppointment,
   budgetAlert,
+  planningPhase,
+  smartReminders,
   onAskToday
 }: DashboardPanelProps) {
-  const setupSteps = [
-    plannerProfile.coupleName.trim(),
-    plannerProfile.groomName.trim(),
-    plannerProfile.brideName.trim(),
-    plannerProfile.majlisDate,
-    plannerProfile.negeri,
-    plannerProfile.totalBudget > 0 || plannerProfile.guestTarget > 0 ? 'planning-scale' : ''
-  ];
-  const setupProgress = setupSteps.filter(Boolean).length;
-
   return (
     <div className="dashboard-panel">
       <section className="today-command-center" aria-label="Today planning overview">
@@ -101,96 +91,30 @@ export function DashboardPanel({
             <strong>{budgetAlert}</strong>
             <p>Review planned, actual, paid, and balance.</p>
           </article>
+          <article>
+            <span>Planning phase</span>
+            <strong>{planningPhase}</strong>
+            <p>{plannerProfile.majlisDate || 'Set wedding date in settings.'}</p>
+          </article>
         </div>
       </section>
 
-      <form className="wedding-profile-card" onSubmit={completeOnboarding}>
-        <div className="profile-card-intro">
-          <p className="eyebrow">Wedding profile</p>
-          <h3>{plannerProfile.completed ? 'Couple details' : 'Set up your couple profile'}</h3>
-          <p>These details personalize greetings, deadlines, budget suggestions, RSVP targets, calendar events, and AI context.</p>
-          <div className="setup-progress" aria-label={`${setupProgress} of 6 setup steps completed`}>
-            <span>{setupProgress}/6 complete</span>
-            <div className="progress-track"><span style={{ width: `${(setupProgress / 6) * 100}%` }} /></div>
+      <section className="planner-section reminder-section">
+        <div className="section-row">
+          <div>
+            <p className="eyebrow">Smart reminders</p>
+            <h3>Recommended focus</h3>
           </div>
         </div>
-
-        <div className="profile-fields">
-          <label className="profile-field-wide">
-            <span>Couple display name</span>
-            <input
-              value={plannerProfile.coupleName}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, coupleName: event.target.value }))}
-              placeholder="e.g. Aisyah & Amir"
-              aria-label="Couple display name"
-            />
-          </label>
-          <label>
-            <span>Groom name</span>
-            <input
-              value={plannerProfile.groomName}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, groomName: event.target.value }))}
-              placeholder="e.g. Amir"
-              aria-label="Groom name"
-            />
-          </label>
-          <label>
-            <span>Bride name</span>
-            <input
-              value={plannerProfile.brideName}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, brideName: event.target.value }))}
-              placeholder="e.g. Aisyah"
-              aria-label="Bride name"
-            />
-          </label>
-          <label>
-            <span>Majlis date</span>
-            <input
-              type="date"
-              value={plannerProfile.majlisDate}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
-              aria-label="Majlis date"
-            />
-          </label>
-          <label>
-            <span>Location</span>
-            <select
-              value={plannerProfile.negeri}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, negeri: event.target.value }))}
-              aria-label="Majlis location"
-            >
-              {malaysiaStates.map((state) => (
-                <option key={state} value={state}>{state}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>Total budget</span>
-            <input
-              type="number"
-              value={plannerProfile.totalBudget}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, totalBudget: Number(event.target.value) }))}
-              placeholder="RM"
-              aria-label="Total budget"
-            />
-          </label>
-          <label>
-            <span>Guest target</span>
-            <input
-              type="number"
-              value={plannerProfile.guestTarget}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, guestTarget: Number(event.target.value) }))}
-              placeholder="Pax"
-              aria-label="Guest target"
-            />
-          </label>
-        </div>
-
-        <div className="profile-card-footer">
-          <span>{plannerProfile.coupleName || 'Saved locally on this device'}</span>
-          <button type="submit">{plannerProfile.completed ? 'Update profile' : 'Save profile'}</button>
-        </div>
-      </form>
+        <ul className="action-list reminder-list">
+          {smartReminders.map((reminder) => (
+            <li key={reminder}>
+              <strong>{reminder}</strong>
+              <span>Suggested by current planner data</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <div className="dashboard-grid">
         <article className="metric-card hero-metric">
@@ -269,9 +193,11 @@ export function DashboardPanel({
 
 type BudgetPanelProps = {
   budgetItems: BudgetItem[];
+  budgetSuggestions: BudgetItem[];
   budgetDraft: BudgetItem;
   setBudgetDraft: Dispatch<SetStateAction<BudgetItem>>;
   addBudgetItem: (event: FormEvent) => void;
+  addSuggestedBudgetItem: (item: BudgetItem) => void;
   updateBudgetItem: (id: string, patch: Partial<BudgetItem>) => void;
   removeBudgetItem: (id: string) => void;
   exportBudgetCsv: () => void;
@@ -282,9 +208,11 @@ type BudgetPanelProps = {
 
 export function BudgetPanel({
   budgetItems,
+  budgetSuggestions,
   budgetDraft,
   setBudgetDraft,
   addBudgetItem,
+  addSuggestedBudgetItem,
   updateBudgetItem,
   removeBudgetItem,
   exportBudgetCsv,
@@ -294,6 +222,7 @@ export function BudgetPanel({
 }: BudgetPanelProps) {
   const [budgetView, setBudgetView] = useState<'all' | 'attention' | 'unpaid' | 'done'>('all');
   const [expandedBudgetId, setExpandedBudgetId] = useState<string | null>(null);
+  const [isBudgetAddOpen, setIsBudgetAddOpen] = useState(false);
   const remainingToPay = Math.max(totalActual - totalPaid, 0);
   const plannedBalance = totalPlanned - totalActual;
   const paidProgress = totalActual > 0 ? Math.min(100, Math.round((totalPaid / totalActual) * 100)) : 0;
@@ -320,6 +249,8 @@ export function BudgetPanel({
       : 'Ready to plan';
   const largestActualItem = [...budgetItems].sort((first, second) => second.actual - first.actual)[0];
   const paidBarWidth = totalActual > 0 ? paidProgress : 0;
+  const normalizedBudgetCategories = budgetItems.map((item) => item.category.trim().toLowerCase());
+  const missingSuggestions = budgetSuggestions.filter((item) => !normalizedBudgetCategories.includes(item.category.trim().toLowerCase())).slice(0, 6);
 
   return (
     <div className="planner-panel budget-panel budget-command-center">
@@ -331,7 +262,8 @@ export function BudgetPanel({
         </div>
         <div className="budget-hero-actions">
           <span className={overBudgetItems.length > 0 ? 'budget-health warning' : 'budget-health'}>{budgetHealth}</span>
-          <button type="button" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>Export CSV</button>
+          <button type="button" className="primary-action" onClick={() => setIsBudgetAddOpen(true)}>Add category</button>
+          <button type="button" className="utility-action" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>Export CSV</button>
         </div>
       </div>
 
@@ -459,13 +391,22 @@ export function BudgetPanel({
               <div className="empty-state action-empty">
                 <strong>No budget items in this view.</strong>
                 <span>Switch to All or add a new category.</span>
+                <button type="button" onClick={() => setIsBudgetAddOpen(true)}>Add category</button>
               </div>
             )}
           </div>
         </section>
 
-        <aside className="budget-side-panel">
-          <form className="budget-add-card budget-add-modern" onSubmit={addBudgetItem}>
+        <aside className={`budget-side-panel ${isBudgetAddOpen ? 'add-open' : ''}`}>
+          {isBudgetAddOpen ? (
+          <form
+            className="budget-add-card budget-add-modern"
+            onSubmit={(event) => {
+              const shouldClose = budgetDraft.category.trim().length > 0;
+              addBudgetItem(event);
+              if (shouldClose) setIsBudgetAddOpen(false);
+            }}
+          >
             <div>
               <p className="eyebrow">New category</p>
               <h4>Add budget item</h4>
@@ -486,8 +427,12 @@ export function BudgetPanel({
           <span>Paid</span>
           <input type="number" value={budgetDraft.paid} onChange={(event) => setBudgetDraft((current) => ({ ...current, paid: Number(event.target.value) }))} placeholder="RM" aria-label="Paid amount" />
         </label>
-        <button type="submit" disabled={!budgetDraft.category.trim()}>Add item</button>
+        <div className="budget-edit-actions">
+          <button type="submit" disabled={!budgetDraft.category.trim()}>Add item</button>
+          <button type="button" className="danger" onClick={() => setIsBudgetAddOpen(false)}>Cancel</button>
+        </div>
           </form>
+          ) : null}
 
           <div className="budget-insight-card">
             <span>Quick insight</span>
@@ -497,6 +442,27 @@ export function BudgetPanel({
                 ? `${money(largestActualItem.actual)} is currently the largest actual cost.`
                 : 'Add actual costs to see which categories need attention.'}
             </p>
+          </div>
+
+          <div className="budget-suggestion-card">
+            <span>Budget suggestions</span>
+            <strong>Common costs couples forget</strong>
+            <p>Add these when they apply to your majlis. You can edit the estimate later.</p>
+            {missingSuggestions.length > 0 ? (
+              <div className="budget-suggestion-list">
+                {missingSuggestions.map((item) => (
+                  <button key={item.id} type="button" onClick={() => addSuggestedBudgetItem(item)}>
+                    <span>
+                      <strong>{item.category}</strong>
+                      <small>{item.note}</small>
+                    </span>
+                    <em>{money(item.planned)}</em>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <small>Nice, you already covered the common suggestion list.</small>
+            )}
           </div>
         </aside>
       </div>
@@ -512,6 +478,7 @@ type RsvpPanelProps = {
   updateGuest: (id: string, patch: Partial<Guest>) => void;
   removeGuest: (id: string) => void;
   exportGuestsCsv: () => void;
+  importGuestsCsv: (file: File | undefined) => void;
   confirmedGuests: number;
   pendingGuests: number;
   declinedGuests: number;
@@ -525,12 +492,15 @@ export function RsvpPanel({
   updateGuest,
   removeGuest,
   exportGuestsCsv,
+  importGuestsCsv,
   confirmedGuests,
   pendingGuests,
   declinedGuests
 }: RsvpPanelProps) {
   const [guestView, setGuestView] = useState<'all' | 'pending' | 'confirmed' | 'declined'>('all');
   const [expandedGuestId, setExpandedGuestId] = useState<string | null>(null);
+  const [isGuestAddOpen, setIsGuestAddOpen] = useState(false);
+  const guestImportRef = useRef<HTMLInputElement | null>(null);
   const totalPax = guests.reduce((sum, guest) => sum + guest.pax, 0);
   const guestGroups = Array.from(new Set(guests.map((guest) => guest.group).filter(Boolean)));
   const filteredGuests = guests.filter((guest) => guestView === 'all' || guest.status === guestView);
@@ -555,7 +525,21 @@ export function RsvpPanel({
           <h3>Guest list and headcount</h3>
           <p>Track attendance by household, group, and pax without turning the page into a spreadsheet.</p>
         </div>
-        <button type="button" onClick={exportGuestsCsv} disabled={guests.length === 0}>Export CSV</button>
+        <div className="guest-header-actions">
+          <button type="button" className="primary-action" onClick={() => setIsGuestAddOpen(true)}>Add guest</button>
+          <button type="button" className="utility-action" onClick={() => guestImportRef.current?.click()}>Import CSV</button>
+          <button type="button" className="utility-action" onClick={exportGuestsCsv} disabled={guests.length === 0}>Export CSV</button>
+          <input
+            ref={guestImportRef}
+            className="visually-hidden"
+            type="file"
+            accept=".csv,text/csv"
+            onChange={(event) => {
+              importGuestsCsv(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+        </div>
       </div>
 
       <div className="guest-focus-grid" aria-label="Guest headcount summary">
@@ -648,13 +632,22 @@ export function RsvpPanel({
               <div className="empty-state action-empty">
                 <strong>No guests in this view.</strong>
                 <span>Switch tabs or add a guest from the side panel.</span>
+                <button type="button" onClick={() => setIsGuestAddOpen(true)}>Add guest</button>
               </div>
             )}
           </div>
         </section>
 
-        <aside className="guest-side-panel">
-          <form className="guest-add-card" onSubmit={addGuest}>
+        <aside className={`guest-side-panel ${isGuestAddOpen ? 'add-open' : ''}`}>
+          {isGuestAddOpen ? (
+          <form
+            className="guest-add-card"
+            onSubmit={(event) => {
+              const shouldClose = guestDraft.name.trim().length > 0;
+              addGuest(event);
+              if (shouldClose) setIsGuestAddOpen(false);
+            }}
+          >
             <div>
               <p className="eyebrow">New guest</p>
               <h4>Add guest</h4>
@@ -675,8 +668,12 @@ export function RsvpPanel({
               <option value="confirmed">Confirm Hadir</option>
               <option value="declined">Tidak Hadir</option>
             </select>
-            <button type="submit" disabled={!guestDraft.name.trim()}>Add guest</button>
+            <div className="guest-edit-actions">
+              <button type="submit" disabled={!guestDraft.name.trim()}>Add guest</button>
+              <button type="button" className="danger" onClick={() => setIsGuestAddOpen(false)}>Cancel</button>
+            </div>
           </form>
+          ) : null}
 
           <div className="guest-insight-card">
             <span>Headcount insight</span>
@@ -714,6 +711,7 @@ export function VendorsPanel({
   askVendorQuestions,
   addVendorToBudget
 }: VendorsPanelProps) {
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const mapQueryBase = (vendor: Vendor) => encodeURIComponent(`${vendor.name} ${vendor.category} ${vendor.negeri} Malaysia`);
   const selectedMapVendor = filteredVendors.find((vendor) => savedVendors.includes(vendor.id)) || filteredVendors[0];
 
@@ -794,6 +792,7 @@ export function VendorsPanel({
                 {savedVendors.includes(vendor.id) ? 'Shortlisted' : 'Shortlist'}
               </button>
               <button type="button" className="primary" onClick={() => askVendorMessage(vendor)}>Draft WhatsApp</button>
+              <button type="button" onClick={() => setSelectedVendor(vendor)}>Details</button>
               <button type="button" onClick={() => askVendorQuestions(vendor)}>Questions</button>
               <button type="button" onClick={() => addVendorToBudget(vendor)}>Add to budget</button>
               <a href={`https://www.google.com/maps/search/?api=1&query=${mapQueryBase(vendor)}`} target="_blank" rel="noreferrer">
@@ -803,6 +802,56 @@ export function VendorsPanel({
           </article>
         ))}
       </div>
+
+      {selectedVendor ? (
+        <>
+          <button
+            type="button"
+            className="vendor-detail-backdrop"
+            aria-label="Close vendor details"
+            onClick={() => setSelectedVendor(null)}
+          />
+          <aside className="vendor-detail-drawer" aria-label={`${selectedVendor.name} vendor details`}>
+            <div className="vendor-detail-header">
+              <div>
+                <p className="eyebrow">{selectedVendor.category}</p>
+                <h3>{selectedVendor.name}</h3>
+                <span>{selectedVendor.negeri} - {selectedVendor.rating.toFixed(1)} rating</span>
+              </div>
+              <button type="button" onClick={() => setSelectedVendor(null)}>Close</button>
+            </div>
+            <iframe
+              title={`Google Maps detail for ${selectedVendor.name}`}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              src={`https://www.google.com/maps?q=${mapQueryBase(selectedVendor)}&output=embed`}
+            />
+            <div className="vendor-detail-body">
+              <article>
+                <span>Price range</span>
+                <strong>{money(selectedVendor.minPrice)} - {money(selectedVendor.maxPrice)}</strong>
+              </article>
+              <article>
+                <span>Contact</span>
+                <strong>{selectedVendor.contact}</strong>
+                {selectedVendor.instagram ? <p>{selectedVendor.instagram}</p> : null}
+              </article>
+              <article>
+                <span>Notes</span>
+                <p>{selectedVendor.note}</p>
+              </article>
+            </div>
+            <div className="vendor-detail-actions">
+              <button type="button" className="primary" onClick={() => askVendorMessage(selectedVendor)}>Draft WhatsApp</button>
+              <button type="button" onClick={() => askVendorQuestions(selectedVendor)}>Questions</button>
+              <button type="button" onClick={() => addVendorToBudget(selectedVendor)}>Add to budget</button>
+              <a href={`https://www.google.com/maps/dir/?api=1&destination=${mapQueryBase(selectedVendor)}`} target="_blank" rel="noreferrer">
+                Directions
+              </a>
+            </div>
+          </aside>
+        </>
+      ) : null}
     </div>
   );
 }
