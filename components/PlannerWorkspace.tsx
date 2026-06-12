@@ -6,7 +6,7 @@ import {
   defaultAssistantMessage,
   defaultBudgetItems,
   defaultPlannerProfile,
-  starterQuestions,
+  languageLabels,
   storageKeys,
   vendorDirectory
 } from './planner/data';
@@ -14,6 +14,7 @@ import ChatWidget from './ChatWidget';
 import MenuAssistant, {
   createMenuAssistantMessages,
   createMenuInputs,
+  menuAssistantPrompts,
   type MenuAssistantTab
 } from './planner/MenuAssistant';
 import { BudgetPanel, DashboardPanel, RsvpPanel, VendorsPanel } from './planner/WorkspacePanels';
@@ -26,6 +27,7 @@ import type {
   BudgetItem,
   CalendarDay,
   ChecklistItem,
+  AppLanguage,
   Guest,
   Message,
   PlannerProfile,
@@ -42,6 +44,7 @@ import {
   formatChecklistText,
   generateDefaultChecklist,
   getCalendarDays,
+  localizedValue,
   money,
   monthLabel,
   parseAppointment,
@@ -55,9 +58,74 @@ import {
   wantsVendorMessage
 } from './planner/utils';
 
+function MenuIcon({ name }: { name: 'dashboard' | 'chat' | 'checklist' | 'calendar' | 'budget' | 'guests' | 'vendors' }) {
+  const common = { 'aria-hidden': true, viewBox: '0 0 24 24' } as const;
+
+  switch (name) {
+    case 'dashboard':
+      return (
+        <svg {...common}>
+          <path d="M4 4h7v7H4zM13 4h7v5h-7zM13 11h7v9h-7zM4 13h7v7H4z" />
+        </svg>
+      );
+    case 'chat':
+      return (
+        <svg {...common}>
+          <path d="M5 5h14v10H8l-3 3V5Z" />
+        </svg>
+      );
+    case 'checklist':
+      return (
+        <svg {...common}>
+          <path d="m5 7 2 2 4-4M13 8h6M5 15l2 2 4-4M13 16h6" />
+        </svg>
+      );
+    case 'calendar':
+      return (
+        <svg {...common}>
+          <path d="M7 3v4M17 3v4M4 9h16M5 5h14v15H5z" />
+        </svg>
+      );
+    case 'budget':
+      return (
+        <svg {...common}>
+          <path d="M4 7h16v11H4zM4 10h16M8 15h4" />
+        </svg>
+      );
+    case 'guests':
+      return (
+        <svg {...common}>
+          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 20a6 6 0 0 1 12 0M17 11a2.5 2.5 0 1 0 0-5M16 15a5 5 0 0 1 5 5" />
+        </svg>
+      );
+    case 'vendors':
+      return (
+        <svg {...common}>
+          <path d="M6 10h12l-1 10H7L6 10ZM9 10a3 3 0 0 1 6 0M8 14h8" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
+function RobotIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M12 4V2M8 4h8a4 4 0 0 1 4 4v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8a4 4 0 0 1 4-4Z" />
+      <path d="M8 12h.01M16 12h.01M9 16h6" />
+    </svg>
+  );
+}
+
 export default function PlannerWorkspace() {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
   const [input, setInput] = useState('');
+  const [language, setLanguage] = useState<AppLanguage>('ms');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isContextAssistantOpen, setIsContextAssistantOpen] = useState(false);
+  const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
   const [menuMessages, setMenuMessages] = useState<Record<MenuAssistantTab, Message[]>>(() => createMenuAssistantMessages());
   const [menuInputs, setMenuInputs] = useState<Record<MenuAssistantTab, string>>(() => createMenuInputs());
   const [menuLoading, setMenuLoading] = useState<MenuAssistantTab | null>(null);
@@ -66,6 +134,7 @@ export default function PlannerWorkspace() {
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [checklistFilter, setChecklistFilter] = useState('all');
+  const [checklistView, setChecklistView] = useState<'next' | 'timeline' | 'category' | 'completed'>('next');
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
@@ -101,6 +170,7 @@ export default function PlannerWorkspace() {
     status: 'planned',
     note: ''
   });
+  const [pendingAppointment, setPendingAppointment] = useState<Appointment | null>(null);
   const [appointmentAssistantActive, setAppointmentAssistantActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -121,8 +191,10 @@ export default function PlannerWorkspace() {
     const storedGuests = safeJsonParse<Guest[]>(localStorage.getItem(storageKeys.guests), []);
     const storedSavedVendors = safeJsonParse<string[]>(localStorage.getItem(storageKeys.savedVendors), []);
     const storedActivity = safeJsonParse<ActivityItem[]>(localStorage.getItem(storageKeys.activity), []);
+    const storedLanguage = localStorage.getItem(storageKeys.language);
 
     setMessages(storedMessages.length > 0 ? storedMessages : [defaultAssistantMessage]);
+    if (storedLanguage === 'ms' || storedLanguage === 'en') setLanguage(storedLanguage);
     if (
       storedActiveTab === 'dashboard' ||
       storedActiveTab === 'chat' ||
@@ -135,7 +207,9 @@ export default function PlannerWorkspace() {
       setActiveTab(storedActiveTab);
     }
     setPlannerProfile({ ...defaultPlannerProfile, ...storedPlannerProfile });
-    if (storedChecklistTitle) setChecklistTitle(storedChecklistTitle);
+    if (storedChecklistTitle) {
+      setChecklistTitle(storedChecklistTitle.replace(/Checklist Perkahwinan Ila/g, 'Checklist MajlisMate').replace(/Ila's Wedding Checklist/g, 'MajlisMate wedding checklist'));
+    }
     setChecklistItems(storedChecklistItems.map((item) => ({ ...item, status: item.status || (item.completed ? 'done' : 'not-started') })));
     setAppointments(storedAppointments);
     setBudgetItems(storedBudgetItems.length > 0 ? storedBudgetItems : defaultBudgetItems);
@@ -203,8 +277,34 @@ export default function PlannerWorkspace() {
   }, [activity, isHydrated]);
 
   useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem(storageKeys.language, language);
+  }, [isHydrated, language]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT';
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setIsCommandOpen(true);
+      }
+      if (!isTyping && event.key === '/') {
+        event.preventDefault();
+        setIsCommandOpen(true);
+      }
+      if (event.key === 'Escape') {
+        setIsCommandOpen(false);
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!statusMessage) return;
@@ -256,11 +356,11 @@ export default function PlannerWorkspace() {
   }
 
   function createDefaultChecklist() {
-    setChecklistTitle('Majlis planning checklist');
+    setChecklistTitle(copy.defaultTemplate);
     setChecklistItems(generateDefaultChecklist(plannerProfile.majlisDate));
     setActiveTab('checklist');
-    addActivity('Default PRD checklist generated.');
-    setStatusMessage('Default wedding checklist generated.');
+    addActivity('Default checklist generated.');
+    setStatusMessage(`${copy.defaultTemplate} loaded.`);
   }
 
   function buildPlannerContext() {
@@ -322,6 +422,7 @@ export default function PlannerWorkspace() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: nextMessages.map(({ role, content }) => ({ role, content })),
+          language,
           plannerContext: buildPlannerContext()
         })
       });
@@ -395,7 +496,7 @@ export default function PlannerWorkspace() {
       }
 
       if (!fullAnswer.trim()) {
-        const emptyMessage = 'Sorry, MajlisMate.ai tak dapat jawapan untuk request ini.';
+        const emptyMessage = copy.noAnswer;
         if (targetTab) {
           setMenuMessages((current) => ({
             ...current,
@@ -421,11 +522,11 @@ export default function PlannerWorkspace() {
       if (shouldCreateAppointment) {
         const appointment = parseAppointment(trimmed);
         if (appointment) {
-          setAppointments((current) => [...current, appointment]);
           setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
           setSelectedDate(appointment.date);
+          setPendingAppointment(appointment);
           setActiveTab('calendar');
-          addActivity(`Appointment added: ${appointment.title}.`);
+          addActivity(`Appointment drafted: ${appointment.title}.`);
         }
       }
       if (shouldDraftVendorMessage) {
@@ -433,13 +534,16 @@ export default function PlannerWorkspace() {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected error';
+      const friendlyMessage = /fetch|network|failed to get response|no response body/i.test(message)
+        ? copy.networkFallback
+        : `${copy.errorPrefix}: ${message}`;
       if (targetTab) {
         setMenuMessages((current) => ({
           ...current,
-          [targetTab]: [...nextMessages, { role: 'assistant', content: `Sorry, ada error: ${message}` }]
+          [targetTab]: [...nextMessages, { role: 'assistant', content: friendlyMessage }]
         }));
       } else {
-        setMessages([...nextMessages, { role: 'assistant', content: `Sorry, ada error: ${message}` }]);
+        setMessages([...nextMessages, { role: 'assistant', content: friendlyMessage }]);
       }
       if (shouldCreateChecklist) {
         setChecklistItems(fallbackChecklist(trimmed).map((item) => ({ ...item, status: 'not-started' })));
@@ -448,11 +552,11 @@ export default function PlannerWorkspace() {
       if (shouldCreateAppointment) {
         const appointment = parseAppointment(trimmed);
         if (appointment) {
-          setAppointments((current) => [...current, appointment]);
           setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
           setSelectedDate(appointment.date);
+          setPendingAppointment(appointment);
           setActiveTab('calendar');
-          addActivity(`Appointment added: ${appointment.title}.`);
+          addActivity(`Appointment drafted: ${appointment.title}.`);
         }
       }
     } finally {
@@ -501,7 +605,15 @@ export default function PlannerWorkspace() {
 
     setChecklistItems((current) => [
       ...current,
-      { id: `${Date.now()}-${current.length}`, text, completed: false, status: 'not-started', phase: 'Custom' }
+      {
+        id: `${Date.now()}-${current.length}`,
+        text,
+        textMs: language === 'ms' ? text : undefined,
+        textEn: language === 'en' ? text : undefined,
+        completed: false,
+        status: 'not-started',
+        phase: copy.custom
+      }
     ]);
     setNewChecklistItem('');
     addActivity('Checklist item added.');
@@ -516,6 +628,7 @@ export default function PlannerWorkspace() {
 
   function startAppointmentAssistant() {
     setAppointmentAssistantActive(true);
+    setIsContextAssistantOpen(true);
     setMenuInputs((current) => ({
       ...current,
       calendar: `Create an appointment on ${selectedDate} at `
@@ -550,18 +663,52 @@ export default function PlannerWorkspace() {
     addActivity('Appointment status updated.');
   }
 
+  function confirmPendingAppointment() {
+    if (!pendingAppointment) return;
+
+    setAppointments((current) => [...current, pendingAppointment]);
+    setCalendarMonth(new Date(`${pendingAppointment.date}T00:00:00`));
+    setSelectedDate(pendingAppointment.date);
+    addActivity(`Appointment confirmed: ${pendingAppointment.title}.`);
+    setStatusMessage('Appointment added to calendar.');
+    setPendingAppointment(null);
+  }
+
+  function editPendingAppointment() {
+    if (!pendingAppointment) return;
+
+    setAppointmentDraft({
+      title: pendingAppointment.title,
+      date: pendingAppointment.date,
+      time: pendingAppointment.time || '',
+      location: pendingAppointment.location || '',
+      vendor: pendingAppointment.vendor || '',
+      status: pendingAppointment.status || 'planned',
+      note: pendingAppointment.note
+    });
+    setSelectedDate(pendingAppointment.date);
+    setPendingAppointment(null);
+  }
+
   function applyChecklistTemplate(template: (typeof checklistTemplates)[number]) {
-    setChecklistTitle(template.title);
+    const title = localizedValue(template.title, language);
+    setChecklistTitle(title);
     setChecklistItems(
-      template.items.map((text, index) => ({
+      template.items.map((item, index) => ({
         id: `${Date.now()}-${index}`,
-        text,
-        completed: false
+        text: item.ms,
+        textMs: item.ms,
+        textEn: item.en,
+        completed: false,
+        status: 'not-started' as const,
+        phase: localizedValue(item.phase, language) || undefined,
+        phaseMs: item.phase?.ms,
+        phaseEn: item.phase?.en
       }))
     );
     setActiveTab('checklist');
-    setStatusMessage(`${template.title} loaded.`);
-    addActivity(`${template.title} loaded.`);
+    setStatusMessage(`${title} loaded.`);
+    addActivity(`${title} loaded.`);
   }
 
   function addBudgetItem(event: FormEvent) {
@@ -634,6 +781,47 @@ export default function PlannerWorkspace() {
     setInput(`Draft a WhatsApp message to ${vendor.name} for ${vendor.category} in ${vendor.negeri}. Ask about availability, package, price range, deposit, setup timing, and what they need from us.`);
   }
 
+  function askVendorQuestions(vendor: Vendor) {
+    setActiveTab('chat');
+    setInput(`Create a short checklist of questions to ask ${vendor.name} before booking. Focus on package inclusions, hidden charges, deposit, cancellation, setup timing, and final confirmation.`);
+  }
+
+  function addVendorToBudget(vendor: Vendor) {
+    const planned = Math.round((vendor.minPrice + vendor.maxPrice) / 2);
+    const existingVendorItem = budgetItems.find((item) => item.note.includes(vendor.name) || item.category === vendor.category);
+
+    if (existingVendorItem) {
+      setBudgetItems((current) =>
+        current.map((item) =>
+          item.id === existingVendorItem.id
+            ? {
+                ...item,
+                planned: item.planned || planned,
+                note: [item.note, `${vendor.name} estimate ${money(vendor.minPrice)}-${money(vendor.maxPrice)}`].filter(Boolean).join(' | ')
+              }
+            : item
+        )
+      );
+    } else {
+      setBudgetItems((current) => [
+        ...current,
+        {
+          id: `${Date.now()}`,
+          category: vendor.category,
+          planned,
+          actual: 0,
+          paid: 0,
+          status: 'not-started',
+          note: `${vendor.name} estimate ${money(vendor.minPrice)}-${money(vendor.maxPrice)}`
+        }
+      ]);
+    }
+
+    setActiveTab('budget');
+    setStatusMessage(`${vendor.name} added to budget estimates.`);
+    addActivity(`Vendor estimate added to budget: ${vendor.name}.`);
+  }
+
   async function copyChecklist() {
     await navigator.clipboard.writeText(formatChecklistText(checklistTitle, checklistItems));
     setStatusMessage('Checklist copied.');
@@ -672,6 +860,60 @@ export default function PlannerWorkspace() {
       .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
       .join('\n');
     downloadTextFile('majlismate-appointments.csv', csv, 'text/csv');
+  }
+
+  function addAppointmentToPhoneCalendar(appointment: Appointment) {
+    const escapeIcs = (value: string | undefined) =>
+      (value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+    const compactDate = appointment.date.replace(/-/g, '');
+    const timeMatch = appointment.time?.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    const createdAt = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const description = [
+      appointment.note,
+      appointment.vendor ? `Vendor: ${appointment.vendor}` : '',
+      appointment.status ? `Status: ${appointment.status}` : ''
+    ].filter(Boolean).join('\n');
+
+    let dateLines = '';
+
+    if (timeMatch) {
+      const start = new Date(`${appointment.date}T${appointment.time}:00`);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      const toLocalIcs = (date: Date) => {
+        const pad = (value: number) => String(value).padStart(2, '0');
+        return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
+      };
+      dateLines = `DTSTART:${toLocalIcs(start)}\nDTEND:${toLocalIcs(end)}`;
+    } else {
+      const end = new Date(`${appointment.date}T00:00:00`);
+      end.setDate(end.getDate() + 1);
+      dateLines = `DTSTART;VALUE=DATE:${compactDate}\nDTEND;VALUE=DATE:${dateKey(end).replace(/-/g, '')}`;
+    }
+
+    const calendarText = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//MajlisMate//Wedding Planner//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${appointment.id}@majlismate.local`,
+      `DTSTAMP:${createdAt}`,
+      dateLines,
+      `SUMMARY:${escapeIcs(appointment.title)}`,
+      appointment.location ? `LOCATION:${escapeIcs(appointment.location)}` : '',
+      description ? `DESCRIPTION:${escapeIcs(description)}` : '',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\n');
+
+    const safeName = appointment.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'appointment';
+    downloadTextFile(`majlismate-${safeName}.ics`, calendarText, 'text/calendar;charset=utf-8');
+    setStatusMessage('Calendar file created. Open it on your phone to add the appointment.');
   }
 
   function exportGuestsCsv() {
@@ -749,6 +991,7 @@ export default function PlannerWorkspace() {
     setChecklistTitle('Checklist');
     setChecklistItems([]);
     setAppointments([]);
+    setPendingAppointment(null);
     setBudgetItems(defaultBudgetItems);
     setGuests([]);
     setSavedVendors([]);
@@ -772,6 +1015,16 @@ export default function PlannerWorkspace() {
   const selectedDateAppointments = appointments
     .filter((appointment) => appointment.date === selectedDate)
     .sort(sortAppointments);
+  const isSelectedWeddingDay = Boolean(plannerProfile.majlisDate && selectedDate === plannerProfile.majlisDate);
+  const weddingDayAppointment: Appointment | null = plannerProfile.majlisDate
+    ? {
+        id: 'wedding-day',
+        title: language === 'ms' ? 'Hari majlis' : 'Wedding day',
+        date: plannerProfile.majlisDate,
+        status: 'confirmed',
+        note: language === 'ms' ? 'Tarikh majlis daripada profil pasangan.' : 'Wedding date from the couple profile.'
+      }
+    : null;
   const selectedDateLabel = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -826,116 +1079,567 @@ export default function PlannerWorkspace() {
     const categoryMatch = vendorFilter.category === 'All' || vendor.category === vendorFilter.category;
     return negeriMatch && categoryMatch;
   });
-  const activeMenuTab = activeTab === 'dashboard' || activeTab === 'chat' ? null : activeTab;
+  const contextAssistantTab: MenuAssistantTab | null = activeTab === 'chat' ? null : (activeTab as MenuAssistantTab);
+  const activeMenuTab = isContextAssistantOpen ? contextAssistantTab : null;
+  const otherLanguage: AppLanguage = language === 'ms' ? 'en' : 'ms';
+  const copy = {
+    ms: {
+      generatedNotice: 'Kandungan dijana pengguna dan belum disahkan.',
+      live: 'Live',
+      offline: 'Offline',
+      customizeReady: 'Pilihan bahasa dan tarikh ada di menu kiri.',
+      linkCopied: 'Link planner disalin.',
+      flagged: 'Workspace ditanda untuk semakan.',
+      weddingPlanner: 'wedding planner',
+      weddingDate: 'tarikh majlis',
+      morning: 'Selamat pagi,',
+      afternoon: 'Selamat tengah hari,',
+      evening: 'Selamat petang,',
+      checklistShortcut: 'Buka checklist',
+      askAi: 'Tanya AI',
+      dashboard: 'dashboard',
+      chat: 'chat',
+      checklist: 'checklist',
+      calendar: 'calendar',
+      budget: 'anggaran perbelanjaan',
+      guests: 'senarai tetamu',
+      vendors: 'vendor',
+      note: 'wedding planning dari hati untuk hati',
+      welcome: 'hi, i MajlisMate',
+      welcomeText: 'cerita kat i pasal wedding you - i tolong susun checklist, bajet, tetamu, semua. update i je bila ada progress',
+      placeholder: 'Tanya pasal majlis, vendor, bajet, checklist, appointment...',
+      checklistEyebrow: 'Checklist interaktif',
+      done: 'selesai',
+      allItems: 'Semua checklist',
+      notStarted: 'Belum Mula',
+      inProgress: 'Sedang Diurus',
+      doneStatus: 'Selesai',
+      creating: 'Sedang bina checklist...',
+      emptyChecklist: 'Minta chat buat checklist dan ia akan muncul di sini.',
+      addItem: 'Tambah checklist item...',
+      add: 'Tambah',
+      remove: 'Buang',
+      send: 'Hantar',
+      sending: 'Menghantar...',
+      typing: 'MajlisMate sedang menaip...',
+      sources: 'Sumber:',
+      questionLabel: 'Soalan',
+      mode: 'Medium',
+      addAction: 'Tambah',
+      dictate: 'Dictate',
+      voice: 'Voice',
+      noAnswer: 'Maaf, MajlisMate tak dapat jawapan untuk request ini.',
+      errorPrefix: 'Maaf, ada ralat',
+      networkFallback: 'Saya tak dapat hubungi AI buat masa ini, tapi saya masih boleh simpan data planner dan guna template yang ada. Cuba lagi sebentar, atau guna quick action untuk checklist, vendor, dan appointment.',
+      defaultTemplate: 'Checklist MajlisMate',
+      custom: 'Custom'
+    },
+    en: {
+      generatedNotice: 'Content is user-generated and unverified.',
+      live: 'Live',
+      offline: 'Offline',
+      customizeReady: 'Language and date controls are in the left menu.',
+      linkCopied: 'Planner link copied.',
+      flagged: 'Workspace flagged for review.',
+      weddingPlanner: 'wedding planner',
+      weddingDate: 'wedding date',
+      morning: 'Good morning,',
+      afternoon: 'Good afternoon,',
+      evening: 'Good evening,',
+      checklistShortcut: 'Open checklist',
+      askAi: 'Ask AI',
+      dashboard: 'dashboard',
+      chat: 'chat',
+      checklist: 'checklist',
+      calendar: 'calendar',
+      budget: 'budget',
+      guests: 'guest list',
+      vendors: 'vendors',
+      note: 'wedding planning from the heart',
+      welcome: 'hi, I am MajlisMate',
+      welcomeText: 'tell me about your wedding - I can organize the checklist, budget, guests, vendors, and progress',
+      placeholder: 'Ask about the wedding, vendors, budget, checklist, appointment...',
+      checklistEyebrow: 'Interactive checklist',
+      done: 'done',
+      allItems: 'All checklist items',
+      notStarted: 'Not started',
+      inProgress: 'In progress',
+      doneStatus: 'Done',
+      creating: 'Creating checklist...',
+      emptyChecklist: 'Ask the chat to create a checklist and it will appear here.',
+      addItem: 'Add checklist item...',
+      add: 'Add',
+      remove: 'Remove',
+      send: 'Send',
+      sending: 'Sending...',
+      typing: 'MajlisMate is typing...',
+      sources: 'Sources:',
+      questionLabel: 'Question',
+      mode: 'Medium',
+      addAction: 'Add',
+      dictate: 'Dictate',
+      voice: 'Voice',
+      noAnswer: 'Sorry, MajlisMate could not answer this request.',
+      errorPrefix: 'Sorry, there was an error',
+      networkFallback: 'I could not reach the AI service right now, but I can still save planner data and use the built-in templates. Try again shortly, or use the quick actions for checklist, vendors, and appointments.',
+      defaultTemplate: 'MajlisMate checklist',
+      custom: 'Custom'
+    }
+  }[language];
+  const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
+    ? copy.defaultTemplate
+    : checklistTitle;
+  const getItemText = (item: ChecklistItem, selectedLanguage = language) =>
+    selectedLanguage === 'ms' ? item.textMs || item.text : item.textEn || item.text;
+  const getItemPhase = (item: ChecklistItem, selectedLanguage = language) =>
+    selectedLanguage === 'ms' ? item.phaseMs || item.phase : item.phaseEn || item.phase;
+  const getChecklistPriority = (item: ChecklistItem) => {
+    if (item.completed || item.status === 'done') return { className: 'done', label: language === 'ms' ? 'Selesai' : 'Done' };
+    if (!item.deadline) return { className: 'later', label: language === 'ms' ? 'Later' : 'Later' };
+
+    const due = daysUntil(item.deadline);
+    if (due !== null && due < 0) return { className: 'urgent', label: language === 'ms' ? 'Overdue' : 'Overdue' };
+    if (due !== null && due <= 14) return { className: 'urgent', label: language === 'ms' ? 'Urgent' : 'Urgent' };
+    if (due !== null && due <= 45) return { className: 'soon', label: language === 'ms' ? 'Soon' : 'Soon' };
+    return { className: 'later', label: language === 'ms' ? 'Later' : 'Later' };
+  };
+  const checklistStatusOptions = [
+    { value: 'all', label: copy.allItems, count: checklistItems.length },
+    { value: 'not-started', label: copy.notStarted, count: checklistItems.filter((item) => (item.status || (item.completed ? 'done' : 'not-started')) === 'not-started').length },
+    { value: 'in-progress', label: copy.inProgress, count: checklistItems.filter((item) => (item.status || (item.completed ? 'done' : 'not-started')) === 'in-progress').length },
+    { value: 'done', label: copy.doneStatus, count: completedCount }
+  ];
+  const urgentChecklistCount = checklistItems.filter((item) => getChecklistPriority(item).className === 'urgent').length;
+  const soonChecklistCount = checklistItems.filter((item) => getChecklistPriority(item).className === 'soon').length;
+  const dueThisMonthChecklistCount = checklistItems.filter((item) => {
+    if (item.completed || item.status === 'done' || !item.deadline) return false;
+    const dueDate = new Date(`${item.deadline}T00:00:00`);
+    const today = new Date();
+    return dueDate.getMonth() === today.getMonth() && dueDate.getFullYear() === today.getFullYear();
+  }).length;
+  const getChecklistStatus = (item: ChecklistItem) => item.status || (item.completed ? 'done' : 'not-started');
+  const scoreChecklistItem = (item: ChecklistItem) => {
+    const priority = getChecklistPriority(item).className;
+    const due = item.deadline ? daysUntil(item.deadline) : null;
+    const priorityScore = priority === 'urgent' ? 0 : priority === 'soon' ? 1 : 2;
+    const statusScore = getChecklistStatus(item) === 'in-progress' ? -0.25 : 0;
+    return priorityScore + statusScore + (due === null ? 999 : Math.max(due, -30) / 1000);
+  };
+  const openChecklistItems = checklistItems.filter((item) => getChecklistStatus(item) !== 'done');
+  const nextChecklistItems = [...openChecklistItems]
+    .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+    .slice(0, 6);
+  const completedChecklistItems = checklistItems.filter((item) => getChecklistStatus(item) === 'done');
+  const checklistPhaseGroups = checklistPhases.map((phase) => ({
+    phase,
+    items: checklistItems.filter((item) => item.phase === phase)
+  }));
+  const checklistCategoryGroups = checklistPhaseGroups.length > 0
+    ? checklistPhaseGroups
+    : [{ phase: copy.custom, items: checklistItems }];
+  const checklistViewOptions = [
+    { value: 'next' as const, label: language === 'ms' ? 'Seterusnya' : 'Next', count: nextChecklistItems.length },
+    { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistPhaseGroups.length || checklistItems.length },
+    { value: 'category' as const, label: language === 'ms' ? 'Kategori' : 'Category', count: checklistCategoryGroups.length },
+    { value: 'completed' as const, label: language === 'ms' ? 'Selesai' : 'Completed', count: completedChecklistItems.length }
+  ];
+  const checklistEmptyActionText = language === 'ms' ? 'Bina checklist sekarang' : 'Create checklist now';
+  const checklistNextPrompt = language === 'ms' ? 'Apa perlu dibuat minggu ini?' : 'What should I do this week?';
+  const checklistSchedulePrompt = language === 'ms' ? 'Jadikan appointment' : 'Add to calendar';
+  const calendarSuggestions =
+    daysLeft === null
+      ? [
+          language === 'ms' ? 'Tambah tarikh majlis untuk cadangan calendar' : 'Add wedding date for calendar suggestions',
+          language === 'ms' ? 'Schedule call dengan venue pilihan' : 'Schedule a call with a preferred venue'
+        ]
+      : daysLeft <= 30
+        ? [
+            language === 'ms' ? 'Confirm final headcount dengan caterer' : 'Confirm final headcount with caterer',
+            language === 'ms' ? 'Schedule final briefing vendor' : 'Schedule final vendor briefing',
+            language === 'ms' ? 'Confirm setup time pelamin/dekor' : 'Confirm decor setup time'
+          ]
+        : daysLeft <= 90
+          ? [
+              language === 'ms' ? 'Follow up RSVP deadline' : 'Follow up RSVP deadline',
+              language === 'ms' ? 'Confirm fitting baju' : 'Confirm outfit fitting',
+              language === 'ms' ? 'Review payment balance vendor' : 'Review vendor payment balance'
+            ]
+          : [
+              language === 'ms' ? 'Book venue/vendor appointment' : 'Book venue/vendor appointment',
+              language === 'ms' ? 'Schedule food tasting' : 'Schedule food tasting',
+              language === 'ms' ? 'Plan photographer discussion' : 'Plan photographer discussion'
+            ];
+  const selectedMonthConfirmed = selectedMonthAppointments.filter((appointment) => appointment.status === 'confirmed').length;
+  const selectedMonthOpen = selectedMonthAppointments.filter((appointment) => appointment.status !== 'done').length;
+  const nextAppointment = selectedMonthAppointments.find((appointment) => appointment.date >= dateKey(new Date()));
+  const globalNextAppointment = [...appointments]
+    .filter((appointment) => appointment.date >= dateKey(new Date()))
+    .sort(sortAppointments)[0];
+  const overBudgetItems = budgetItems.filter((item) => item.actual > item.planned && item.planned > 0);
+  const remainingToPay = Math.max(totalActual - totalPaid, 0);
+  const budgetAlert =
+    overBudgetItems.length > 0
+      ? `${overBudgetItems.length} over budget`
+      : remainingToPay > 0
+        ? `${money(remainingToPay)} to pay`
+        : totalActual > 0
+          ? 'On track'
+          : 'Ready to plan';
+  const coupleDisplayName =
+    plannerProfile.coupleName.trim() ||
+    [plannerProfile.groomName.trim(), plannerProfile.brideName.trim()].filter(Boolean).join(' & ') ||
+    (language === 'ms' ? 'Profil pasangan' : 'Couple profile');
+  const coupleInitials = coupleDisplayName
+    .split(/\s+|&/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'MM';
+  const coupleMeta =
+    plannerProfile.majlisDate ||
+    (plannerProfile.negeri ? `${plannerProfile.negeri} - ${plannerProfile.guestTarget} pax` : `${plannerProfile.guestTarget} pax`);
+  const selectTab = (tab: ActiveTab) => {
+    setActiveTab(tab);
+    setIsSidebarOpen(false);
+    setIsContextAssistantOpen(false);
+  };
+  const currentHour = new Date().getHours();
+  const timeGreeting = currentHour < 12 ? copy.morning : currentHour < 18 ? copy.afternoon : copy.evening;
+  const greetingName =
+    plannerProfile.coupleName.trim() ||
+    [plannerProfile.groomName.trim(), plannerProfile.brideName.trim()].filter(Boolean).join(' & ') ||
+    'MajlisMate';
+  const quickActionPills = [
+    {
+      id: 'checklist',
+      label: language === 'ms' ? 'Buat checklist' : 'Create a checklist',
+      onClick: createDefaultChecklist
+    },
+    {
+      id: 'vendors',
+      label: language === 'ms' ? 'Cari vendor' : 'Find a vendor',
+      onClick: () => selectTab('vendors')
+    },
+    {
+      id: 'calendar',
+      label: language === 'ms' ? 'Buat appointment' : 'Make an appointment',
+      onClick: () => {
+        selectTab('calendar');
+        startAppointmentAssistant();
+      }
+    }
+  ];
+  const isProfileIncomplete =
+    !plannerProfile.completed ||
+    !plannerProfile.majlisDate ||
+    !plannerProfile.guestTarget ||
+    !plannerProfile.totalBudget;
+  const normalizedInput = input.toLowerCase();
+  const commandSuggestions =
+    input.trim().length < 2
+      ? []
+      : normalizedInput.includes('vendor')
+        ? [language === 'ms' ? 'Draft mesej WhatsApp untuk vendor' : 'Draft a WhatsApp message to a vendor', language === 'ms' ? 'Apa soalan perlu tanya vendor?' : 'What questions should I ask a vendor?']
+        : normalizedInput.includes('check') || normalizedInput.includes('senarai')
+          ? [language === 'ms' ? 'Buat checklist bulan terakhir' : 'Create a final month checklist', language === 'ms' ? 'Susun task ikut priority' : 'Prioritize my tasks']
+          : normalizedInput.includes('bajet') || normalizedInput.includes('budget') || normalizedInput.includes('rm')
+            ? [language === 'ms' ? 'Cadangkan pecahan bajet' : 'Suggest a budget allocation', language === 'ms' ? 'Apa kos yang mungkin tertinggal?' : 'What costs might be missing?']
+            : normalizedInput.includes('appoint') || normalizedInput.includes('jadual') || normalizedInput.includes('tempah')
+              ? [language === 'ms' ? 'Buat appointment vendor minggu ini' : 'Schedule a vendor appointment this week', language === 'ms' ? 'Apa perlu confirm dengan vendor?' : 'What should I confirm with the vendor?']
+              : [];
+  const mobileNavItems: Array<{ tab: ActiveTab; label: string; icon: Parameters<typeof MenuIcon>[0]['name'] }> = [
+    { tab: 'chat', label: copy.chat, icon: 'chat' },
+    { tab: 'checklist', label: copy.checklist, icon: 'checklist' },
+    { tab: 'calendar', label: copy.calendar, icon: 'calendar' },
+    { tab: 'vendors', label: copy.vendors, icon: 'vendors' }
+  ];
+  const commandItems = [
+    {
+      label: language === 'ms' ? 'Tanya MajlisMate' : 'Ask MajlisMate',
+      detail: language === 'ms' ? 'Buka chat utama' : 'Open main chat',
+      action: () => selectTab('chat')
+    },
+    {
+      label: language === 'ms' ? 'Buat checklist' : 'Create checklist',
+      detail: copy.defaultTemplate,
+      action: createDefaultChecklist
+    },
+    {
+      label: language === 'ms' ? 'Buat appointment' : 'Schedule appointment',
+      detail: selectedDate,
+      action: () => {
+        selectTab('calendar');
+        startAppointmentAssistant();
+      }
+    },
+    ...nextChecklistItems.slice(0, 5).map((item) => ({
+      label: getItemText(item),
+      detail: `${copy.checklist} - ${getItemPhase(item) || copy.custom}`,
+      action: () => {
+        setChecklistView('next');
+        selectTab('checklist');
+      }
+    })),
+    ...vendorDirectory.slice(0, 6).map((vendor) => ({
+      label: vendor.name,
+      detail: `${vendor.category} - ${vendor.negeri}`,
+      action: () => {
+        setVendorFilter({ negeri: vendor.negeri, category: vendor.category });
+        selectTab('vendors');
+      }
+    })),
+    ...appointments.slice(0, 6).map((appointment) => ({
+      label: appointment.title,
+      detail: `${copy.calendar} - ${appointment.date}`,
+      action: () => {
+        setSelectedDate(appointment.date);
+        setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
+        selectTab('calendar');
+      }
+    })),
+    ...guests.slice(0, 6).map((guest) => ({
+      label: guest.name,
+      detail: `${copy.guests} - ${guest.group}`,
+      action: () => selectTab('rsvp')
+    }))
+  ];
+  const filteredCommandItems = commandItems
+    .filter((item) => {
+      const query = commandQuery.trim().toLowerCase();
+      if (!query) return true;
+      return `${item.label} ${item.detail}`.toLowerCase().includes(query);
+    })
+    .slice(0, 9);
+  const renderChecklistTask = (item: ChecklistItem, options?: { compact?: boolean }) => {
+    const priority = getChecklistPriority(item);
+    const status = getChecklistStatus(item);
+    const dueLabel = item.deadline
+      ? `${language === 'ms' ? 'Due' : 'Due'} ${item.deadline}`
+      : language === 'ms' ? 'Tiada tarikh' : 'No date';
+
+    return (
+      <li key={item.id} className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}`}>
+        <label className="checklist-task-main">
+          <input
+            type="checkbox"
+            checked={item.completed}
+            onChange={() => toggleChecklistItem(item.id)}
+          />
+          <span className="checklist-task-check" aria-hidden="true" />
+          <span className="checklist-task-copy">
+            <strong>{getItemText(item)}</strong>
+            {!options?.compact && getItemText(item, otherLanguage) !== getItemText(item) ? (
+              <small>{getItemText(item, otherLanguage)}</small>
+            ) : null}
+            <small>{getItemPhase(item) || copy.custom} · {dueLabel}</small>
+          </span>
+        </label>
+        <span className={`priority-chip ${priority.className}`}>{priority.label}</span>
+        <div className="checklist-row-actions">
+          {status !== 'done' ? (
+            <button type="button" onClick={() => updateChecklistStatus(item.id, status === 'in-progress' ? 'not-started' : 'in-progress')}>
+              {status === 'in-progress' ? copy.notStarted : copy.inProgress}
+            </button>
+          ) : null}
+          {!options?.compact ? (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('calendar');
+                setIsContextAssistantOpen(true);
+                setAppointmentAssistantActive(true);
+                setMenuInputs((current) => ({
+                  ...current,
+                  calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(item)} on ${item.deadline || selectedDate} at `
+                }));
+              }}
+            >
+              {checklistSchedulePrompt}
+            </button>
+          ) : null}
+          <button type="button" aria-label={`Remove ${item.text}`} onClick={() => removeChecklistItem(item.id)}>
+            {copy.remove}
+          </button>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
-      <div className="planner-topbar">
-        <div>
-          <p className="eyebrow">MajlisMate.ai</p>
-          <h2>Wedding Planner Workspace</h2>
-        </div>
-        <div className="header-actions">
-          <span className="status-dot">{isOffline ? 'Offline' : 'Live demo'}</span>
-          {installPrompt ? (
-            <button type="button" onClick={installApp}>
-              Install
-            </button>
-          ) : null}
-          <button type="button" onClick={resetLocalWorkspace}>
-            Reset
-          </button>
-        </div>
-      </div>
-
       {isOffline ? (
         <div className="pwa-banner">Offline mode: templates and saved planning data are available. AI replies need internet.</div>
       ) : null}
 
       {statusMessage ? <div className="pwa-banner success">{statusMessage}</div> : null}
 
-      <div className={`planner-body ${activeMenuTab ? 'has-assistant' : ''}`}>
+      <div className={`planner-body ${activeMenuTab ? 'has-assistant' : ''} ${isSidebarOpen ? 'sidebar-open' : ''}`}>
         <aside className="planner-sidebar" aria-label="Planner menu">
           <div className="sidebar-header">
-            <span className="sidebar-mark" aria-hidden="true">M</span>
+            <span className="sidebar-mark" aria-hidden="true">i</span>
             <div>
-              <p>Workspace</p>
-              <strong>Wedding tools</strong>
+              <strong>{copy.weddingPlanner}</strong>
             </div>
+            <button type="button" aria-label="Close menu" onClick={() => setIsSidebarOpen(false)}>
+              ×
+            </button>
           </div>
+          <label className="sidebar-date">
+            <span>{copy.weddingDate}</span>
+            <input
+              type="date"
+              value={plannerProfile.majlisDate}
+              onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
+            />
+          </label>
           <nav className="planner-menu" role="tablist" aria-label="Planner menu">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'dashboard'}
               className={activeTab === 'dashboard' ? 'active' : ''}
-              onClick={() => setActiveTab('dashboard')}
+              onClick={() => selectTab('dashboard')}
             >
-              Dashboard
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="dashboard" /></span>{copy.dashboard}</span>
+              <span className="menu-chevron" aria-hidden="true" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'chat'}
               className={activeTab === 'chat' ? 'active' : ''}
-              onClick={() => setActiveTab('chat')}
+              onClick={() => selectTab('chat')}
             >
-              Chat
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="chat" /></span>{copy.chat}</span>
+              <span className="menu-chevron" aria-hidden="true" />
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'checklist'}
               className={activeTab === 'checklist' ? 'active' : ''}
-              onClick={() => setActiveTab('checklist')}
+              onClick={() => selectTab('checklist')}
             >
-              Checklist
-              {checklistItems.length > 0 ? <span>{completedCount}/{checklistItems.length}</span> : null}
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="checklist" /></span>{copy.checklist}</span>
+              {checklistItems.length > 0 ? <span>{completedCount}/{checklistItems.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'calendar'}
               className={activeTab === 'calendar' ? 'active' : ''}
-              onClick={() => setActiveTab('calendar')}
+              onClick={() => selectTab('calendar')}
             >
-              Calendar
-              {appointments.length > 0 ? <span>{appointments.length}</span> : null}
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="calendar" /></span>{copy.calendar}</span>
+              {appointments.length > 0 ? <span>{appointments.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'budget'}
               className={activeTab === 'budget' ? 'active' : ''}
-              onClick={() => setActiveTab('budget')}
+              onClick={() => selectTab('budget')}
             >
-              Budget
-              {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : null}
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="budget" /></span>{copy.budget}</span>
+              {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'rsvp'}
               className={activeTab === 'rsvp' ? 'active' : ''}
-              onClick={() => setActiveTab('rsvp')}
+              onClick={() => selectTab('rsvp')}
             >
-              RSVP
-              {guests.length > 0 ? <span>{confirmedGuests}</span> : null}
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="guests" /></span>{copy.guests}</span>
+              {guests.length > 0 ? <span>{confirmedGuests}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'vendors'}
               className={activeTab === 'vendors' ? 'active' : ''}
-              onClick={() => setActiveTab('vendors')}
+              onClick={() => selectTab('vendors')}
             >
-              Vendors
-              {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : null}
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="vendors" /></span>{copy.vendors}</span>
+              {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
           </nav>
+          <div className="couple-profile-card">
+            <div className="couple-avatar" aria-hidden="true">{coupleInitials}</div>
+            <div className="couple-profile-copy">
+              <strong>{coupleDisplayName}</strong>
+              <span>{coupleMeta}</span>
+            </div>
+            <div className="language-toggle compact" aria-label="Language">
+              {(['ms', 'en'] as AppLanguage[]).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={language === option ? 'active' : ''}
+                  onClick={() => setLanguage(option)}
+                  aria-pressed={language === option}
+                >
+                  {languageLabels[option]}
+                </button>
+              ))}
+            </div>
+          </div>
         </aside>
+        {isSidebarOpen ? (
+          <button
+            type="button"
+            className="sidebar-backdrop"
+            aria-label="Close menu"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        ) : null}
 
         <div className="planner-content">
+          <div className="workspace-titlebar">
+            <button
+              type="button"
+              className={`workspace-menu-button ${isSidebarOpen ? 'active' : ''}`}
+              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isSidebarOpen}
+              onClick={() => setIsSidebarOpen((current) => !current)}
+            >
+              Menu
+            </button>
+            <div className="workspace-title-center">
+              <span className="sidebar-mark small" aria-hidden="true">M</span>
+              <strong>MajlisMate</strong>
+            </div>
+            <div className="workspace-title-actions">
+              <button
+                type="button"
+                className="workspace-command-button"
+                aria-label="Open command search"
+                onClick={() => setIsCommandOpen(true)}
+              >
+                Search
+              </button>
+              {contextAssistantTab ? (
+                <button
+                  type="button"
+                  className="workspace-ai-button"
+                  aria-label="Open context assistant"
+                  aria-expanded={isContextAssistantOpen}
+                  onClick={() => setIsContextAssistantOpen(true)}
+                >
+                  <span className="workspace-ai-icon"><RobotIcon /></span>
+                  {copy.askAi}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="workspace-checklist-shortcut"
+                aria-label={copy.checklistShortcut}
+                onClick={() => selectTab('checklist')}
+              >
+                <span aria-hidden="true" />
+              </button>
+            </div>
+          </div>
           {activeTab === 'dashboard' ? (
         <DashboardPanel
           plannerProfile={plannerProfile}
@@ -955,129 +1659,307 @@ export default function PlannerWorkspace() {
           urgentChecklist={urgentChecklist}
           fallbackUrgent={fallbackUrgent}
           activity={activity}
+          nextAppointment={globalNextAppointment}
+          budgetAlert={budgetAlert}
+          onAskToday={() => {
+            setActiveTab('chat');
+            setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');
+          }}
         />
       ) : activeTab === 'chat' ? (
-        <div className="main-chat-panel">
+        <div className={`main-chat-panel ${messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? 'empty-chat' : 'active-chat'}`}>
+          <div className="chat-welcome">
+            <span aria-hidden="true">heart</span>
+            <h2>
+              <span>{timeGreeting}</span>
+              {greetingName}
+            </h2>
+            <p>{copy.welcomeText}</p>
+            {isProfileIncomplete ? (
+              <div className="chat-onboarding-card">
+                <strong>{language === 'ms' ? 'Setup cepat untuk planner you' : 'Quick setup for your planner'}</strong>
+                <p>
+                  {language === 'ms'
+                    ? 'Tambah nama pasangan, tarikh, tetamu, dan bajet supaya checklist dan cadangan jadi lebih tepat.'
+                    : 'Add couple names, date, guests, and budget so checklists and suggestions become more accurate.'}
+                </p>
+                <button type="button" onClick={() => selectTab('dashboard')}>
+                  {language === 'ms' ? 'Lengkapkan setup' : 'Complete setup'}
+                </button>
+              </div>
+            ) : null}
+          </div>
           <div className="starter-grid">
-            {starterQuestions.map((question) => (
-              <button key={question} type="button" onClick={() => ask(question)} disabled={loading}>
-                {question}
+            {quickActionPills.map((pill) => (
+              <button key={pill.id} type="button" onClick={pill.onClick} disabled={loading}>
+                <span className={`quick-pill-icon ${pill.id}`} aria-hidden="true" />
+                {pill.label}
               </button>
             ))}
           </div>
           <ChatWidget
-            messages={messages}
+            messages={messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? [] : messages}
             input={input}
             loading={loading}
-            placeholder="Ask about majlis, vendors, budget, checklist, appointment..."
+            placeholder={copy.placeholder}
+            submitLabel={copy.send}
+            loadingLabel={copy.sending}
+            emptyTypingLabel={copy.typing}
+            sourcesLabel={copy.sources}
+            inputAriaLabel={copy.questionLabel}
+            language={language}
+            dictateLabel={copy.dictate}
+            voiceLabel={copy.voice}
+            commandSuggestions={commandSuggestions}
             messagesEndRef={messagesEndRef}
             onInputChange={setInput}
+            onCommandSuggestion={(suggestion) => setInput(suggestion)}
             onSubmit={onSubmit}
           />
         </div>
       ) : activeTab === 'checklist' ? (
-        <div className="checklist-panel">
-          <div className="checklist-summary">
+        <div className="checklist-panel checklist-command-center">
+          <div className="checklist-hero">
             <div>
-              <p className="eyebrow">Interactive checklist</p>
-              <h3>{checklistTitle}</h3>
+              <p className="eyebrow">{language === 'ms' ? 'Checklist planner' : 'Checklist planner'}</p>
+              <h3>{displayChecklistTitle}</h3>
+              <p>
+                {language === 'ms'
+                  ? 'Fokus pada task yang paling penting dulu, kemudian semak timeline bila perlukan gambaran penuh.'
+                  : 'Focus on the most important tasks first, then review the full timeline when you need the bigger picture.'}
+              </p>
             </div>
-            <span>{completedCount}/{checklistItems.length} done</span>
+            <div className="checklist-hero-progress">
+              <strong>{planningProgress}%</strong>
+              <span>{completedCount}/{checklistItems.length} {copy.done}</span>
+              <div className="checklist-progress-line" aria-label={`${completedCount} of ${checklistItems.length} checklist items done`}>
+                <span style={{ width: `${planningProgress}%` }} />
+              </div>
+            </div>
           </div>
 
-          <div className="template-strip" aria-label="Wedding checklist templates">
+          <div className="checklist-stat-row" aria-label="Checklist health summary">
+            <article>
+              <span>{language === 'ms' ? 'Seterusnya' : 'Next actions'}</span>
+              <strong>{nextChecklistItems.length}</strong>
+              <p>{language === 'ms' ? 'perlu perhatian' : 'need attention'}</p>
+            </article>
+            <article>
+              <span>{language === 'ms' ? 'Urgent' : 'Urgent'}</span>
+              <strong>{urgentChecklistCount}</strong>
+              <p>{language === 'ms' ? 'due dekat' : 'close deadlines'}</p>
+            </article>
+            <article>
+              <span>{language === 'ms' ? 'Bulan ini' : 'This month'}</span>
+              <strong>{dueThisMonthChecklistCount}</strong>
+              <p>{language === 'ms' ? 'belum selesai' : 'still open'}</p>
+            </article>
+            <article>
+              <span>{language === 'ms' ? 'Sedang diurus' : 'In progress'}</span>
+              <strong>{checklistStatusOptions.find((option) => option.value === 'in-progress')?.count || 0}</strong>
+              <p>{language === 'ms' ? 'aktif sekarang' : 'active now'}</p>
+            </article>
+          </div>
+
+          <div className="checklist-toolbelt">
+            <div className="checklist-view-tabs" role="tablist" aria-label="Checklist views">
+              {checklistViewOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={checklistView === option.value}
+                  className={checklistView === option.value ? 'active' : ''}
+                  onClick={() => setChecklistView(option.value)}
+                >
+                  {option.label}
+                  <span>{option.count}</span>
+                </button>
+              ))}
+            </div>
+            <div className="checklist-export-actions">
+              <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>Copy</button>
+              <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>TXT</button>
+              <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>Print</button>
+            </div>
+          </div>
+
+          <div className="checklist-template-row" aria-label="Wedding checklist templates">
+            <span>{language === 'ms' ? 'Template' : 'Templates'}</span>
             {checklistTemplates.map((template) => (
-              <button key={template.title} type="button" onClick={() => applyChecklistTemplate(template)}>
-                {template.title}
+              <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
+                {localizedValue(template.title, language)}
               </button>
             ))}
           </div>
 
-          <div className="tool-actions">
-            <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>
-              Copy
-            </button>
-            <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>
-              Export TXT
-            </button>
-            <button type="button" onClick={() => exportChecklist('json')} disabled={checklistItems.length === 0}>
-              Export JSON
-            </button>
-            <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>
-              Print
-            </button>
-            <button type="button" onClick={createDefaultChecklist}>
-              PRD Default
-            </button>
-          </div>
-
-          <div className="filter-row">
-            <select value={checklistFilter} onChange={(event) => setChecklistFilter(event.target.value)} aria-label="Checklist filter">
-              <option value="all">All checklist items</option>
-              <option value="not-started">Belum Mula</option>
-              <option value="in-progress">Sedang Diurus</option>
-              <option value="done">Selesai</option>
-              {checklistPhases.map((phase) => (
-                <option key={phase} value={phase}>{phase}</option>
-              ))}
-            </select>
-          </div>
-
-          {loading && checklistItems.length === 0 ? <p className="typing">Creating checklist...</p> : null}
+          {loading && checklistItems.length === 0 ? <p className="typing">{copy.creating}</p> : null}
 
           {checklistItems.length > 0 ? (
-            <ul className="checklist-items">
-              {filteredChecklistItems.map((item) => (
-                <li key={item.id} className={item.completed ? 'done' : ''}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={item.completed}
-                      onChange={() => toggleChecklistItem(item.id)}
-                    />
-                    <span>
-                      {item.text}
-                      <small>{item.phase || 'Custom'} {item.deadline ? `- due ${item.deadline}` : ''}</small>
-                    </span>
-                  </label>
-                  <select
-                    value={item.status || (item.completed ? 'done' : 'not-started')}
-                    onChange={(event) => updateChecklistStatus(item.id, event.target.value as NonNullable<ChecklistItem['status']>)}
-                    aria-label={`Status for ${item.text}`}
-                  >
-                    <option value="not-started">Belum Mula</option>
-                    <option value="in-progress">Sedang Diurus</option>
-                    <option value="done">Selesai</option>
-                  </select>
-                  <button type="button" aria-label={`Remove ${item.text}`} onClick={() => removeChecklistItem(item.id)}>
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : !loading ? (
-            <p className="empty-state">Ask the chat to create a checklist and it will appear here.</p>
-          ) : null}
+            <div className="checklist-workspace-grid">
+              <section className="checklist-main-list">
+                {checklistView === 'next' ? (
+                  <>
+                    <div className="checklist-section-heading">
+                      <div>
+                        <h4>{language === 'ms' ? 'Apa perlu dibuat sekarang' : 'What to do next'}</h4>
+                        <p>{language === 'ms' ? 'Disusun ikut deadline, urgency, dan status.' : 'Sorted by deadline, urgency, and progress status.'}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('chat');
+                          setInput(checklistNextPrompt);
+                        }}
+                      >
+                        {copy.askAi}
+                      </button>
+                    </div>
+                    <ul className="checklist-task-list">
+                      {(nextChecklistItems.length > 0 ? nextChecklistItems : openChecklistItems.slice(0, 6)).map((item) => renderChecklistTask(item))}
+                    </ul>
+                  </>
+                ) : null}
 
-          <form className="checklist-form" onSubmit={addChecklistItem}>
-            <input
-              value={newChecklistItem}
-              onChange={(event) => setNewChecklistItem(event.target.value)}
-              placeholder="Add checklist item..."
-              aria-label="New checklist item"
-            />
-            <button type="submit" disabled={newChecklistItem.trim().length === 0}>
-              Add
-            </button>
-          </form>
+                {checklistView === 'timeline' ? (
+                  <div className="checklist-timeline-list">
+                    {checklistCategoryGroups.map((group) => {
+                      const groupCompleted = group.items.filter((item) => getChecklistStatus(item) === 'done').length;
+                      return (
+                        <section key={group.phase} className="checklist-phase-group">
+                          <div className="checklist-phase-header">
+                            <div>
+                              <h4>{getItemPhase(group.items[0]) || group.phase}</h4>
+                              <p>{groupCompleted}/{group.items.length} {copy.done}</p>
+                            </div>
+                            <div className="mini-progress"><span style={{ width: `${group.items.length > 0 ? (groupCompleted / group.items.length) * 100 : 0}%` }} /></div>
+                          </div>
+                          <ul className="checklist-task-list">
+                            {group.items.map((item) => renderChecklistTask(item, { compact: true }))}
+                          </ul>
+                        </section>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {checklistView === 'category' ? (
+                  <div className="checklist-category-list">
+                    {checklistCategoryGroups.map((group) => (
+                      <section key={group.phase} className="checklist-category-group">
+                        <button
+                          type="button"
+                          className={checklistFilter === group.phase ? 'active' : ''}
+                          onClick={() => setChecklistFilter(group.phase)}
+                        >
+                          <span>{getItemPhase(group.items[0]) || group.phase}</span>
+                          <strong>{group.items.length}</strong>
+                        </button>
+                        <ul className="checklist-task-list">
+                          {group.items.map((item) => renderChecklistTask(item, { compact: true }))}
+                        </ul>
+                      </section>
+                    ))}
+                  </div>
+                ) : null}
+
+                {checklistView === 'completed' ? (
+                  <>
+                    <div className="checklist-section-heading">
+                      <div>
+                        <h4>{language === 'ms' ? 'Task selesai' : 'Completed tasks'}</h4>
+                        <p>{language === 'ms' ? 'Ruang ini simpan momentum dan bukti progress.' : 'This keeps momentum and proof of progress visible.'}</p>
+                      </div>
+                    </div>
+                    {completedChecklistItems.length > 0 ? (
+                      <ul className="checklist-task-list">
+                        {completedChecklistItems.map((item) => renderChecklistTask(item, { compact: true }))}
+                      </ul>
+                    ) : (
+                      <div className="empty-state action-empty">
+                        <strong>{language === 'ms' ? 'Belum ada task selesai.' : 'No completed tasks yet.'}</strong>
+                        <span>{language === 'ms' ? 'Tick task pertama untuk mula nampak progress.' : 'Tick your first task to start seeing progress.'}</span>
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </section>
+
+              <aside className="checklist-side-panel" aria-label="Checklist assistant">
+                <div className="checklist-side-card">
+                  <span>{language === 'ms' ? 'Cadangan AI' : 'AI suggestions'}</span>
+                  <strong>{nextChecklistItems[0] ? getItemText(nextChecklistItems[0]) : language === 'ms' ? 'Bina checklist pertama' : 'Create your first checklist'}</strong>
+                  <p>
+                    {nextChecklistItems[0]
+                      ? (language === 'ms' ? 'Task ini paling sesuai dibuat sekarang berdasarkan deadline dan status.' : 'This is the best next task based on deadline and status.')
+                      : (language === 'ms' ? 'Mulakan dengan template MajlisMate atau minta AI bina checklist ikut tarikh majlis.' : 'Start with the MajlisMate template or ask AI to generate a checklist from your wedding date.')}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('chat');
+                      setInput(checklistNextPrompt);
+                    }}
+                  >
+                    {copy.askAi}
+                  </button>
+                </div>
+
+                <form className="checklist-form checklist-quick-add" onSubmit={addChecklistItem}>
+                  <label>
+                    <span>{language === 'ms' ? 'Tambah task cepat' : 'Quick add task'}</span>
+                    <input
+                      value={newChecklistItem}
+                      onChange={(event) => setNewChecklistItem(event.target.value)}
+                      placeholder={copy.addItem}
+                      aria-label="New checklist item"
+                    />
+                  </label>
+                  <button type="submit" disabled={newChecklistItem.trim().length === 0}>
+                    {copy.add}
+                  </button>
+                </form>
+
+                <div className="checklist-side-card subtle">
+                  <span>{language === 'ms' ? 'Export' : 'Export'}</span>
+                  <div className="checklist-side-actions">
+                    <button type="button" onClick={() => exportChecklist('json')} disabled={checklistItems.length === 0}>JSON</button>
+                    <button type="button" onClick={createDefaultChecklist}>{copy.defaultTemplate}</button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          ) : !loading ? (
+            <div className="checklist-empty-modern">
+              <span className="checklist-empty-icon" aria-hidden="true"><MenuIcon name="checklist" /></span>
+              <strong>{copy.emptyChecklist}</strong>
+              <p>
+                {language === 'ms'
+                  ? 'Gunakan template MajlisMate atau minta MajlisMate susun checklist ikut tarikh, bajet, dan jumlah tetamu.'
+                  : 'Use the MajlisMate template or ask MajlisMate to build a checklist from your date, budget, and guest count.'}
+              </p>
+              <div>
+                <button type="button" onClick={createDefaultChecklist}>{checklistEmptyActionText}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('chat');
+                    setInput(language === 'ms' ? 'Buat checklist majlis saya ikut tarikh dan bajet' : 'Create my wedding checklist from my date and budget');
+                  }}
+                >
+                  {copy.askAi}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : activeTab === 'calendar' ? (
         <div className="calendar-panel">
           <div className="calendar-toolbar">
             <div>
-              <p className="eyebrow">Calendar menu</p>
+              <p className="eyebrow">Wedding calendar</p>
               <h3>{monthLabel(calendarMonth)}</h3>
-              <p>Click any day to view or add appointments for that date.</p>
+              <p>Schedule vendor follow-ups, payment reminders, fittings, and final confirmations.</p>
             </div>
             <div className="calendar-actions">
               <button type="button" onClick={() => changeCalendarMonth(-1)} aria-label="Previous month">
@@ -1086,13 +1968,70 @@ export default function PlannerWorkspace() {
               <button type="button" onClick={() => setCalendarMonth(new Date())}>
                 Today
               </button>
+              {plannerProfile.majlisDate ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
+                    setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
+                    setSelectedDate(plannerProfile.majlisDate);
+                    setAppointmentDraft((current) => ({ ...current, date: plannerProfile.majlisDate }));
+                  }}
+                >
+                  Wedding day
+                </button>
+              ) : null}
               <button type="button" onClick={() => changeCalendarMonth(1)} aria-label="Next month">
                 &gt;
               </button>
               <button type="button" className="primary-action" onClick={startAppointmentAssistant}>
-                AI Add
+                Schedule with AI
               </button>
             </div>
+          </div>
+
+          <div className="calendar-overview-row" aria-label="Calendar overview">
+            <article>
+              <span>This month</span>
+              <strong>{selectedMonthAppointments.length}</strong>
+              <p>appointments</p>
+            </article>
+            <article>
+              <span>Confirmed</span>
+              <strong>{selectedMonthConfirmed}</strong>
+              <p>locked in</p>
+            </article>
+            <article>
+              <span>Open tasks</span>
+              <strong>{selectedMonthOpen}</strong>
+              <p>need follow-up</p>
+            </article>
+            <article>
+              <span>Next</span>
+              <strong>{nextAppointment ? nextAppointment.date.slice(5) : 'None'}</strong>
+              <p>{nextAppointment ? nextAppointment.title : 'no upcoming item'}</p>
+            </article>
+          </div>
+
+          <div className="calendar-suggestion-strip" aria-label="Calendar suggestions">
+            {calendarSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => {
+                  setActiveTab('calendar');
+                  setIsContextAssistantOpen(true);
+                  setAppointmentAssistantActive(true);
+                  setMenuInputs((current) => ({
+                    ...current,
+                    calendar: `${suggestion} on ${selectedDate} at `
+                  }));
+                }}
+              >
+                <span>Plan with AI</span>
+                {suggestion}
+              </button>
+            ))}
           </div>
 
           <div className="calendar-workspace">
@@ -1104,7 +2043,11 @@ export default function PlannerWorkspace() {
               ))}
               {calendarDays.map((day) => {
                 const dayAppointments = appointments.filter((appointment) => appointment.date === day.key);
-                const dayStatus = dayAppointments.some((appointment) => appointment.status === 'confirmed')
+                const isWeddingDay = Boolean(plannerProfile.majlisDate && day.key === plannerProfile.majlisDate);
+                const dayItemCount = dayAppointments.length + (isWeddingDay ? 1 : 0);
+                const dayStatus = isWeddingDay
+                  ? 'wedding'
+                  : dayAppointments.some((appointment) => appointment.status === 'confirmed')
                   ? 'confirmed'
                   : dayAppointments.some((appointment) => appointment.status === 'done')
                     ? 'done'
@@ -1120,9 +2063,13 @@ export default function PlannerWorkspace() {
                     className={`calendar-day ${day.isCurrentMonth ? '' : 'muted'} ${day.isToday ? 'today' : ''} ${selectedDate === day.key ? 'selected' : ''}`}
                   >
                     <span className="calendar-date">{day.date.getDate()}</span>
-                    <span className="calendar-add-hint">Select</span>
-                    {dayAppointments.length > 0 ? (
-                      <span className={`calendar-count ${dayStatus}`}>{dayAppointments.length}</span>
+                    {dayItemCount > 0 ? (
+                      <span className={`calendar-count ${dayStatus}`}>{dayItemCount}</span>
+                    ) : null}
+                    {isWeddingDay ? (
+                      <span className="appointment-chip wedding">
+                        {language === 'ms' ? 'Hari majlis' : 'Wedding day'}
+                      </span>
                     ) : null}
                     {dayAppointments.slice(0, 2).map((appointment) => (
                       <span key={appointment.id} className={`appointment-chip ${appointment.status || 'planned'}`}>
@@ -1142,8 +2089,78 @@ export default function PlannerWorkspace() {
                   <p className="eyebrow">Selected day</p>
                   <h4>{selectedDateLabel}</h4>
                 </div>
-                <span>{selectedDateAppointments.length} item{selectedDateAppointments.length === 1 ? '' : 's'}</span>
+                <span>{selectedDateAppointments.length + (isSelectedWeddingDay ? 1 : 0)} item{selectedDateAppointments.length + (isSelectedWeddingDay ? 1 : 0) === 1 ? '' : 's'}</span>
               </div>
+
+              {pendingAppointment ? (
+                <article className="appointment-confirm-card">
+                  <p className="eyebrow">Review before adding</p>
+                  <h5>{pendingAppointment.title}</h5>
+                  <dl>
+                    <div>
+                      <dt>Date</dt>
+                      <dd>{pendingAppointment.date}</dd>
+                    </div>
+                    <div>
+                      <dt>Time</dt>
+                      <dd>{pendingAppointment.time || 'Not set'}</dd>
+                    </div>
+                    <div>
+                      <dt>Vendor</dt>
+                      <dd>{pendingAppointment.vendor || 'Not set'}</dd>
+                    </div>
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{pendingAppointment.location || 'Not set'}</dd>
+                    </div>
+                  </dl>
+                  <div className="appointment-confirm-actions">
+                    <button type="button" className="primary-action" onClick={confirmPendingAppointment}>
+                      Confirm
+                    </button>
+                    <button type="button" onClick={editPendingAppointment}>
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => setPendingAppointment(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </article>
+              ) : null}
+
+              {isSelectedWeddingDay && weddingDayAppointment ? (
+                <article className="agenda-card wedding">
+                  <div className="agenda-card-top">
+                    <div>
+                      <strong>{language === 'ms' ? 'Hari majlis' : 'Wedding day'}</strong>
+                      <p>{plannerProfile.coupleName || [plannerProfile.groomName, plannerProfile.brideName].filter(Boolean).join(' & ') || 'MajlisMate'}</p>
+                    </div>
+                    <span>{language === 'ms' ? 'Majlis' : 'Wedding'}</span>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Date</dt>
+                      <dd>{plannerProfile.majlisDate}</dd>
+                    </div>
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{plannerProfile.negeri || 'Not set'}</dd>
+                    </div>
+                    <div>
+                      <dt>Guests</dt>
+                      <dd>{plannerProfile.guestTarget ? `${plannerProfile.guestTarget} pax` : 'Not set'}</dd>
+                    </div>
+                  </dl>
+                  <div className="agenda-actions">
+                    <button type="button" onClick={() => addAppointmentToPhoneCalendar(weddingDayAppointment)}>
+                      Add to phone calendar
+                    </button>
+                    <button type="button" onClick={() => selectTab('dashboard')}>
+                      Edit wedding details
+                    </button>
+                  </div>
+                </article>
+              ) : null}
 
               {selectedDateAppointments.length > 0 ? (
                 <div className="agenda-cards">
@@ -1180,6 +2197,9 @@ export default function PlannerWorkspace() {
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'done')}>
                           Done
                         </button>
+                        <button type="button" onClick={() => addAppointmentToPhoneCalendar(appointment)}>
+                          Add to phone calendar
+                        </button>
                         <button type="button" onClick={() => removeAppointment(appointment.id)}>
                           Remove
                         </button>
@@ -1188,12 +2208,15 @@ export default function PlannerWorkspace() {
                   ))}
                 </div>
               ) : (
-                <p className="empty-state">No appointment on this day. Add one manually or use AI Add.</p>
+                <div className="empty-state action-empty">
+                  <strong>No appointment on this day.</strong>
+                  <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
+                </div>
               )}
 
               <form className="appointment-form" onSubmit={addManualAppointment}>
                 <div>
-                  <p className="eyebrow">Add appointment</p>
+                  <p className="eyebrow">Add manually</p>
                   <h5>{selectedDateLabel}</h5>
                 </div>
                 <input
@@ -1256,7 +2279,7 @@ export default function PlannerWorkspace() {
                   aria-label="Appointment notes"
                 />
                 <button type="submit" disabled={!appointmentDraft.title.trim() || !appointmentDraft.date}>
-                  Add to selected day
+                  Save appointment
                 </button>
               </form>
             </aside>
@@ -1264,20 +2287,22 @@ export default function PlannerWorkspace() {
 
           <div className="appointment-list">
             <div className="appointment-list-header">
-              <h4>This month</h4>
+              <h4>Upcoming this month</h4>
               <span>{selectedMonthAppointments.length} appointment{selectedMonthAppointments.length === 1 ? '' : 's'}</span>
             </div>
-            <div className="tool-actions">
-              <button type="button" onClick={copyAppointments} disabled={appointments.length === 0}>
-                Copy
-              </button>
-              <button type="button" onClick={() => exportAppointments('csv')} disabled={appointments.length === 0}>
-                Export CSV
-              </button>
-              <button type="button" onClick={() => exportAppointments('json')} disabled={appointments.length === 0}>
-                Export JSON
-              </button>
-            </div>
+            {appointments.length > 0 ? (
+              <div className="tool-actions">
+                <button type="button" onClick={copyAppointments}>
+                  Copy
+                </button>
+                <button type="button" onClick={() => exportAppointments('csv')}>
+                  Export CSV
+                </button>
+                <button type="button" onClick={() => exportAppointments('json')}>
+                  Export JSON
+                </button>
+              </div>
+            ) : null}
             {selectedMonthAppointments.length > 0 ? (
               selectedMonthAppointments.map((appointment) => (
                 <article key={appointment.id} className="appointment-item">
@@ -1288,17 +2313,23 @@ export default function PlannerWorkspace() {
                       {appointment.time ? ` at ${appointment.time}` : ''}
                     </p>
                     <small>
-                      {appointment.vendor ? `${appointment.vendor} · ` : ''}
-                      {appointment.location || 'Location not set'} · {appointment.status || 'planned'}
+                      {appointment.vendor ? `${appointment.vendor} - ` : ''}
+                      {appointment.location || 'Location not set'} - {appointment.status || 'planned'}
                     </small>
                   </div>
                   <button type="button" onClick={() => removeAppointment(appointment.id)}>
                     Remove
                   </button>
+                  <button type="button" onClick={() => addAppointmentToPhoneCalendar(appointment)}>
+                    Phone calendar
+                  </button>
                 </article>
               ))
             ) : (
-              <p className="empty-state">No appointments yet. Use AI Add, then tell the chat what to schedule.</p>
+              <div className="empty-state action-empty">
+                <strong>No appointments yet.</strong>
+                <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
+              </div>
             )}
           </div>
         </div>
@@ -1338,28 +2369,91 @@ export default function PlannerWorkspace() {
           savedVendors={savedVendors}
           toggleSavedVendor={toggleSavedVendor}
           askVendorMessage={askVendorMessage}
+          askVendorQuestions={askVendorQuestions}
+          addVendorToBudget={addVendorToBudget}
         />
       ) : null}
         </div>
         {activeMenuTab ? (
-          <aside className="planner-assistant-rail" aria-label="Menu assistant">
-            <MenuAssistant
-              activeMenuTab={activeMenuTab}
-              messages={menuMessages[activeMenuTab]}
-              input={menuInputs[activeMenuTab]}
-              loading={menuLoading === activeMenuTab}
-              onOpenMainChat={() => setActiveTab('chat')}
-              onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
-              onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
-              onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
+          <>
+            <button
+              type="button"
+              className="assistant-drawer-backdrop"
+              aria-label="Close context assistant"
+              onClick={() => setIsContextAssistantOpen(false)}
             />
-          </aside>
+            <aside className="planner-assistant-rail assistant-drawer" aria-label="Menu assistant">
+              <div className="assistant-drawer-header">
+                <div>
+                  <span>Context assistant</span>
+                  <strong>{menuAssistantPrompts[activeMenuTab].title}</strong>
+                </div>
+                <button type="button" aria-label="Close context assistant" onClick={() => setIsContextAssistantOpen(false)}>
+                  Close
+                </button>
+              </div>
+              <MenuAssistant
+                activeMenuTab={activeMenuTab}
+                messages={menuMessages[activeMenuTab]}
+                input={menuInputs[activeMenuTab]}
+                loading={menuLoading === activeMenuTab}
+                onOpenMainChat={() => {
+                  setIsContextAssistantOpen(false);
+                  setActiveTab('chat');
+                }}
+                onQuickPrompt={(prompt) => setMenuAssistantPrompt(activeMenuTab, prompt)}
+                onInputChange={(value) => setMenuInputs((current) => ({ ...current, [activeMenuTab]: value }))}
+                onSubmit={(event) => submitMenuAssistant(event, activeMenuTab)}
+              />
+            </aside>
+          </>
         ) : null}
+        {isCommandOpen ? (
+          <div className="command-palette-backdrop" role="presentation" onMouseDown={() => setIsCommandOpen(false)}>
+            <div className="command-palette" role="dialog" aria-modal="true" aria-label="Command search" onMouseDown={(event) => event.stopPropagation()}>
+              <input
+                autoFocus
+                value={commandQuery}
+                onChange={(event) => setCommandQuery(event.target.value)}
+                placeholder={language === 'ms' ? 'Cari task, vendor, tetamu, appointment...' : 'Search tasks, vendors, guests, appointments...'}
+                aria-label="Command search"
+              />
+              <div className="command-results">
+                {filteredCommandItems.length > 0 ? filteredCommandItems.map((item) => (
+                  <button
+                    key={`${item.label}-${item.detail}`}
+                    type="button"
+                    onClick={() => {
+                      item.action();
+                      setIsCommandOpen(false);
+                      setCommandQuery('');
+                    }}
+                  >
+                    <strong>{item.label}</strong>
+                    <span>{item.detail}</span>
+                  </button>
+                )) : (
+                  <p>{language === 'ms' ? 'Tiada hasil.' : 'No results.'}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
+        <nav className="mobile-bottom-nav" aria-label="Mobile planner navigation">
+          {mobileNavItems.map((item) => (
+            <button
+              key={item.tab}
+              type="button"
+              className={activeTab === item.tab ? 'active' : ''}
+              onClick={() => selectTab(item.tab)}
+            >
+              <MenuIcon name={item.icon} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
 
     </section>
   );
 }
-
-
-
