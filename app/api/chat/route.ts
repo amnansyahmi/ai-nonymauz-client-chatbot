@@ -26,6 +26,8 @@ type PlannerContext = {
   upcomingAppointments?: Array<{ title: string; date: string; time?: string; vendor?: string; location?: string }>;
 };
 
+type AppLanguage = 'ms' | 'en';
+
 const WEDDING_RELATED_PATTERN =
   /\b(akad|andaman|baju|banquet|bride|bridal|budget|caterer|catering|ceremony|checklist|decor|dewan|engagement|event|florist|groom|guest|hantaran|hotel|invitation|jemputan|kahwin|kenduri|majlis|makeup|nikah|pelamin|photographer|reception|rsvp|sanding|seating|venue|vendor|wedding)\b/i;
 
@@ -47,6 +49,30 @@ function isUnrelatedCreationRequest(message: string) {
   return CREATION_REQUEST_PATTERN.test(message) && !WEDDING_RELATED_PATTERN.test(message);
 }
 
+function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage) {
+  const isChecklist = /\b(checklist|senarai|task|tugas|todo|to-do)\b/i.test(userMessage);
+  const isVendor = /\b(vendor|photographer|caterer|katering|dewan|venue|andaman|makeup|mua|florist)\b/i.test(userMessage);
+  const isBudget = /\b(budget|bajet|harga|kos|rm|payment|bayar)\b/i.test(userMessage);
+  const isAppointment = /\b(appointment|temujanji|schedule|jadual|booking|book|tempah)\b/i.test(userMessage);
+  const isRsvp = /\b(rsvp|guest|tetamu|jemputan|headcount|pax)\b/i.test(userMessage);
+
+  if (language === 'en') {
+    if (isChecklist) return 'I can help with that. A clean wedding checklist should be grouped by timing, not just category.\n\nStart with:\n- 12-9 months: date, venue, budget, main vendors\n- 8-6 months: outfits, photographer, catering, guest list\n- 5-3 months: invitation, doorgift, decoration, documents\n- Final month: vendor confirmations, seating, payment balance, day schedule\n\nTell me your wedding date and guest estimate so I can make it more specific.';
+    if (isVendor) return 'Good idea. For vendors, shortlist by fit before price.\n\nCompare each vendor on:\n- Availability for your date\n- Package inclusions and hidden charges\n- Deposit and cancellation terms\n- Recent portfolio or reviews\n- Travel fee and setup timing\n\nShare the vendor type and negeri, and I can prepare questions or a WhatsApp message.';
+    if (isBudget) return 'Let’s keep the budget practical. Split it into confirmed, estimated, and optional costs.\n\nA simple structure:\n- Venue and catering\n- Outfit and makeup\n- Photo/video\n- Decoration and pelamin\n- Door gifts and invitation\n- Buffer, usually 8-12%\n\nTell me your total budget and guest count, and I’ll suggest a cleaner allocation.';
+    if (isAppointment) return 'Sure. For appointments, track three things: who, when, and what decision must be made.\n\nUseful notes:\n- Vendor name\n- Date and time\n- Location or call link\n- Questions to ask\n- Deposit or document needed\n\nGive me the date, time, and vendor, and I’ll help format it.';
+    if (isRsvp) return 'For RSVP, separate guests by family side or group first. That makes follow-up easier.\n\nTrack:\n- Name and phone\n- Group\n- Pax count\n- Status: pending, confirmed, declined\n- Notes, such as kids or transport\n\nIf you already have a guest estimate, I can suggest a follow-up plan.';
+    return 'I’ve noted that. Here’s a practical next step: turn it into one clear planning action.\n\nTry this:\n- Decide whether it affects checklist, budget, vendor, guest list, or appointment\n- Add the key date or amount if there is one\n- Ask me to draft the next message, task, or reminder\n\nFor example: “Create a checklist for my final month” or “Draft a WhatsApp message to a caterer.”';
+  }
+
+  if (isChecklist) return 'Boleh. Checklist kahwin paling senang bila susun ikut masa, bukan ikut kategori semata-mata.\n\nMula dengan:\n- 12-9 bulan: tarikh, dewan, bajet, vendor utama\n- 8-6 bulan: baju, photographer, katering, senarai tetamu\n- 5-3 bulan: kad jemputan, doorgift, dekorasi, dokumen\n- Bulan terakhir: confirm vendor, seating, baki bayaran, tentatif hari majlis\n\nBeritahu tarikh majlis dan anggaran tetamu, saya boleh susun lebih tepat.';
+  if (isVendor) return 'Bagus. Untuk vendor, shortlist ikut kesesuaian dulu sebelum harga.\n\nBandingkan setiap vendor pada:\n- Available atau tidak pada tarikh majlis\n- Apa yang termasuk dalam pakej\n- Caj tambahan tersembunyi\n- Deposit dan syarat cancel\n- Portfolio atau review terkini\n- Caj travel dan masa setup\n\nBagi jenis vendor dan negeri, saya boleh bantu sediakan soalan atau mesej WhatsApp.';
+  if (isBudget) return 'Jom kemaskan bajet. Pecahkan kepada kos confirm, kos anggaran, dan kos optional.\n\nStruktur mudah:\n- Dewan dan katering\n- Baju dan makeup\n- Photo/video\n- Dekorasi dan pelamin\n- Doorgift dan jemputan\n- Buffer sekitar 8-12%\n\nBeritahu jumlah bajet dan jumlah tetamu, saya boleh cadangkan pecahan yang lebih sesuai.';
+  if (isAppointment) return 'Boleh. Untuk appointment, simpan tiga benda: siapa, bila, dan keputusan apa yang perlu dibuat.\n\nNota appointment yang berguna:\n- Nama vendor\n- Tarikh dan masa\n- Lokasi atau link call\n- Soalan yang nak ditanya\n- Deposit atau dokumen yang perlu dibawa\n\nBagi tarikh, masa, dan vendor, saya boleh formatkan untuk calendar.';
+  if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut side keluarga atau group dulu. Nanti follow-up lebih mudah.\n\nTrack benda ini:\n- Nama dan nombor telefon\n- Group tetamu\n- Bilangan pax\n- Status: belum reply, confirm, tidak hadir\n- Nota seperti anak kecil atau transport\n\nKalau ada anggaran tetamu, saya boleh cadangkan cara follow-up.';
+  return 'Saya dah noted. Langkah terbaik sekarang ialah tukarkan perkara ini kepada satu tindakan planning yang jelas.\n\nCuba pilih kategori:\n- Checklist\n- Bajet\n- Vendor\n- Tetamu\n- Appointment\n\nContoh: “Buat checklist untuk bulan terakhir” atau “Draft mesej WhatsApp untuk caterer.”';
+}
+
 function extractTextFromJson(data: any): string {
   const text =
     data?.choices?.[0]?.delta?.content ||
@@ -64,7 +90,8 @@ function extractTextFromJson(data: any): string {
 async function forwardAiNonymauzStream(
   controller: ReadableStreamDefaultController<Uint8Array>,
   encoder: TextEncoder,
-  messages: ChatMessage[]
+  messages: ChatMessage[],
+  language: AppLanguage
 ) {
   const baseUrl = process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '');
   const apiKey = process.env.AI_NONYMAUZ_API_KEY;
@@ -72,9 +99,7 @@ async function forwardAiNonymauzStream(
 
   if (!baseUrl || !apiKey || apiKey === 'your-secret-api-key') {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-    const demoAnswer =
-      `Demo mode aktif kerana AI_NONYMAUZ_BASE_URL / AI_NONYMAUZ_API_KEY belum diset.\n\n` +
-      `MajlisMate.ai sudah terima soalan wedding planner anda: "${userMessage}". Selepas env diset di Vercel, jawapan sebenar akan dijana menggunakan knowledge base MajlisMate.ai.`;
+    const demoAnswer = buildDemoPlannerAnswer(userMessage, language);
 
     for (const word of demoAnswer.split(/(\s+)/)) {
       controller.enqueue(encoder.encode(sse({ type: 'delta', text: word })));
@@ -174,19 +199,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const messages = Array.isArray(body.messages) ? (body.messages as IncomingMessage[]) : [];
+    const language: AppLanguage = body.language === 'en' ? 'en' : 'ms';
+    const languageName = language === 'en' ? 'English' : 'Malay/Bahasa Melayu';
     const plannerContext = (body.plannerContext || {}) as PlannerContext;
     const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content;
 
     if (!latestUserMessage || latestUserMessage.trim().length < 2) {
-      return new Response(sse({ type: 'error', error: 'Please provide a valid question.' }), {
+      return new Response(sse({ type: 'error', error: language === 'en' ? 'Please provide a valid question.' : 'Sila masukkan soalan yang sah.' }), {
         status: 400,
         headers: { 'Content-Type': 'text/event-stream; charset=utf-8' }
       });
     }
 
     if (isCodingRequest(latestUserMessage)) {
-      const redirectMessage =
-        'I cannot help create code, HTML, CSS, scripts, apps, or websites. I can still help with non-code wedding planning, such as invitation wording, vendor messages, checklists, timelines, budgets, RSVP planning, and appointment planning.';
+      const redirectMessage = language === 'en'
+        ? 'I cannot help create code, HTML, CSS, scripts, apps, or websites. I can still help with non-code wedding planning, such as invitation wording, vendor messages, checklists, timelines, budgets, RSVP planning, and appointment planning.'
+        : 'Saya tak boleh bantu cipta kod, HTML, CSS, skrip, app, atau website. Saya masih boleh bantu perancangan kahwin tanpa kod seperti wording jemputan, mesej vendor, checklist, timeline, bajet, RSVP, dan appointment.';
 
       return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
         headers: {
@@ -199,8 +227,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (isUnrelatedCreationRequest(latestUserMessage)) {
-      const redirectMessage =
-        'I can help create non-code prompts, copy, wording, and templates when they are for your wedding or majlis planning. For example, ask me to write invitation wording, a vendor-message template, a majlis checklist prompt, or RSVP reminder copy.';
+      const redirectMessage = language === 'en'
+        ? 'I can help create non-code prompts, copy, wording, and templates when they are for your wedding or majlis planning. For example, ask me to write invitation wording, a vendor-message template, a majlis checklist prompt, or RSVP reminder copy.'
+        : 'Saya boleh bantu cipta prompt, copy, wording, dan template tanpa kod bila ia berkaitan wedding atau majlis. Contohnya, minta saya tulis wording jemputan, template mesej vendor, prompt checklist majlis, atau copy reminder RSVP.';
 
       return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
         headers: {
@@ -228,7 +257,7 @@ Rules:
 6. Use the internal knowledge context first.
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
-9. Support English and Malay. Reply in the same language as the customer where possible.
+9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
 
 Internal knowledge context:
 ${context}
@@ -263,7 +292,7 @@ Current planner context from the local MajlisMate.ai workspace:
             )
           );
 
-          await forwardAiNonymauzStream(controller, encoder, aiMessages);
+          await forwardAiNonymauzStream(controller, encoder, aiMessages, language);
           controller.enqueue(encoder.encode(sse({ type: 'done' })));
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unexpected error';

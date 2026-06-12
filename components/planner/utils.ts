@@ -1,4 +1,4 @@
-import { defaultChecklistTemplate } from './data';
+import { defaultChecklistTemplate, type LocalizedText } from './data';
 import type { Appointment, BudgetItem, CalendarDay, ChecklistItem, Guest, StreamEvent } from './types';
 
 export function parseSseEvents(buffer: string) {
@@ -155,21 +155,31 @@ export function generateDefaultChecklist(majlisDate?: string): ChecklistItem[] {
   };
 
   return defaultChecklistTemplate.flatMap((group, groupIndex) =>
-    group.items.map((text, itemIndex) => {
+    group.items.map((item, itemIndex) => {
+      const phase = group.phase;
       const dueDate = weddingDate
-        ? new Date(weddingDate.getFullYear(), weddingDate.getMonth(), weddingDate.getDate() - phaseOffsets[group.phase])
+        ? new Date(weddingDate.getFullYear(), weddingDate.getMonth(), weddingDate.getDate() - phaseOffsets[phase.ms])
         : null;
 
       return {
         id: `default-${groupIndex}-${itemIndex}-${Date.now()}`,
-        text,
+        text: item.ms,
+        textMs: item.ms,
+        textEn: item.en,
         completed: false,
-        phase: group.phase,
+        phase: phase.ms,
+        phaseMs: phase.ms,
+        phaseEn: phase.en,
         status: 'not-started' as const,
         deadline: dueDate ? dateKey(dueDate) : undefined
       };
     })
   );
+}
+
+export function localizedValue(value: LocalizedText | string | undefined, language: 'ms' | 'en') {
+  if (!value) return '';
+  return typeof value === 'string' ? value : value[language];
 }
 
 export function statusLabel(status: ChecklistItem['status'] | BudgetItem['status'] | undefined) {

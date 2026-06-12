@@ -1,4 +1,23 @@
-import type { BudgetItem, Message, PlannerProfile, Vendor } from './types';
+import type { AppLanguage, BudgetItem, Message, PlannerProfile, Vendor } from './types';
+
+export type LocalizedText = {
+  ms: string;
+  en: string;
+};
+
+export type ChecklistTemplateItem = LocalizedText & {
+  phase?: LocalizedText;
+};
+
+export type ChecklistTemplate = {
+  title: LocalizedText;
+  items: ChecklistTemplateItem[];
+};
+
+export const languageLabels: Record<AppLanguage, string> = {
+  ms: 'BM',
+  en: 'EN'
+};
 
 export const starterQuestions = [
   'Create a wedding checklist for 100 guests.',
@@ -25,7 +44,8 @@ export const storageKeys = {
   budgetItems: 'majlismate.budgetItems',
   guests: 'majlismate.guests',
   savedVendors: 'majlismate.savedVendors',
-  activity: 'majlismate.activity'
+  activity: 'majlismate.activity',
+  language: 'majlismate.language'
 };
 
 export const defaultPlannerProfile: PlannerProfile = {
@@ -41,53 +61,53 @@ export const defaultPlannerProfile: PlannerProfile = {
 
 export const defaultChecklistTemplate = [
   {
-    phase: 'Fasa 1 - Asas',
+    phase: { ms: 'Fasa 1 - Asas', en: 'Phase 1 - Foundation' },
     items: [
-      'Isi maklumat majlis',
-      'Confirm tarikh majlis dengan keluarga dua belah',
-      'Apply permohonan nikah online',
-      'Daftar kursus pra-perkahwinan',
-      'Tempah jurunikah',
-      'Tetapkan bajet keseluruhan',
-      'Tempah dewan / lokasi majlis',
-      'Bayar deposit dewan'
+      { ms: 'Isi maklumat majlis', en: 'Fill in wedding details' },
+      { ms: 'Confirm tarikh majlis dengan keluarga dua belah', en: 'Confirm the wedding date with both families' },
+      { ms: 'Apply permohonan nikah online', en: 'Submit the online nikah application' },
+      { ms: 'Daftar kursus pra-perkahwinan', en: 'Register for the pre-marriage course' },
+      { ms: 'Tempah jurunikah', en: 'Book the marriage officiant' },
+      { ms: 'Tetapkan bajet keseluruhan', en: 'Set the overall wedding budget' },
+      { ms: 'Tempah dewan / lokasi majlis', en: 'Book the hall or wedding venue' },
+      { ms: 'Bayar deposit dewan', en: 'Pay the venue deposit' }
     ]
   },
   {
-    phase: 'Fasa 2 - Vendor Utama',
+    phase: { ms: 'Fasa 2 - Vendor Utama', en: 'Phase 2 - Main Vendors' },
     items: [
-      'Tempah katerer ATAU confirm orang rewang',
-      'Tempah jurufoto & juruvideo',
-      'Tempah juruandam / makeup',
-      'Survey & tempah baju pengantin',
-      'Buat fitting baju pengantin',
-      'Settle hantaran dua belah',
-      'Tempah penghias majlis',
-      'Tempah PA system & MC'
+      { ms: 'Tempah katerer ATAU confirm orang rewang', en: 'Book catering or confirm the rewang team' },
+      { ms: 'Tempah jurufoto & juruvideo', en: 'Book photographer and videographer' },
+      { ms: 'Tempah juruandam / makeup', en: 'Book makeup or bridal styling' },
+      { ms: 'Survey & tempah baju pengantin', en: 'Survey and book wedding attire' },
+      { ms: 'Buat fitting baju pengantin', en: 'Schedule wedding attire fitting' },
+      { ms: 'Settle hantaran dua belah', en: 'Finalize hantaran for both sides' },
+      { ms: 'Tempah penghias majlis', en: 'Book wedding decorator' },
+      { ms: 'Tempah PA system & MC', en: 'Book PA system and emcee' }
     ]
   },
   {
-    phase: 'Fasa 3 - Persediaan',
+    phase: { ms: 'Fasa 3 - Persediaan', en: 'Phase 3 - Preparation' },
     items: [
-      'Siapkan senarai tetamu penuh',
-      'Hantar jemputan & setup RSVP',
-      'Hantar reminder RSVP',
-      'Confirm headcount & bagi ke katerer',
-      'Tempah cenderahati',
-      'Confirm semua vendor',
-      'Briefing kepada pembantu & keluarga'
+      { ms: 'Siapkan senarai tetamu penuh', en: 'Complete the full guest list' },
+      { ms: 'Hantar jemputan & setup RSVP', en: 'Send invitations and set up RSVP' },
+      { ms: 'Hantar reminder RSVP', en: 'Send RSVP reminders' },
+      { ms: 'Confirm headcount & bagi ke katerer', en: 'Confirm headcount and share it with the caterer' },
+      { ms: 'Tempah cenderahati', en: 'Order wedding favors' },
+      { ms: 'Confirm semua vendor', en: 'Confirm all vendors' },
+      { ms: 'Briefing kepada pembantu & keluarga', en: 'Brief helpers and family members' }
     ]
   },
   {
-    phase: 'Fasa 4 - Final',
+    phase: { ms: 'Fasa 4 - Final', en: 'Phase 4 - Final' },
     items: [
-      'Confirm semua vendor seminggu sebelum',
-      'Bagi nombor final ke katerer 5 hari sebelum',
-      'Briefing terakhir semua pembantu',
-      'Confirm parking & pengangkutan',
-      'Confirm penginapan tetamu jauh',
-      'Prepare barang penting hari majlis',
-      'Rehat & serah urusan kepada pembantu'
+      { ms: 'Confirm semua vendor seminggu sebelum', en: 'Confirm all vendors one week before' },
+      { ms: 'Bagi nombor final ke katerer 5 hari sebelum', en: 'Give the final number to the caterer five days before' },
+      { ms: 'Briefing terakhir semua pembantu', en: 'Run the final briefing with all helpers' },
+      { ms: 'Confirm parking & pengangkutan', en: 'Confirm parking and transport' },
+      { ms: 'Confirm penginapan tetamu jauh', en: 'Confirm accommodation for outstation guests' },
+      { ms: 'Prepare barang penting hari majlis', en: 'Prepare important wedding-day items' },
+      { ms: 'Rehat & serah urusan kepada pembantu', en: 'Rest and hand over tasks to helpers' }
     ]
   }
 ];
@@ -179,78 +199,83 @@ export const vendorDirectory: Vendor[] = [
   }
 ];
 
-export const checklistTemplates = [
+export const checklistTemplates: ChecklistTemplate[] = [
   {
-    title: 'PRD default wedding checklist',
-    items: defaultChecklistTemplate.flatMap((group) => group.items)
+    title: { ms: 'Checklist MajlisMate', en: 'MajlisMate wedding checklist' },
+    items: defaultChecklistTemplate.flatMap((group) =>
+      group.items.map((item) => ({
+        ...item,
+        phase: group.phase
+      }))
+    )
   },
   {
-    title: '12-month wedding checklist',
+    title: { ms: 'Checklist 12 bulan', en: '12-month wedding checklist' },
     items: [
-      'Set wedding date and planning budget',
-      'Confirm estimated guest count',
-      'Shortlist venue or dewan options',
-      'Book nikah, sanding, or reception venue',
-      'Compare catering, decor, photo, video, and makeup vendors',
-      'Prepare invitation and RSVP plan',
-      'Confirm attire, fitting dates, and accessories',
-      'Create event day timeline',
-      'Confirm final vendor balances and contact persons',
-      'Prepare emergency kit and final family briefing'
+      { ms: 'Tetapkan tarikh kahwin dan bajet', en: 'Set wedding date and planning budget' },
+      { ms: 'Confirm anggaran jumlah tetamu', en: 'Confirm estimated guest count' },
+      { ms: 'Shortlist pilihan venue atau dewan', en: 'Shortlist venue or hall options' },
+      { ms: 'Tempah lokasi nikah, sanding, atau reception', en: 'Book nikah, sanding, or reception venue' },
+      { ms: 'Bandingkan vendor katering, dekor, foto, video, dan makeup', en: 'Compare catering, decor, photo, video, and makeup vendors' },
+      { ms: 'Sediakan pelan jemputan dan RSVP', en: 'Prepare invitation and RSVP plan' },
+      { ms: 'Confirm baju, tarikh fitting, dan aksesori', en: 'Confirm attire, fitting dates, and accessories' },
+      { ms: 'Bina timeline hari majlis', en: 'Create the event-day timeline' },
+      { ms: 'Confirm baki bayaran vendor dan contact person', en: 'Confirm final vendor balances and contact persons' },
+      { ms: 'Sediakan emergency kit dan briefing keluarga', en: 'Prepare emergency kit and final family briefing' }
     ]
   },
   {
-    title: 'Nikah checklist',
+    title: { ms: 'Checklist nikah', en: 'Nikah checklist' },
     items: [
-      'Confirm nikah date, time, and location',
-      'Check required documents with the relevant authority',
-      'Prepare wali, witnesses, and family seating',
-      'Confirm tok kadi or officiant details',
-      'Prepare mas kahwin, rings, and hantaran items',
-      'Confirm attire, makeup, and photographer timing',
-      'Prepare simple post-nikah photo session plan'
+      { ms: 'Confirm tarikh, masa, dan lokasi nikah', en: 'Confirm nikah date, time, and location' },
+      { ms: 'Semak dokumen wajib dengan pejabat agama', en: 'Check required documents with the relevant authority' },
+      { ms: 'Sediakan wali, saksi, dan susunan tempat keluarga', en: 'Prepare wali, witnesses, and family seating' },
+      { ms: 'Confirm butiran tok kadi atau jurunikah', en: 'Confirm tok kadi or officiant details' },
+      { ms: 'Sediakan mas kahwin, cincin, dan hantaran', en: 'Prepare mas kahwin, rings, and hantaran items' },
+      { ms: 'Confirm baju, makeup, dan timing photographer', en: 'Confirm attire, makeup, and photographer timing' },
+      { ms: 'Sediakan plan photoshoot ringkas selepas nikah', en: 'Prepare a simple post-nikah photo session plan' }
     ]
   },
   {
-    title: 'Sanding day timeline',
+    title: { ms: 'Timeline hari sanding', en: 'Sanding day timeline' },
     items: [
-      'Vendor arrival and setup check',
-      'Makeup and outfit preparation',
-      'Family photo session',
-      'Guest arrival and reception opening',
-      'Couple entrance',
-      'Meal service and table rounds',
-      'Cake cutting or special program',
-      'Final photography session',
-      'Vendor teardown and item handover'
+      { ms: 'Vendor sampai dan semak setup', en: 'Vendor arrival and setup check' },
+      { ms: 'Persediaan makeup dan baju', en: 'Makeup and outfit preparation' },
+      { ms: 'Sesi gambar keluarga', en: 'Family photo session' },
+      { ms: 'Tetamu tiba dan reception bermula', en: 'Guest arrival and reception opening' },
+      { ms: 'Pengantin masuk', en: 'Couple entrance' },
+      { ms: 'Makan beradab dan table rounds', en: 'Meal service and table rounds' },
+      { ms: 'Potong kek atau program khas', en: 'Cake cutting or special program' },
+      { ms: 'Sesi fotografi akhir', en: 'Final photography session' },
+      { ms: 'Vendor teardown dan serah barang', en: 'Vendor teardown and item handover' }
     ]
   },
   {
-    title: 'Vendor meeting questions',
+    title: { ms: 'Soalan meeting vendor', en: 'Vendor meeting questions' },
     items: [
-      'Are you available on our wedding date?',
-      'What is included in the package?',
-      'What is the payment schedule and deposit amount?',
-      'Are there overtime or transport fees?',
-      'Who is the event-day contact person?',
-      'What is your cancellation or postponement policy?',
-      'Can we see recent portfolio examples?',
-      'What do you need from us before the wedding day?'
+      { ms: 'Adakah tarikh majlis kami masih available?', en: 'Are you available on our wedding date?' },
+      { ms: 'Apa yang termasuk dalam pakej?', en: 'What is included in the package?' },
+      { ms: 'Bagaimana jadual bayaran dan jumlah deposit?', en: 'What is the payment schedule and deposit amount?' },
+      { ms: 'Ada caj overtime atau transport?', en: 'Are there overtime or transport fees?' },
+      { ms: 'Siapa contact person pada hari majlis?', en: 'Who is the event-day contact person?' },
+      { ms: 'Apa polisi cancellation atau postponement?', en: 'What is your cancellation or postponement policy?' },
+      { ms: 'Boleh tengok portfolio terkini?', en: 'Can we see recent portfolio examples?' },
+      { ms: 'Apa yang vendor perlukan sebelum hari majlis?', en: 'What do you need from us before the wedding day?' }
     ]
   },
   {
-    title: 'Wedding budget categories',
+    title: { ms: 'Kategori bajet kahwin', en: 'Wedding budget categories' },
     items: [
-      'Venue or dewan',
-      'Catering',
-      'Decor and pelamin',
-      'Attire and accessories',
-      'Makeup and styling',
-      'Photography and videography',
-      'Invitation and stationery',
-      'Hantaran and gifts',
-      'Transport and accommodation',
-      'Contingency fund'
+      { ms: 'Venue atau dewan', en: 'Venue or hall' },
+      { ms: 'Katering', en: 'Catering' },
+      { ms: 'Dekorasi dan pelamin', en: 'Decor and pelamin' },
+      { ms: 'Baju dan aksesori', en: 'Attire and accessories' },
+      { ms: 'Makeup dan styling', en: 'Makeup and styling' },
+      { ms: 'Fotografi dan videografi', en: 'Photography and videography' },
+      { ms: 'Jemputan dan stationery', en: 'Invitation and stationery' },
+      { ms: 'Hantaran dan hadiah', en: 'Hantaran and gifts' },
+      { ms: 'Transport dan penginapan', en: 'Transport and accommodation' },
+      { ms: 'Dana kecemasan', en: 'Contingency fund' }
     ]
   }
 ];

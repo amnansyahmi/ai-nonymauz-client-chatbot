@@ -16,11 +16,17 @@ export type StreamEvent = {
 export type ChecklistItem = {
   id: string;
   text: string;
+  textMs?: string;
+  textEn?: string;
   completed: boolean;
   phase?: string;
+  phaseMs?: string;
+  phaseEn?: string;
   status?: 'not-started' | 'in-progress' | 'done';
   deadline?: string;
 };
+
+export type AppLanguage = 'ms' | 'en';
 
 export type PlannerProfile = {
   coupleName: string;
