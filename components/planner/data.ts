@@ -35,6 +35,8 @@ export const defaultAssistantMessage: Message = {
 
 export const storageKeys = {
   messages: 'majlismate.messages',
+  chatSessions: 'majlismate.chatSessions',
+  currentChatId: 'majlismate.currentChatId',
   activeTab: 'majlismate.activeTab',
   checklistTitle: 'majlismate.checklistTitle',
   checklistItems: 'majlismate.checklistItems',
@@ -56,6 +58,8 @@ export const defaultPlannerProfile: PlannerProfile = {
   negeri: 'Selangor',
   totalBudget: 30000,
   guestTarget: 300,
+  weddingStyle: '',
+  keyContact: '',
   completed: false
 };
 
@@ -136,6 +140,21 @@ export const defaultBudgetItems: BudgetItem[] = [
   status: 'not-started',
   note: ''
 }));
+
+export const budgetSuggestions: BudgetItem[] = [
+  { id: 'suggestion-khemah', category: 'Khemah / Canopy', planned: 2500, actual: 0, paid: 0, status: 'not-started', note: 'Backup if venue needs outdoor cover, walkway, or extra seating.' },
+  { id: 'suggestion-lighting', category: 'Lighting & Ambience', planned: 1200, actual: 0, paid: 0, status: 'not-started', note: 'Fairy lights, spotlight, backdrop lighting, or outdoor lighting.' },
+  { id: 'suggestion-sound', category: 'PA System / Sound', planned: 900, actual: 0, paid: 0, status: 'not-started', note: 'Mic, speakers, basic sound tech, or ceremony audio.' },
+  { id: 'suggestion-mc', category: 'MC / Pengacara Majlis', planned: 700, actual: 0, paid: 0, status: 'not-started', note: 'Host, emcee, or flow coordinator for reception.' },
+  { id: 'suggestion-door-gift', category: 'Door Gift Extra', planned: 1000, actual: 0, paid: 0, status: 'not-started', note: 'Extra favors for family, VIP, or last-minute guests.' },
+  { id: 'suggestion-stationery', category: 'Signage & Stationery', planned: 450, actual: 0, paid: 0, status: 'not-started', note: 'Welcome sign, seating labels, tent cards, menus, or stickers.' },
+  { id: 'suggestion-parking', category: 'Parking / Rela', planned: 600, actual: 0, paid: 0, status: 'not-started', note: 'Parking attendants, cones, signage, or traffic support.' },
+  { id: 'suggestion-cleaning', category: 'Cleaning / Waste', planned: 500, actual: 0, paid: 0, status: 'not-started', note: 'Post-event cleanup, bins, or venue cleaning fee.' },
+  { id: 'suggestion-family-attire', category: 'Family Attire', planned: 1800, actual: 0, paid: 0, status: 'not-started', note: 'Parents, siblings, bridesmaids, or groomsmen outfits.' },
+  { id: 'suggestion-beauty-prep', category: 'Beauty Prep', planned: 400, actual: 0, paid: 0, status: 'not-started', note: 'Facial, nails, hair treatment, or grooming before majlis.' },
+  { id: 'suggestion-meal-crew', category: 'Crew / Family Meals', planned: 700, actual: 0, paid: 0, status: 'not-started', note: 'Meals for helpers, vendors, family, or rehearsal day.' },
+  { id: 'suggestion-emergency', category: 'Emergency Buffer', planned: 1500, actual: 0, paid: 0, status: 'not-started', note: 'Last-minute printing, transport, extra pax, or unexpected vendor charges.' }
+];
 
 export const vendorDirectory: Vendor[] = [
   {

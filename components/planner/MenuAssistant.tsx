@@ -97,7 +97,7 @@ export default function MenuAssistant({
       <div className="menu-assistant-copy">
         <div className="assistant-orb" aria-hidden="true">AI</div>
         <div>
-          <p className="assistant-kicker">Context assistant</p>
+          <p className="assistant-kicker">Planner AI</p>
           <h3>{promptConfig.title}</h3>
           <p>{promptConfig.description}</p>
         </div>
@@ -132,8 +132,16 @@ export default function MenuAssistant({
             placeholder={promptConfig.placeholder}
             aria-label={`${promptConfig.title} question`}
           />
-          <button type="submit" disabled={loading || input.trim().length < 2}>
-            {loading ? 'Thinking' : 'Ask'}
+          <button
+            type="submit"
+            className="menu-assistant-submit"
+            disabled={loading || input.trim().length < 2}
+            aria-label={loading ? 'Planner AI is thinking' : 'Send to Planner AI'}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 12 20 4l-4 16-4.5-6.5L4 12Z" />
+              <path d="m11.5 13.5 4.5-5.5" />
+            </svg>
           </button>
         </form>
       </div>

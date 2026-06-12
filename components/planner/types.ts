@@ -36,6 +36,8 @@ export type PlannerProfile = {
   negeri: string;
   totalBudget: number;
   guestTarget: number;
+  weddingStyle: string;
+  keyContact: string;
   completed: boolean;
 };
 
