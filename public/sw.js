@@ -1,5 +1,6 @@
-const CACHE_NAME = 'majlismate-pwa-v3';
-const STATIC_ASSETS = ['/manifest.webmanifest', '/icon.svg'];
+const CACHE_NAME = 'majlismate-pwa-v4';
+const APP_SHELL = '/chat';
+const STATIC_ASSETS = [APP_SHELL, '/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -21,16 +22,16 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   if (url.pathname.startsWith('/api/')) return;
-  if (url.pathname.startsWith('/_next/')) return;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(
-        () =>
-          new Response('MajlisMate.ai is offline. Please reconnect to load this page.', {
-            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-          })
-      )
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(APP_SHELL, copy));
+          return response;
+        })
+        .catch(() => caches.match(APP_SHELL))
     );
     return;
   }
@@ -40,7 +41,7 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
 
       return fetch(event.request).then((response) => {
-        if (response.ok && STATIC_ASSETS.includes(url.pathname)) {
+        if (response.ok && (STATIC_ASSETS.includes(url.pathname) || url.pathname.startsWith('/_next/static/'))) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }

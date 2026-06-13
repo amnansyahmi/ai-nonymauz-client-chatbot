@@ -2,25 +2,6 @@ import { useRef, useState, type Dispatch, type FormEvent, type SetStateAction } 
 import type { ActivityItem, Appointment, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
 
-const malaysiaStates = [
-  'Johor',
-  'Kedah',
-  'Kelantan',
-  'Melaka',
-  'Negeri Sembilan',
-  'Pahang',
-  'Perak',
-  'Perlis',
-  'Pulau Pinang',
-  'Sabah',
-  'Sarawak',
-  'Selangor',
-  'Terengganu',
-  'Kuala Lumpur',
-  'Labuan',
-  'Putrajaya'
-];
-
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
   daysLeft: number | null;
@@ -194,6 +175,7 @@ export function DashboardPanel({
 type BudgetPanelProps = {
   budgetItems: BudgetItem[];
   budgetSuggestions: BudgetItem[];
+  plannerProfile: PlannerProfile;
   budgetDraft: BudgetItem;
   setBudgetDraft: Dispatch<SetStateAction<BudgetItem>>;
   addBudgetItem: (event: FormEvent) => void;
@@ -209,6 +191,7 @@ type BudgetPanelProps = {
 export function BudgetPanel({
   budgetItems,
   budgetSuggestions,
+  plannerProfile,
   budgetDraft,
   setBudgetDraft,
   addBudgetItem,
@@ -251,6 +234,34 @@ export function BudgetPanel({
   const paidBarWidth = totalActual > 0 ? paidProgress : 0;
   const normalizedBudgetCategories = budgetItems.map((item) => item.category.trim().toLowerCase());
   const missingSuggestions = budgetSuggestions.filter((item) => !normalizedBudgetCategories.includes(item.category.trim().toLowerCase())).slice(0, 6);
+  const suggestionBase = Math.max(plannerProfile.totalBudget, totalPlanned, totalActual, 30000);
+  const budgetAllocation = [
+    { label: 'Venue / Dewan', percent: 0.24, hint: 'Hall, room, basic facilities, parking' },
+    { label: 'Catering', percent: 0.34, hint: 'Food usually scales with guest count' },
+    { label: 'Pelamin & Dekorasi', percent: 0.1, hint: 'Backdrop, florals, walkway, ambience' },
+    { label: 'Baju / Andaman', percent: 0.1, hint: 'Attire, makeup, fitting, accessories' },
+    { label: 'Photo & Video', percent: 0.1, hint: 'Coverage, editing, album, highlight video' },
+    { label: 'Contingency', percent: 0.07, hint: 'Buffer for last-minute changes' },
+    { label: 'Others', percent: 0.05, hint: 'Door gifts, transport, stationery, crew meals' }
+  ];
+  const findBudgetByAllocation = (label: string) => {
+    const normalizedLabel = label.toLowerCase();
+    return budgetItems.find((item) => {
+      const category = item.category.toLowerCase();
+      if (normalizedLabel.includes('baju')) return category.includes('baju') || category.includes('andaman') || category.includes('mua');
+      if (normalizedLabel.includes('photo')) return category.includes('photo') || category.includes('video') || category.includes('foto');
+      if (normalizedLabel.includes('others')) return category.includes('cenderahati') || category.includes('hantaran') || category.includes('transport');
+      return normalizedLabel.split('/')[0].trim().split(' ')[0] && category.includes(normalizedLabel.split('/')[0].trim().toLowerCase());
+    });
+  };
+  const applyBudgetAllocation = () => {
+    budgetAllocation.forEach((allocation) => {
+      const matchedItem = findBudgetByAllocation(allocation.label);
+      if (matchedItem) {
+        updateBudgetItem(matchedItem.id, { planned: Math.round(suggestionBase * allocation.percent) });
+      }
+    });
+  };
 
   return (
     <div className="planner-panel budget-panel budget-command-center">
@@ -442,6 +453,24 @@ export function BudgetPanel({
                 ? `${money(largestActualItem.actual)} is currently the largest actual cost.`
                 : 'Add actual costs to see which categories need attention.'}
             </p>
+          </div>
+
+          <div className="budget-allocation-card">
+            <span>Suggested split</span>
+            <strong>{money(suggestionBase)} planning guide</strong>
+            <p>Use this as a starting point, then adjust based on venue style and guest count.</p>
+            <div className="budget-allocation-list">
+              {budgetAllocation.map((allocation) => (
+                <div key={allocation.label}>
+                  <span>
+                    <strong>{allocation.label}</strong>
+                    <small>{allocation.hint}</small>
+                  </span>
+                  <em>{money(Math.round(suggestionBase * allocation.percent))}</em>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={applyBudgetAllocation}>Apply suggested split</button>
           </div>
 
           <div className="budget-suggestion-card">
@@ -712,8 +741,18 @@ export function VendorsPanel({
   addVendorToBudget
 }: VendorsPanelProps) {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [compareVendorIds, setCompareVendorIds] = useState<string[]>([]);
   const mapQueryBase = (vendor: Vendor) => encodeURIComponent(`${vendor.name} ${vendor.category} ${vendor.negeri} Malaysia`);
   const selectedMapVendor = filteredVendors.find((vendor) => savedVendors.includes(vendor.id)) || filteredVendors[0];
+  const comparedVendors = compareVendorIds
+    .map((id) => filteredVendors.find((vendor) => vendor.id === id))
+    .filter((vendor): vendor is Vendor => Boolean(vendor));
+  const toggleCompareVendor = (id: string) => {
+    setCompareVendorIds((current) => {
+      if (current.includes(id)) return current.filter((vendorId) => vendorId !== id);
+      return [...current, id].slice(-3);
+    });
+  };
 
   return (
     <div className="planner-panel vendor-discovery-panel">
@@ -725,6 +764,7 @@ export function VendorsPanel({
         </div>
         <div className="vendor-header-actions">
           <span className="status-pill">{savedVendors.length} shortlisted</span>
+          {compareVendorIds.length > 0 ? <span className="status-pill">{compareVendorIds.length}/3 comparing</span> : null}
         </div>
       </div>
 
@@ -771,6 +811,41 @@ export function VendorsPanel({
         </section>
       ) : null}
 
+      {comparedVendors.length > 0 ? (
+        <section className="vendor-compare-panel" aria-label="Vendor comparison">
+          <div className="vendor-compare-header">
+            <div>
+              <p className="eyebrow">Compare</p>
+              <h4>Shortlist side by side</h4>
+            </div>
+            <button type="button" onClick={() => setCompareVendorIds([])}>Clear</button>
+          </div>
+          <div className="vendor-compare-grid">
+            {comparedVendors.map((vendor) => (
+              <article key={vendor.id}>
+                <strong>{vendor.name}</strong>
+                <span>{vendor.category} - {vendor.negeri}</span>
+                <dl>
+                  <div>
+                    <dt>Price</dt>
+                    <dd>{money(vendor.minPrice)} - {money(vendor.maxPrice)}</dd>
+                  </div>
+                  <div>
+                    <dt>Rating</dt>
+                    <dd>{vendor.rating.toFixed(1)}</dd>
+                  </div>
+                  <div>
+                    <dt>Contact</dt>
+                    <dd>{vendor.contact}</dd>
+                  </div>
+                </dl>
+                <button type="button" onClick={() => setSelectedVendor(vendor)}>Open details</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="vendor-grid">
         {filteredVendors.map((vendor) => (
           <article key={vendor.id} className="vendor-card">
@@ -790,6 +865,9 @@ export function VendorsPanel({
             <div className="vendor-actions">
               <button type="button" className={savedVendors.includes(vendor.id) ? 'is-saved' : ''} onClick={() => toggleSavedVendor(vendor.id)}>
                 {savedVendors.includes(vendor.id) ? 'Shortlisted' : 'Shortlist'}
+              </button>
+              <button type="button" className={compareVendorIds.includes(vendor.id) ? 'is-saved' : ''} onClick={() => toggleCompareVendor(vendor.id)}>
+                {compareVendorIds.includes(vendor.id) ? 'Comparing' : 'Compare'}
               </button>
               <button type="button" className="primary" onClick={() => askVendorMessage(vendor)}>Draft WhatsApp</button>
               <button type="button" onClick={() => setSelectedVendor(vendor)}>Details</button>

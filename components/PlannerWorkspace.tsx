@@ -24,7 +24,6 @@ import type {
   ActivityItem,
   Appointment,
   AppointmentDraft,
-  BeforeInstallPromptEvent,
   BudgetItem,
   CalendarDay,
   ChecklistItem,
@@ -41,7 +40,6 @@ import {
   daysUntil,
   downloadTextFile,
   fallbackChecklist,
-  formatAppointmentsText,
   formatChecklistText,
   generateDefaultChecklist,
   getCalendarDays,
@@ -234,10 +232,8 @@ export default function PlannerWorkspace() {
   const [loading, setLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const backupInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const storedMessages = safeJsonParse<Message[]>(localStorage.getItem(storageKeys.messages), [defaultAssistantMessage]);
@@ -415,19 +411,13 @@ export default function PlannerWorkspace() {
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
     const handleOffline = () => setIsOffline(true);
-    const handleInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
     };
   }, []);
 
@@ -471,10 +461,6 @@ export default function PlannerWorkspace() {
     if (!options?.silent) {
       setStatusMessage(language === 'ms' ? 'Chat baru dibuka.' : 'New chat started.');
     }
-  }
-
-  function startNewChat() {
-    startFreshChat();
   }
 
   function openChatSession(session: ChatSession) {
@@ -983,11 +969,6 @@ export default function PlannerWorkspace() {
     setStatusMessage('Checklist copied.');
   }
 
-  async function copyAppointments() {
-    await navigator.clipboard.writeText(formatAppointmentsText(appointments));
-    setStatusMessage('Appointments copied.');
-  }
-
   function exportChecklist(format: 'txt' | 'json') {
     if (format === 'json') {
       downloadTextFile('majlismate-checklist.json', JSON.stringify({ title: checklistTitle, items: checklistItems }, null, 2), 'application/json');
@@ -995,27 +976,6 @@ export default function PlannerWorkspace() {
     }
 
     downloadTextFile('majlismate-checklist.txt', formatChecklistText(checklistTitle, checklistItems));
-  }
-
-  function exportAppointments(format: 'csv' | 'json') {
-    if (format === 'json') {
-      downloadTextFile('majlismate-appointments.json', JSON.stringify(appointments, null, 2), 'application/json');
-      return;
-    }
-
-    const rows = [
-      ['date', 'time', 'title', 'note'],
-      ...appointments.map((appointment) => [
-        appointment.date,
-        appointment.time || '',
-        appointment.title,
-        appointment.note
-      ])
-    ];
-    const csv = rows
-      .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    downloadTextFile('majlismate-appointments.csv', csv, 'text/csv');
   }
 
   function addAppointmentToPhoneCalendar(appointment: Appointment) {
@@ -1123,57 +1083,6 @@ export default function PlannerWorkspace() {
 
     downloadTextFile('majlismate-calendar.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MajlisMate//Wedding Planner//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...events, 'END:VCALENDAR'].join('\n'), 'text/calendar;charset=utf-8');
     setStatusMessage('Calendar file created for all appointments.');
-  }
-
-  function exportPlannerBackup() {
-    const backup = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      plannerProfile,
-      checklistTitle,
-      checklistItems,
-      appointments,
-      budgetItems,
-      guests,
-      savedVendors,
-      activity,
-      language
-    };
-    downloadTextFile('majlismate-backup.json', JSON.stringify(backup, null, 2), 'application/json');
-    setStatusMessage('Planner backup exported.');
-  }
-
-  function importPlannerBackup(file: File | undefined) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const backup = JSON.parse(String(reader.result || '{}')) as Partial<{
-          plannerProfile: PlannerProfile;
-          checklistTitle: string;
-          checklistItems: ChecklistItem[];
-          appointments: Appointment[];
-          budgetItems: BudgetItem[];
-          guests: Guest[];
-          savedVendors: string[];
-          activity: ActivityItem[];
-          language: AppLanguage;
-        }>;
-        if (backup.plannerProfile) setPlannerProfile({ ...defaultPlannerProfile, ...backup.plannerProfile });
-        if (backup.checklistTitle) setChecklistTitle(backup.checklistTitle);
-        if (Array.isArray(backup.checklistItems)) setChecklistItems(backup.checklistItems);
-        if (Array.isArray(backup.appointments)) setAppointments(backup.appointments);
-        if (Array.isArray(backup.budgetItems)) setBudgetItems(backup.budgetItems);
-        if (Array.isArray(backup.guests)) setGuests(backup.guests);
-        if (Array.isArray(backup.savedVendors)) setSavedVendors(backup.savedVendors);
-        if (Array.isArray(backup.activity)) setActivity(backup.activity);
-        if (backup.language === 'ms' || backup.language === 'en') setLanguage(backup.language);
-        setStatusMessage('Planner backup imported.');
-      } catch {
-        setStatusMessage('Could not import that backup file.');
-      }
-    };
-    reader.readAsText(file);
   }
 
   function exportGuestsCsv() {
@@ -1308,31 +1217,6 @@ export default function PlannerWorkspace() {
     setStatusMessage('Appointment added.');
   }
 
-  async function installApp() {
-    if (!installPrompt) return;
-
-    await installPrompt.prompt();
-    await installPrompt.userChoice;
-    setInstallPrompt(null);
-  }
-
-  function resetLocalWorkspace() {
-    setMessages([defaultAssistantMessage]);
-    setActiveTab('dashboard');
-    setPlannerProfile(defaultPlannerProfile);
-    setChecklistTitle('Checklist');
-    setChecklistItems([]);
-    setAppointments([]);
-    setPendingAppointment(null);
-    setBudgetItems(defaultBudgetItems);
-    setGuests([]);
-    setSavedVendors([]);
-    setActivity([]);
-    setCalendarMonth(new Date());
-    setSelectedDate(dateKey(new Date()));
-    setStatusMessage('Local workspace cleared.');
-  }
-
   const completedCount = checklistItems.filter((item) => item.completed).length;
   const calendarDays = getCalendarDays(calendarMonth);
   const selectedMonthAppointments = appointments
@@ -1396,13 +1280,6 @@ export default function PlannerWorkspace() {
                 : daysLeft > 7
                   ? ['Confirm all vendors and give headcount to caterer.']
                   : ['Final briefing, confirm parking, and prepare day-of items.'];
-  const filteredChecklistItems = checklistItems.filter((item) => {
-    if (checklistFilter === 'all') return true;
-    if (checklistFilter === 'not-started' || checklistFilter === 'in-progress' || checklistFilter === 'done') {
-      return (item.status || (item.completed ? 'done' : 'not-started')) === checklistFilter;
-    }
-    return item.phase === checklistFilter;
-  });
   const checklistPhases = Array.from(new Set(checklistItems.map((item) => item.phase).filter(Boolean))) as string[];
   const vendorCategories = Array.from(new Set(vendorDirectory.map((vendor) => vendor.category)));
   const vendorStates = Array.from(new Set(vendorDirectory.map((vendor) => vendor.negeri)));
@@ -1561,6 +1438,35 @@ export default function PlannerWorkspace() {
   const nextChecklistItems = [...openChecklistItems]
     .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
     .slice(0, 6);
+  const checklistFocusGroups = [
+    {
+      key: 'now',
+      title: language === 'ms' ? 'Sekarang' : 'Now',
+      helper: language === 'ms' ? 'Overdue, urgent, atau sedang diurus.' : 'Overdue, urgent, or already in progress.',
+      items: openChecklistItems
+        .filter((item) => getChecklistPriority(item).className === 'urgent' || getChecklistStatus(item) === 'in-progress')
+        .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+        .slice(0, 4)
+    },
+    {
+      key: 'week',
+      title: language === 'ms' ? 'Minggu ini' : 'This week',
+      helper: language === 'ms' ? 'Task yang elok diselesaikan selepas item urgent.' : 'Tasks to handle after urgent items.',
+      items: openChecklistItems
+        .filter((item) => getChecklistPriority(item).className === 'soon')
+        .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+        .slice(0, 4)
+    },
+    {
+      key: 'later',
+      title: language === 'ms' ? 'Kemudian' : 'Later',
+      helper: language === 'ms' ? 'Belum kritikal, tapi jangan hilang dari radar.' : 'Not critical yet, but keep it visible.',
+      items: openChecklistItems
+        .filter((item) => getChecklistPriority(item).className === 'later')
+        .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+        .slice(0, 4)
+    }
+  ].filter((group) => group.items.length > 0);
   const completedChecklistItems = checklistItems.filter((item) => getChecklistStatus(item) === 'done');
   const checklistPhaseGroups = checklistPhases.map((phase) => ({
     phase,
@@ -1653,6 +1559,13 @@ export default function PlannerWorkspace() {
   const coupleMeta =
     plannerProfile.majlisDate ||
     (plannerProfile.negeri ? `${plannerProfile.negeri} - ${plannerProfile.guestTarget} pax` : `${plannerProfile.guestTarget} pax`);
+  const sidebarDateLabel = plannerProfile.majlisDate
+    ? new Date(`${plannerProfile.majlisDate}T00:00:00`).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })
+    : language === 'ms' ? 'Belum ditetapkan' : 'Not set yet';
   const selectTab = (tab: ActiveTab) => {
     if (tab === 'chat') {
       startFreshChat({ silent: true });
@@ -1690,11 +1603,6 @@ export default function PlannerWorkspace() {
       }
     }
   ];
-  const isProfileIncomplete =
-    !plannerProfile.completed ||
-    !plannerProfile.majlisDate ||
-    !plannerProfile.guestTarget ||
-    !plannerProfile.totalBudget;
   const normalizedInput = input.toLowerCase();
   const commandSuggestions =
     input.trim().length < 2
@@ -1712,9 +1620,18 @@ export default function PlannerWorkspace() {
     { tab: 'chat', label: copy.chat, icon: 'chat' },
     { tab: 'checklist', label: copy.checklist, icon: 'checklist' },
     { tab: 'calendar', label: copy.calendar, icon: 'calendar' },
-    { tab: 'budget', label: copy.budget, icon: 'budget' },
+    { tab: 'budget', label: language === 'ms' ? 'bajet' : 'budget', icon: 'budget' },
     { tab: 'vendors', label: copy.vendors, icon: 'vendors' }
   ];
+  const sidebarMenuLabels: Record<ActiveTab, string> = {
+    dashboard: copy.dashboard,
+    chat: copy.chat,
+    checklist: copy.checklist,
+    calendar: copy.calendar,
+    budget: language === 'ms' ? 'Bajet' : 'Budget',
+    rsvp: language === 'ms' ? 'Tetamu' : 'Guests',
+    vendors: copy.vendors
+  };
   const commandItems = [
     {
       label: language === 'ms' ? 'Tanya MajlisMate' : 'Ask MajlisMate',
@@ -1848,11 +1765,16 @@ export default function PlannerWorkspace() {
           </div>
           <label className="sidebar-date">
             <span>{copy.weddingDate}</span>
-            <input
-              type="date"
-              value={plannerProfile.majlisDate}
-              onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
-            />
+            <span className="sidebar-date-control">
+              <strong>{sidebarDateLabel}</strong>
+              <small>{language === 'ms' ? 'Tap untuk tukar tarikh' : 'Tap to change date'}</small>
+              <input
+                type="date"
+                value={plannerProfile.majlisDate}
+                onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
+                aria-label={copy.weddingDate}
+              />
+            </span>
           </label>
           <nav className="planner-menu" role="tablist" aria-label="Planner menu">
             <button
@@ -1902,7 +1824,7 @@ export default function PlannerWorkspace() {
               className={activeTab === 'budget' ? 'active' : ''}
               onClick={() => selectTab('budget')}
             >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="budget" /></span>{copy.budget}</span>
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="budget" /></span>{sidebarMenuLabels.budget}</span>
               {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
@@ -1912,7 +1834,7 @@ export default function PlannerWorkspace() {
               className={activeTab === 'rsvp' ? 'active' : ''}
               onClick={() => selectTab('rsvp')}
             >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="guests" /></span>{copy.guests}</span>
+              <span className="menu-label"><span className="menu-icon"><MenuIcon name="guests" /></span>{sidebarMenuLabels.rsvp}</span>
               {guests.length > 0 ? <span>{confirmedGuests}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
             <button
@@ -2014,14 +1936,6 @@ export default function PlannerWorkspace() {
               >
                 {coupleInitials}
               </button>
-              <button
-                type="button"
-                className="workspace-checklist-shortcut"
-                aria-label={copy.checklistShortcut}
-                onClick={() => selectTab('checklist')}
-              >
-                <span aria-hidden="true" />
-              </button>
             </div>
           </div>
           {activeTab === 'dashboard' ? (
@@ -2074,7 +1988,6 @@ export default function PlannerWorkspace() {
             loading={loading}
             placeholder={copy.placeholder}
             submitLabel={copy.send}
-            loadingLabel={copy.sending}
             emptyTypingLabel={copy.typing}
             sourcesLabel={copy.sources}
             inputAriaLabel={copy.questionLabel}
@@ -2186,9 +2099,28 @@ export default function PlannerWorkspace() {
                         {copy.askAi}
                       </button>
                     </div>
-                    <ul className="checklist-task-list">
-                      {(nextChecklistItems.length > 0 ? nextChecklistItems : openChecklistItems.slice(0, 6)).map((item) => renderChecklistTask(item))}
-                    </ul>
+                    {checklistFocusGroups.length > 0 ? (
+                      <div className="checklist-focus-stack">
+                        {checklistFocusGroups.map((group) => (
+                          <section key={group.key} className="checklist-focus-group">
+                            <div className="checklist-focus-header">
+                              <div>
+                                <h5>{group.title}</h5>
+                                <p>{group.helper}</p>
+                              </div>
+                              <span>{group.items.length}</span>
+                            </div>
+                            <ul className="checklist-task-list">
+                              {group.items.map((item) => renderChecklistTask(item))}
+                            </ul>
+                          </section>
+                        ))}
+                      </div>
+                    ) : (
+                      <ul className="checklist-task-list">
+                        {openChecklistItems.slice(0, 6).map((item) => renderChecklistTask(item))}
+                      </ul>
+                    )}
                   </>
                 ) : null}
 
@@ -2707,58 +2639,12 @@ export default function PlannerWorkspace() {
             </aside>
           </div>
 
-          <div className="appointment-list">
-            <div className="appointment-list-header">
-              <h4>Upcoming this month</h4>
-              <span>{selectedMonthAppointments.length} appointment{selectedMonthAppointments.length === 1 ? '' : 's'}</span>
-            </div>
-            {appointments.length > 0 ? (
-              <div className="tool-actions">
-                <button type="button" className="utility-action" onClick={copyAppointments}>
-                  Copy
-                </button>
-                <button type="button" className="utility-action" onClick={() => exportAppointments('csv')}>
-                  Export CSV
-                </button>
-                <button type="button" className="utility-action" onClick={() => exportAppointments('json')}>
-                  Export JSON
-                </button>
-              </div>
-            ) : null}
-            {selectedMonthAppointments.length > 0 ? (
-              selectedMonthAppointments.map((appointment) => (
-                <article key={appointment.id} className="appointment-item">
-                  <div>
-                    <strong>{appointment.title}</strong>
-                    <p>
-                      {appointment.date}
-                      {appointment.time ? ` at ${appointment.time}` : ''}
-                    </p>
-                    <small>
-                      {appointment.vendor ? `${appointment.vendor} - ` : ''}
-                      {appointment.location || 'Location not set'} - {appointment.status || 'planned'}
-                    </small>
-                  </div>
-                  <button type="button" onClick={() => removeAppointment(appointment.id)}>
-                    Remove
-                  </button>
-                  <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(appointment)} title="Download this event as a calendar file">
-                    Add to calendar
-                  </button>
-                </article>
-              ))
-            ) : (
-              <div className="empty-state action-empty">
-                <strong>No appointments yet.</strong>
-                <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
-              </div>
-            )}
-          </div>
         </div>
       ) : activeTab === 'budget' ? (
         <BudgetPanel
           budgetItems={budgetItems}
           budgetSuggestions={budgetSuggestions}
+          plannerProfile={plannerProfile}
           budgetDraft={budgetDraft}
           setBudgetDraft={setBudgetDraft}
           addBudgetItem={addBudgetItem}
