@@ -235,6 +235,27 @@ export function BudgetPanel({
   const normalizedBudgetCategories = budgetItems.map((item) => item.category.trim().toLowerCase());
   const missingSuggestions = budgetSuggestions.filter((item) => !normalizedBudgetCategories.includes(item.category.trim().toLowerCase())).slice(0, 6);
   const suggestionBase = Math.max(plannerProfile.totalBudget, totalPlanned, totalActual, 30000);
+  const cateringItem = budgetItems.find((item) => /cater|katering|catering/i.test(item.category));
+  const contingencyItem = budgetItems.find((item) => /contingency|kecemasan|buffer/i.test(item.category));
+  const cateringBudget = cateringItem ? Math.max(cateringItem.actual, cateringItem.planned) : 0;
+  const cateringPerPax = plannerProfile.guestTarget > 0 && cateringBudget > 0 ? Math.round(cateringBudget / plannerProfile.guestTarget) : 0;
+  const budgetPerPax = plannerProfile.guestTarget > 0 && suggestionBase > 0 ? Math.round(suggestionBase / plannerProfile.guestTarget) : 0;
+  const budgetRisk = !plannerProfile.guestTarget
+    ? 'Add guest target for better budget checks'
+    : !cateringItem
+      ? 'Catering category missing'
+      : cateringPerPax > 0 && cateringPerPax < 18
+        ? `Catering looks low at ${money(cateringPerPax)} per pax`
+        : budgetPerPax > 0 && budgetPerPax < 80
+          ? `Overall budget is tight at ${money(budgetPerPax)} per pax`
+          : !contingencyItem || contingencyItem.planned === 0
+            ? 'Add a contingency buffer'
+            : overBudgetItems.length > 0
+              ? `${overBudgetItems.length} category needs review`
+              : 'Budget looks balanced';
+  const budgetRiskDetail = budgetRisk === 'Budget looks balanced'
+    ? 'No obvious risk from current totals. Keep actual costs updated.'
+    : 'Use this as a planning signal, then adjust based on your real vendor quotes.';
   const budgetAllocation = [
     { label: 'Venue / Dewan', percent: 0.24, hint: 'Hall, room, basic facilities, parking' },
     { label: 'Catering', percent: 0.34, hint: 'Food usually scales with guest count' },
@@ -446,12 +467,12 @@ export function BudgetPanel({
           ) : null}
 
           <div className="budget-insight-card">
-            <span>Quick insight</span>
-            <strong>{largestActualItem && largestActualItem.actual > 0 ? largestActualItem.category : 'No spending yet'}</strong>
+            <span>AI budget check</span>
+            <strong>{budgetRisk}</strong>
             <p>
-              {largestActualItem && largestActualItem.actual > 0
+              {largestActualItem && largestActualItem.actual > 0 && budgetRisk === 'Budget looks balanced'
                 ? `${money(largestActualItem.actual)} is currently the largest actual cost.`
-                : 'Add actual costs to see which categories need attention.'}
+                : budgetRiskDetail}
             </p>
           </div>
 
@@ -725,6 +746,7 @@ type VendorsPanelProps = {
   toggleSavedVendor: (id: string) => void;
   askVendorMessage: (vendor: Vendor) => void;
   askVendorQuestions: (vendor: Vendor) => void;
+  askVendorComparison: (vendors: Vendor[]) => void;
   addVendorToBudget: (vendor: Vendor) => void;
 };
 
@@ -738,6 +760,7 @@ export function VendorsPanel({
   toggleSavedVendor,
   askVendorMessage,
   askVendorQuestions,
+  askVendorComparison,
   addVendorToBudget
 }: VendorsPanelProps) {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -818,7 +841,12 @@ export function VendorsPanel({
               <p className="eyebrow">Compare</p>
               <h4>Shortlist side by side</h4>
             </div>
-            <button type="button" onClick={() => setCompareVendorIds([])}>Clear</button>
+            <div className="vendor-compare-actions">
+              {comparedVendors.length >= 2 ? (
+                <button type="button" className="primary" onClick={() => askVendorComparison(comparedVendors)}>Ask AI</button>
+              ) : null}
+              <button type="button" onClick={() => setCompareVendorIds([])}>Clear</button>
+            </div>
           </div>
           <div className="vendor-compare-grid">
             {comparedVendors.map((vendor) => (

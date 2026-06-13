@@ -47,13 +47,19 @@ import {
   money,
   monthLabel,
   parseAppointment,
+  parseGuestList,
+  parseMoneyAmount,
+  parsePlannerSetup,
   parseSseEvents,
   rsvpLabel,
   safeJsonParse,
   sortAppointments,
   statusLabel,
   wantsAppointment,
+  wantsBudgetSuggestion,
   wantsChecklist,
+  wantsGuestPlanning,
+  wantsPlannerSetup,
   wantsVendorMessage
 } from './planner/utils';
 
@@ -195,6 +201,8 @@ export default function PlannerWorkspace() {
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
+  const [calendarView, setCalendarView] = useState<'month' | 'agenda'>('month');
+  const [calendarAgendaFilter, setCalendarAgendaFilter] = useState<'upcoming' | 'all'>('upcoming');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(defaultBudgetItems);
   const [budgetDraft, setBudgetDraft] = useState<BudgetItem>({
@@ -227,6 +235,7 @@ export default function PlannerWorkspace() {
     status: 'planned',
     note: ''
   });
+  const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
   const [pendingAppointment, setPendingAppointment] = useState<Appointment | null>(null);
   const [appointmentAssistantActive, setAppointmentAssistantActive] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -268,7 +277,7 @@ export default function PlannerWorkspace() {
     setActiveTab('chat');
     setPlannerProfile({ ...defaultPlannerProfile, ...storedPlannerProfile, weddingStyle: storedPlannerProfile.weddingStyle || '', keyContact: storedPlannerProfile.keyContact || '' });
     if (storedChecklistTitle) {
-      setChecklistTitle(storedChecklistTitle.replace(/Checklist Perkahwinan Ila/g, 'Checklist MajlisMate').replace(/Ila's Wedding Checklist/g, 'MajlisMate wedding checklist'));
+      setChecklistTitle(storedChecklistTitle.replace(/Checklist Perkahwinan/g, 'Checklist MajlisMate').replace(/Wedding Checklist/g, 'Wedding checklist'));
     }
     setChecklistItems(storedChecklistItems.map((item) => ({ ...item, status: item.status || (item.completed ? 'done' : 'not-started') })));
     setAppointments(storedAppointments);
@@ -452,6 +461,119 @@ export default function PlannerWorkspace() {
     setStatusMessage(`${copy.defaultTemplate} loaded.`);
   }
 
+  function applyPlannerSetupFromText(text: string) {
+    const setupPatch = parsePlannerSetup(text, profileStates);
+    const hasSetupPatch = Object.keys(setupPatch).length > 0;
+    if (!hasSetupPatch) return false;
+
+    setPlannerProfile((current) => {
+      const nextProfile = {
+        ...current,
+        ...setupPatch
+      };
+      const derivedCoupleName =
+        nextProfile.coupleName.trim() ||
+        [nextProfile.groomName.trim(), nextProfile.brideName.trim()].filter(Boolean).join(' & ');
+      return {
+        ...nextProfile,
+        coupleName: derivedCoupleName,
+        completed: Boolean(derivedCoupleName || nextProfile.majlisDate || nextProfile.totalBudget || nextProfile.guestTarget)
+      };
+    });
+
+    if (setupPatch.majlisDate) {
+      setCalendarMonth(new Date(`${setupPatch.majlisDate}T00:00:00`));
+      setSelectedDate(setupPatch.majlisDate);
+      if (checklistItems.length === 0) {
+        setChecklistTitle(copy.defaultTemplate);
+        setChecklistItems(generateDefaultChecklist(setupPatch.majlisDate));
+      }
+    }
+
+    addActivity('AI updated wedding setup details.');
+    setStatusMessage(language === 'ms' ? 'Maklumat majlis dikemaskini.' : 'Wedding setup updated.');
+    return true;
+  }
+
+  function applySmartBudgetSuggestion(total?: number) {
+    const base = Math.max(total || plannerProfile.totalBudget || totalPlanned || totalActual || 30000, 10000);
+    const allocationRules = [
+      { test: (category: string) => /venue|dewan|hall/i.test(category), percent: 0.24 },
+      { test: (category: string) => /cater|katering|catering/i.test(category), percent: 0.34 },
+      { test: (category: string) => /pelamin|dekor|decor/i.test(category), percent: 0.1 },
+      { test: (category: string) => /baju|andaman|mua|makeup/i.test(category), percent: 0.1 },
+      { test: (category: string) => /photo|foto|video/i.test(category), percent: 0.1 },
+      { test: (category: string) => /contingency|kecemasan|buffer/i.test(category), percent: 0.07 }
+    ];
+
+    setPlannerProfile((current) => ({ ...current, totalBudget: base }));
+    setBudgetItems((current) =>
+      current.map((item) => {
+        const allocation = allocationRules.find((rule) => rule.test(item.category));
+        if (allocation) return { ...item, planned: Math.round(base * allocation.percent) };
+        if (item.planned > 0) return item;
+        return { ...item, planned: Math.round(base * 0.05) };
+      })
+    );
+    setActiveTab('budget');
+    addActivity(`AI suggested budget allocation from ${money(base)}.`);
+    setStatusMessage(language === 'ms' ? 'Cadangan bajet dimasukkan.' : 'Budget suggestion applied.');
+  }
+
+  function applyGuestPlanningFromText(text: string) {
+    const parsedGuests = parseGuestList(text);
+    if (parsedGuests.length === 0) {
+      setActiveTab('rsvp');
+      setIsContextAssistantOpen(true);
+      setMenuInputs((current) => ({ ...current, rsvp: text }));
+      return false;
+    }
+
+    setGuests((current) => [...current, ...parsedGuests]);
+    setActiveTab('rsvp');
+    addActivity(`AI added ${parsedGuests.length} guest${parsedGuests.length === 1 ? '' : 's'}.`);
+    setStatusMessage(language === 'ms' ? 'Tetamu ditambah.' : 'Guest list updated.');
+    return true;
+  }
+
+  function applyDetectedBudgetUpdate(text: string) {
+    const amount = parseMoneyAmount(text);
+    if (!amount) return false;
+
+    const lowerText = text.toLowerCase();
+    const matchedVendor = vendorDirectory.find((vendor) => lowerText.includes(vendor.name.toLowerCase()));
+    const matchedItem = budgetItems.find((item) => {
+      const category = item.category.toLowerCase();
+      const vendorCategory = matchedVendor?.category.toLowerCase();
+      return lowerText.includes(category) ||
+        Boolean(vendorCategory && (category.includes(vendorCategory) || vendorCategory.includes(category))) ||
+        Boolean(matchedVendor && item.note.toLowerCase().includes(matchedVendor.name.toLowerCase()));
+    });
+
+    if (!matchedItem) return false;
+
+    const isPaidUpdate = /\b(paid|pay|bayar|deposit|settle|transfer|duit muka)\b/i.test(text);
+    const isActualUpdate = /\b(actual|cost|harga|quote|quotation|sebut harga|kos)\b/i.test(text);
+    const isPlannedUpdate = /\b(planned|plan|budget|bajet|estimate|anggaran)\b/i.test(text);
+    if (!isPaidUpdate && !isActualUpdate && !isPlannedUpdate) return false;
+
+    const note = [matchedItem.note, text].filter(Boolean).join(' | ');
+    const patch: Partial<BudgetItem> = { note, status: 'in-progress' };
+    if (isPaidUpdate) {
+      patch.paid = Math.max(0, matchedItem.paid + amount);
+      if (matchedItem.actual === 0) patch.actual = Math.max(matchedItem.actual, matchedItem.paid + amount);
+    } else if (isActualUpdate) {
+      patch.actual = amount;
+    } else if (isPlannedUpdate) {
+      patch.planned = amount;
+    }
+
+    setBudgetItems((current) => current.map((item) => (item.id === matchedItem.id ? { ...item, ...patch } : item)));
+    addActivity(`AI detected budget update: ${matchedItem.category}.`);
+    setStatusMessage(language === 'ms' ? `${matchedItem.category} dikemaskini.` : `${matchedItem.category} updated.`);
+    return true;
+  }
+
   function startFreshChat(options?: { silent?: boolean }) {
     setMessages([defaultAssistantMessage]);
     setInput('');
@@ -505,6 +627,10 @@ export default function PlannerWorkspace() {
     const shouldCreateChecklist = wantsChecklist(trimmed);
     const shouldCreateAppointment = appointmentAssistantActive || wantsAppointment(trimmed);
     const shouldDraftVendorMessage = wantsVendorMessage(trimmed);
+    const shouldApplySetup = wantsPlannerSetup(trimmed);
+    const shouldApplyBudgetSuggestion = wantsBudgetSuggestion(trimmed);
+    const shouldApplyGuestPlanning = wantsGuestPlanning(trimmed);
+    const didApplyBudgetUpdate = applyDetectedBudgetUpdate(trimmed);
 
     if (shouldCreateChecklist) {
       setActiveTab('checklist');
@@ -518,6 +644,18 @@ export default function PlannerWorkspace() {
 
     if (shouldDraftVendorMessage && !isMenuAssistant) {
       setActiveTab('chat');
+    }
+
+    if (shouldApplySetup) {
+      applyPlannerSetupFromText(trimmed);
+    }
+
+    if (shouldApplyBudgetSuggestion && !didApplyBudgetUpdate) {
+      applySmartBudgetSuggestion(parseMoneyAmount(trimmed) || undefined);
+    }
+
+    if (shouldApplyGuestPlanning) {
+      applyGuestPlanningFromText(trimmed);
     }
 
     if (targetTab) {
@@ -699,6 +837,37 @@ export default function PlannerWorkspace() {
     setMenuInputs((current) => ({ ...current, [tab]: prompt }));
   }
 
+  function repairChecklistScroll(mode: 'clamp' | 'focus-list' = 'clamp') {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+
+        const checklistPanel = document.querySelector<HTMLElement>('.planner-content > .checklist-panel');
+        if (!checklistPanel) return;
+
+        if (mode === 'focus-list') {
+          const checklistList = checklistPanel.querySelector<HTMLElement>('.checklist-main-list');
+          const targetTop = checklistList
+            ? checklistList.offsetTop - 18
+            : 0;
+
+          checklistPanel.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: 'auto'
+          });
+          return;
+        }
+
+        const maxScrollTop = Math.max(0, checklistPanel.scrollHeight - checklistPanel.clientHeight);
+        if (checklistPanel.scrollTop > maxScrollTop) {
+          checklistPanel.scrollTop = maxScrollTop;
+        }
+      });
+    });
+  }
+
   function toggleChecklistItem(id: string) {
     setChecklistItems((current) =>
       current.map((item) =>
@@ -707,6 +876,7 @@ export default function PlannerWorkspace() {
           : item
       )
     );
+    repairChecklistScroll(checklistView === 'next' ? 'focus-list' : 'clamp');
     addActivity('Checklist item updated.');
   }
 
@@ -764,6 +934,18 @@ export default function PlannerWorkspace() {
 
   function removeAppointment(id: string) {
     setAppointments((current) => current.filter((appointment) => appointment.id !== id));
+    if (editingAppointmentId === id) {
+      setEditingAppointmentId(null);
+      setAppointmentDraft({
+        title: '',
+        date: selectedDate,
+        time: '',
+        location: '',
+        vendor: '',
+        status: 'planned',
+        note: ''
+      });
+    }
     addActivity('Appointment removed.');
   }
 
@@ -805,6 +987,33 @@ export default function PlannerWorkspace() {
     });
     setSelectedDate(pendingAppointment.date);
     setPendingAppointment(null);
+  }
+
+  function startEditingAppointment(appointment: Appointment) {
+    setEditingAppointmentId(appointment.id);
+    setAppointmentDraft({
+      title: appointment.title,
+      date: appointment.date,
+      time: appointment.time || '',
+      location: appointment.location || '',
+      vendor: appointment.vendor || '',
+      status: appointment.status || 'planned',
+      note: appointment.note
+    });
+    setSelectedDate(appointment.date);
+  }
+
+  function cancelEditingAppointment() {
+    setEditingAppointmentId(null);
+    setAppointmentDraft({
+      title: '',
+      date: selectedDate,
+      time: '',
+      location: '',
+      vendor: '',
+      status: 'planned',
+      note: ''
+    });
   }
 
   function applyChecklistTemplate(template: (typeof checklistTemplates)[number]) {
@@ -926,6 +1135,14 @@ export default function PlannerWorkspace() {
   function askVendorQuestions(vendor: Vendor) {
     setActiveTab('chat');
     setInput(`Create a short checklist of questions to ask ${vendor.name} before booking. Focus on package inclusions, hidden charges, deposit, cancellation, setup timing, and final confirmation.`);
+  }
+
+  function askVendorComparison(vendors: Vendor[]) {
+    const vendorSummary = vendors
+      .map((vendor) => `${vendor.name}: ${vendor.category}, ${vendor.negeri}, ${money(vendor.minPrice)}-${money(vendor.maxPrice)}, rating ${vendor.rating.toFixed(1)}, note: ${vendor.note}`)
+      .join('\n');
+    setActiveTab('chat');
+    ask(`Compare these wedding vendors and recommend the safest next step. Keep it concise with best value, risk, questions to ask, and next action.\n${vendorSummary}`);
   }
 
   function addVendorToBudget(vendor: Vendor) {
@@ -1202,7 +1419,18 @@ export default function PlannerWorkspace() {
       note: appointmentDraft.note.trim()
     };
 
-    setAppointments((current) => [...current, appointment]);
+    if (editingAppointmentId) {
+      setAppointments((current) =>
+        current.map((item) => (item.id === editingAppointmentId ? { ...appointment, id: editingAppointmentId } : item))
+      );
+      setEditingAppointmentId(null);
+      setStatusMessage('Appointment updated.');
+      addActivity(`Appointment updated: ${appointment.title}.`);
+    } else {
+      setAppointments((current) => [...current, appointment]);
+      setStatusMessage('Appointment added.');
+      addActivity(`Appointment added: ${appointment.title}.`);
+    }
     setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
     setSelectedDate(appointment.date);
     setAppointmentDraft({
@@ -1214,7 +1442,6 @@ export default function PlannerWorkspace() {
       status: 'planned',
       note: ''
     });
-    setStatusMessage('Appointment added.');
   }
 
   const completedCount = checklistItems.filter((item) => item.completed).length;
@@ -1241,6 +1468,28 @@ export default function PlannerWorkspace() {
         note: language === 'ms' ? 'Tarikh majlis daripada profil pasangan.' : 'Wedding date from the couple profile.'
       }
     : null;
+  const todayKey = dateKey(new Date());
+  const calendarAgendaItems = [
+    ...appointments,
+    ...(weddingDayAppointment ? [weddingDayAppointment] : [])
+  ]
+    .filter((appointment) => calendarAgendaFilter === 'all' || appointment.date >= todayKey)
+    .sort(sortAppointments);
+  const calendarAgendaGroups = calendarAgendaItems.reduce<Array<{ key: string; label: string; items: Appointment[] }>>((groups, appointment) => {
+    const appointmentDate = new Date(`${appointment.date}T00:00:00`);
+    const key = `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}`;
+    const label = appointmentDate.toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', {
+      month: 'long',
+      year: 'numeric'
+    });
+    const existingGroup = groups.find((group) => group.key === key);
+    if (existingGroup) {
+      existingGroup.items.push(appointment);
+      return groups;
+    }
+    return [...groups, { key, label, items: [appointment] }];
+  }, []);
+  const agendaNeedsTime = calendarAgendaItems.filter((appointment) => !appointment.time && appointment.id !== 'wedding-day').length;
   const selectedDateLabel = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -1546,6 +1795,82 @@ export default function PlannerWorkspace() {
     !plannerProfile.majlisDate ? 'Set wedding date to unlock timeline guidance' : ''
   ].filter(Boolean).slice(0, 5);
   if (smartReminders.length === 0) smartReminders.push('Everything looks calm. Review today view and keep progress updated.');
+  const contextInsights: Record<MenuAssistantTab, string[]> = {
+    dashboard: smartReminders,
+    checklist: [
+      urgentChecklistCount > 0
+        ? language === 'ms'
+          ? `Prioritize ${urgentChecklistCount} task urgent`
+          : `Prioritize ${urgentChecklistCount} urgent tasks`
+        : language === 'ms'
+          ? 'Cadangkan task seterusnya'
+          : 'Suggest the next tasks',
+      dueThisMonthChecklistCount > 0
+        ? language === 'ms'
+          ? `Susun ${dueThisMonthChecklistCount} task bulan ini`
+          : `Organize ${dueThisMonthChecklistCount} tasks due this month`
+        : language === 'ms'
+          ? 'Buat checklist final week'
+          : 'Create a final week checklist',
+      language === 'ms' ? 'Jadikan task penting sebagai appointment' : 'Turn important tasks into appointments'
+    ],
+    calendar: [
+      globalNextAppointment
+        ? language === 'ms'
+          ? `Apa perlu prepare untuk ${globalNextAppointment.title}?`
+          : `What should I prepare for ${globalNextAppointment.title}?`
+        : language === 'ms'
+          ? 'Cadangkan appointment vendor seterusnya'
+          : 'Suggest the next vendor appointment',
+      plannerProfile.majlisDate
+        ? language === 'ms'
+          ? 'Bina reminder sebelum hari majlis'
+          : 'Create reminders before the wedding day'
+        : language === 'ms'
+          ? 'Tambah tarikh majlis untuk timeline'
+          : 'Add wedding date for the timeline',
+      language === 'ms' ? 'Schedule follow-up vendor minggu ini' : 'Schedule a vendor follow-up this week'
+    ],
+    budget: [
+      totalPlanned === 0
+        ? language === 'ms'
+          ? `Cadangkan pecahan bajet ${money(plannerProfile.totalBudget || 30000)}`
+          : `Suggest a ${money(plannerProfile.totalBudget || 30000)} budget split`
+        : language === 'ms'
+          ? 'Review bajet dan kos tertinggal'
+          : 'Review budget and missing costs',
+      overBudgetItems.length > 0
+        ? language === 'ms'
+          ? `Bantu kawal ${overBudgetItems.length} kategori over budget`
+          : `Help control ${overBudgetItems.length} over-budget categories`
+        : language === 'ms'
+          ? 'Apa kos kahwin yang selalu terlupa?'
+          : 'What wedding costs are often missed?',
+      language === 'ms' ? 'Susun priority bayaran vendor' : 'Prioritize vendor payments'
+    ],
+    rsvp: [
+      pendingGuests > 0
+        ? language === 'ms'
+          ? `Draft reminder untuk ${pendingGuests} pax pending`
+          : `Draft reminders for ${pendingGuests} pending pax`
+        : language === 'ms'
+          ? 'Cadangkan cara susun guest list'
+          : 'Suggest a guest list structure',
+      language === 'ms' ? 'Ringkaskan headcount untuk caterer' : 'Summarize headcount for caterer',
+      language === 'ms' ? 'Tambah tetamu dari mesej saya' : 'Add guests from my message'
+    ],
+    vendors: [
+      savedVendors.length > 0
+        ? language === 'ms'
+          ? 'Bandingkan vendor shortlisted'
+          : 'Compare shortlisted vendors'
+        : language === 'ms'
+          ? 'Cari vendor ikut negeri dan bajet'
+          : 'Find vendors by state and budget',
+      language === 'ms' ? 'Draft mesej WhatsApp untuk vendor' : 'Draft a vendor WhatsApp message',
+      language === 'ms' ? 'Apa soalan wajib tanya vendor?' : 'What must I ask vendors?'
+    ]
+  };
   const coupleDisplayName =
     plannerProfile.coupleName.trim() ||
     [plannerProfile.groomName.trim(), plannerProfile.brideName.trim()].filter(Boolean).join(' & ') ||
@@ -1585,14 +1910,16 @@ export default function PlannerWorkspace() {
     'MajlisMate';
   const quickActionPills = [
     {
-      id: 'checklist',
-      label: language === 'ms' ? 'Buat checklist' : 'Create a checklist',
-      onClick: createDefaultChecklist
+      id: 'setup',
+      label: language === 'ms' ? 'Setup planner' : 'Set up planner',
+      onClick: () => setInput(language === 'ms'
+        ? 'Setup majlis saya: tarikh 12/06/2027, Selangor, bajet RM30000, 300 tetamu'
+        : 'Set up my wedding: 12/06/2027, Selangor, RM30000 budget, 300 guests')
     },
     {
-      id: 'vendors',
-      label: language === 'ms' ? 'Cari vendor' : 'Find a vendor',
-      onClick: () => selectTab('vendors')
+      id: 'budget',
+      label: language === 'ms' ? 'Cadang bajet' : 'Suggest budget',
+      onClick: () => applySmartBudgetSuggestion()
     },
     {
       id: 'calendar',
@@ -1632,6 +1959,8 @@ export default function PlannerWorkspace() {
     rsvp: language === 'ms' ? 'Tetamu' : 'Guests',
     vendors: copy.vendors
   };
+  const visibleChecklistTemplates = checklistTemplates.slice(0, 4);
+  const hiddenChecklistTemplates = checklistTemplates.slice(4);
   const commandItems = [
     {
       label: language === 'ms' ? 'Tanya MajlisMate' : 'Ask MajlisMate',
@@ -1698,12 +2027,17 @@ export default function PlannerWorkspace() {
 
     return (
       <li key={item.id} className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}`}>
-        <label className="checklist-task-main">
-          <input
-            type="checkbox"
-            checked={item.completed}
-            onChange={() => toggleChecklistItem(item.id)}
-          />
+        <div className="checklist-task-main">
+          <button
+            type="button"
+            className="checklist-task-toggle"
+            role="checkbox"
+            aria-checked={item.completed}
+            aria-label={`${item.completed ? 'Mark incomplete' : 'Mark done'}: ${getItemText(item)}`}
+            onClick={() => toggleChecklistItem(item.id)}
+          >
+            <span className="visually-hidden">{item.completed ? 'Done' : 'Not done'}</span>
+          </button>
           <span className="checklist-task-check" aria-hidden="true" />
           <span className="checklist-task-copy">
             <strong>{getItemText(item)}</strong>
@@ -1712,7 +2046,7 @@ export default function PlannerWorkspace() {
             ) : null}
             <small>{getItemPhase(item) || copy.custom} · {dueLabel}</small>
           </span>
-        </label>
+        </div>
         <span className={`priority-chip ${priority.className}`}>{priority.label}</span>
         <div className="checklist-row-actions">
           {status !== 'done' ? (
@@ -2070,11 +2404,35 @@ export default function PlannerWorkspace() {
 
           <div className="checklist-template-row" aria-label="Wedding checklist templates">
             <span>{language === 'ms' ? 'Template' : 'Templates'}</span>
-            {checklistTemplates.map((template) => (
-              <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
-                {localizedValue(template.title, language)}
-              </button>
-            ))}
+            <div className="checklist-template-desktop">
+              {visibleChecklistTemplates.map((template) => (
+                <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
+                  {localizedValue(template.title, language)}
+                </button>
+              ))}
+              {hiddenChecklistTemplates.length > 0 ? (
+                <details className="checklist-template-more">
+                  <summary>{language === 'ms' ? `Lagi ${hiddenChecklistTemplates.length}` : `${hiddenChecklistTemplates.length} more`}</summary>
+                  <div>
+                    {hiddenChecklistTemplates.map((template) => (
+                      <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
+                        {localizedValue(template.title, language)}
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ) : null}
+            </div>
+            <details className="checklist-template-mobile">
+              <summary>{language === 'ms' ? 'Pilih template' : 'Choose template'}</summary>
+              <div>
+                {checklistTemplates.map((template) => (
+                  <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
+                    {localizedValue(template.title, language)}
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
 
           {loading && checklistItems.length === 0 ? <p className="typing">{copy.creating}</p> : null}
@@ -2257,7 +2615,7 @@ export default function PlannerWorkspace() {
           ) : null}
         </div>
       ) : activeTab === 'calendar' ? (
-        <div className="calendar-panel">
+        <div className={`calendar-panel calendar-view-${calendarView}`}>
           <div className="calendar-toolbar">
             <div>
               <p className="eyebrow">Wedding calendar</p>
@@ -2317,6 +2675,45 @@ export default function PlannerWorkspace() {
               <strong>{nextAppointment ? nextAppointment.date.slice(5) : 'None'}</strong>
               <p>{nextAppointment ? nextAppointment.title : 'no upcoming item'}</p>
             </article>
+          </div>
+
+          <div className="calendar-viewbar" aria-label="Calendar view">
+            <div className="calendar-view-switch" role="tablist" aria-label="Calendar display">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={calendarView === 'month'}
+                className={calendarView === 'month' ? 'active' : ''}
+                onClick={() => setCalendarView('month')}
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={calendarView === 'agenda'}
+                className={calendarView === 'agenda' ? 'active' : ''}
+                onClick={() => setCalendarView('agenda')}
+              >
+                Agenda
+              </button>
+            </div>
+            <div className="calendar-agenda-filter" aria-label="Agenda filter">
+              <button
+                type="button"
+                className={calendarAgendaFilter === 'upcoming' ? 'active' : ''}
+                onClick={() => setCalendarAgendaFilter('upcoming')}
+              >
+                Upcoming
+              </button>
+              <button
+                type="button"
+                className={calendarAgendaFilter === 'all' ? 'active' : ''}
+                onClick={() => setCalendarAgendaFilter('all')}
+              >
+                All
+              </button>
+            </div>
           </div>
 
           <div className="calendar-suggestion-strip" aria-label="Calendar suggestions">
@@ -2388,6 +2785,70 @@ export default function PlannerWorkspace() {
             ) : null}
           </section>
 
+          <section className="calendar-agenda-summary" aria-label="Calendar agenda summary">
+            <div className="agenda-summary-row">
+              <article>
+                <span>{calendarAgendaFilter === 'upcoming' ? 'Upcoming' : 'All items'}</span>
+                <strong>{calendarAgendaItems.length}</strong>
+              </article>
+              <article>
+                <span>Confirmed</span>
+                <strong>{calendarAgendaItems.filter((appointment) => appointment.status === 'confirmed').length}</strong>
+              </article>
+              <article>
+                <span>Need time</span>
+                <strong>{agendaNeedsTime}</strong>
+              </article>
+              <article>
+                <span>Next</span>
+                <strong>{calendarAgendaItems[0]?.date.slice(5) || 'None'}</strong>
+              </article>
+            </div>
+
+            {calendarAgendaGroups.length > 0 ? (
+              <div className="calendar-agenda-list">
+                {calendarAgendaGroups.map((group) => (
+                  <section key={group.key} className="calendar-agenda-month">
+                    <h4>{group.label}</h4>
+                    <div>
+                      {group.items.map((appointment) => {
+                        const appointmentDate = new Date(`${appointment.date}T00:00:00`);
+                        const dayLabel = appointmentDate.toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', {
+                          day: 'numeric',
+                          weekday: 'short'
+                        });
+
+                        return (
+                          <button
+                            key={appointment.id}
+                            type="button"
+                            className={`calendar-agenda-item ${appointment.id === 'wedding-day' ? 'wedding' : appointment.status || 'planned'}`}
+                            onClick={() => {
+                              setSelectedDate(appointment.date);
+                              setCalendarMonth(new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), 1));
+                              setAppointmentDraft((current) => ({ ...current, date: appointment.date }));
+                              setCalendarView('month');
+                            }}
+                          >
+                            <span>{dayLabel}</span>
+                            <strong>{appointment.title}</strong>
+                            <small>{appointment.time || appointment.vendor || appointment.location || appointment.status || 'Time not set'}</small>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state action-empty">
+                <strong>No calendar items yet.</strong>
+                <span>Add appointments or set your wedding date to build a year view.</span>
+                <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
+              </div>
+            )}
+          </section>
+
           <div className="calendar-workspace">
             <div className="calendar-grid" aria-label={`${monthLabel(calendarMonth)} calendar`}>
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -2418,7 +2879,10 @@ export default function PlannerWorkspace() {
                   >
                     <span className="calendar-date">{day.date.getDate()}</span>
                     {dayItemCount > 0 ? (
-                      <span className={`calendar-count ${dayStatus}`}>{dayItemCount}</span>
+                      <span className={`calendar-count ${dayStatus}`}>
+                        <strong>{dayItemCount}</strong>
+                        <small>{dayItemCount === 1 ? 'item' : 'items'}</small>
+                      </span>
                     ) : null}
                     {isWeddingDay ? (
                       <span className="appointment-chip wedding">
@@ -2542,6 +3006,9 @@ export default function PlannerWorkspace() {
                         </div>
                       </dl>
                       <div className="agenda-actions">
+                        <button type="button" onClick={() => startEditingAppointment(appointment)}>
+                          Edit
+                        </button>
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'planned')}>
                           Planned
                         </button>
@@ -2568,10 +3035,17 @@ export default function PlannerWorkspace() {
                 </div>
               )}
 
-              <form className="appointment-form" onSubmit={addManualAppointment}>
-                <div>
-                  <p className="eyebrow">Add manually</p>
-                  <h5>{selectedDateLabel}</h5>
+              <form className={`appointment-form ${editingAppointmentId ? 'editing' : ''}`} onSubmit={addManualAppointment}>
+                <div className="appointment-form-heading">
+                  <div>
+                    <p className="eyebrow">{editingAppointmentId ? 'Edit appointment' : 'Add manually'}</p>
+                    <h5>{selectedDateLabel}</h5>
+                  </div>
+                  {editingAppointmentId ? (
+                    <button type="button" onClick={cancelEditingAppointment}>
+                      Cancel
+                    </button>
+                  ) : null}
                 </div>
                 <input
                   value={appointmentDraft.title}
@@ -2580,25 +3054,29 @@ export default function PlannerWorkspace() {
                   aria-label="Appointment title"
                 />
                 <div className="appointment-form-row">
-                  <input
-                    type="date"
-                    value={appointmentDraft.date}
-                    onChange={(event) => {
-                      setAppointmentDraft((current) => ({ ...current, date: event.target.value }));
-                      setSelectedDate(event.target.value);
-                      if (event.target.value) {
-                        const nextDate = new Date(`${event.target.value}T00:00:00`);
-                        setCalendarMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
-                      }
-                    }}
-                    aria-label="Appointment date"
-                  />
-                  <input
-                    type="time"
-                    value={appointmentDraft.time}
-                    onChange={(event) => setAppointmentDraft((current) => ({ ...current, time: event.target.value }))}
-                    aria-label="Appointment time"
-                  />
+                  <span className="appointment-native-field date">
+                    <input
+                      type="date"
+                      value={appointmentDraft.date}
+                      onChange={(event) => {
+                        setAppointmentDraft((current) => ({ ...current, date: event.target.value }));
+                        setSelectedDate(event.target.value);
+                        if (event.target.value) {
+                          const nextDate = new Date(`${event.target.value}T00:00:00`);
+                          setCalendarMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+                        }
+                      }}
+                      aria-label="Appointment date"
+                    />
+                  </span>
+                  <span className="appointment-native-field time">
+                    <input
+                      type="time"
+                      value={appointmentDraft.time}
+                      onChange={(event) => setAppointmentDraft((current) => ({ ...current, time: event.target.value }))}
+                      aria-label="Appointment time"
+                    />
+                  </span>
                 </div>
                 <input
                   value={appointmentDraft.vendor}
@@ -2633,7 +3111,7 @@ export default function PlannerWorkspace() {
                   aria-label="Appointment notes"
                 />
                 <button type="submit" disabled={!appointmentDraft.title.trim() || !appointmentDraft.date}>
-                  Save appointment
+                  {editingAppointmentId ? 'Save changes' : 'Save appointment'}
                 </button>
               </form>
             </aside>
@@ -2681,6 +3159,7 @@ export default function PlannerWorkspace() {
           toggleSavedVendor={toggleSavedVendor}
           askVendorMessage={askVendorMessage}
           askVendorQuestions={askVendorQuestions}
+          askVendorComparison={askVendorComparison}
           addVendorToBudget={addVendorToBudget}
         />
       ) : null}
@@ -2708,6 +3187,7 @@ export default function PlannerWorkspace() {
                 messages={menuMessages[activeMenuTab]}
                 input={menuInputs[activeMenuTab]}
                 loading={menuLoading === activeMenuTab}
+                insights={contextInsights[activeMenuTab]}
                 onOpenMainChat={() => {
                   setIsContextAssistantOpen(false);
                   setActiveTab('chat');

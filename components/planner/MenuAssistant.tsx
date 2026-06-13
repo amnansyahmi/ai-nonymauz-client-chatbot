@@ -74,6 +74,7 @@ type MenuAssistantProps = {
   messages: Message[];
   input: string;
   loading: boolean;
+  insights?: string[];
   onOpenMainChat: () => void;
   onQuickPrompt: (prompt: string) => void;
   onInputChange: (value: string) => void;
@@ -85,6 +86,7 @@ export default function MenuAssistant({
   messages,
   input,
   loading,
+  insights = [],
   onOpenMainChat,
   onQuickPrompt,
   onInputChange,
@@ -92,6 +94,7 @@ export default function MenuAssistant({
 }: MenuAssistantProps) {
   const promptConfig = menuAssistantPrompts[activeMenuTab];
   const conversationMessages = messages.slice(1).slice(-3);
+  const visiblePrompts = insights.length > 0 ? insights.slice(0, 3) : promptConfig.quick;
 
   return (
     <section className="menu-assistant" aria-label={`${promptConfig.title} chat`}>
@@ -105,8 +108,8 @@ export default function MenuAssistant({
       </div>
 
       <div className="menu-assistant-workflow">
-        <div className="menu-assistant-actions">
-          {promptConfig.quick.map((prompt) => (
+        <div className="menu-assistant-actions menu-assistant-insights">
+          {visiblePrompts.map((prompt) => (
             <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)}>
               {prompt}
             </button>
