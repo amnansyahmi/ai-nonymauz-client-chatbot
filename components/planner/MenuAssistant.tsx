@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent } from 'react';
+import Composer from '../ui/Composer';
 import type { ActiveTab, Message } from './types';
 
 export type MenuAssistantTab = Exclude<ActiveTab, 'chat'>;
@@ -73,6 +74,7 @@ type MenuAssistantProps = {
   messages: Message[];
   input: string;
   loading: boolean;
+  insights?: string[];
   onOpenMainChat: () => void;
   onQuickPrompt: (prompt: string) => void;
   onInputChange: (value: string) => void;
@@ -84,6 +86,7 @@ export default function MenuAssistant({
   messages,
   input,
   loading,
+  insights = [],
   onOpenMainChat,
   onQuickPrompt,
   onInputChange,
@@ -91,6 +94,7 @@ export default function MenuAssistant({
 }: MenuAssistantProps) {
   const promptConfig = menuAssistantPrompts[activeMenuTab];
   const conversationMessages = messages.slice(1).slice(-3);
+  const visiblePrompts = insights.length > 0 ? insights.slice(0, 3) : promptConfig.quick;
 
   return (
     <section className="menu-assistant" aria-label={`${promptConfig.title} chat`}>
@@ -104,8 +108,8 @@ export default function MenuAssistant({
       </div>
 
       <div className="menu-assistant-workflow">
-        <div className="menu-assistant-actions">
-          {promptConfig.quick.map((prompt) => (
+        <div className="menu-assistant-actions menu-assistant-insights">
+          {visiblePrompts.map((prompt) => (
             <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)}>
               {prompt}
             </button>
@@ -125,25 +129,19 @@ export default function MenuAssistant({
           </div>
         ) : null}
 
-        <form className="menu-assistant-form" onSubmit={onSubmit}>
-          <input
-            value={input}
-            onChange={(event) => onInputChange(event.target.value)}
-            placeholder={promptConfig.placeholder}
-            aria-label={`${promptConfig.title} question`}
-          />
-          <button
-            type="submit"
-            className="menu-assistant-submit"
-            disabled={loading || input.trim().length < 2}
-            aria-label={loading ? 'Planner AI is thinking' : 'Send to Planner AI'}
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-              <path d="M4 12 20 4l-4 16-4.5-6.5L4 12Z" />
-              <path d="m11.5 13.5 4.5-5.5" />
-            </svg>
-          </button>
-        </form>
+        <Composer
+          className="chat-form menu-assistant-form"
+          input={input}
+          placeholder={promptConfig.placeholder}
+          inputAriaLabel={`${promptConfig.title} question`}
+          submitLabel="Send to Planner AI"
+          voiceLabel="Planner AI voice"
+          disabled={loading}
+          showDictate={false}
+          showVoiceWhenEmpty={false}
+          onInputChange={onInputChange}
+          onSubmit={onSubmit}
+        />
       </div>
     </section>
   );

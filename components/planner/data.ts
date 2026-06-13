@@ -220,7 +220,7 @@ export const vendorDirectory: Vendor[] = [
 
 export const checklistTemplates: ChecklistTemplate[] = [
   {
-    title: { ms: 'Checklist MajlisMate', en: 'MajlisMate wedding checklist' },
+    title: { ms: 'Checklist Perkahwinan', en: 'Wedding Checklist' },
     items: defaultChecklistTemplate.flatMap((group) =>
       group.items.map((item) => ({
         ...item,

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import PwaRegister from '../components/PwaRegister';
 import './globals.css';
+import './styles/planner-overrides.css';
 
 export const metadata: Metadata = {
   title: 'MajlisMate.ai',
@@ -25,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="ms">
       <body>
         <PwaRegister />
         {children}

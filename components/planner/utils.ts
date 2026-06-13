@@ -1,5 +1,5 @@
 import { defaultChecklistTemplate, type LocalizedText } from './data';
-import type { Appointment, BudgetItem, CalendarDay, ChecklistItem, Guest, StreamEvent } from './types';
+import type { Appointment, BudgetItem, CalendarDay, ChecklistItem, Guest, PlannerProfile, StreamEvent } from './types';
 
 export function parseSseEvents(buffer: string) {
   const events: StreamEvent[] = [];
@@ -37,6 +37,18 @@ export function wantsAppointment(text: string) {
   const hasCalendarTarget = /\b(appointment|meeting|calendar|janji temu|temujanji)\b/i.test(text);
 
   return hasAction && (hasCalendarTarget || Boolean(parseAppointmentDate(text)));
+}
+
+export function wantsPlannerSetup(text: string) {
+  return /\b(set ?up|setup|profile|majlis|wedding|kahwin|bride|groom|pengantin|negeri|budget|bajet|guest|tetamu|pax)\b/i.test(text);
+}
+
+export function wantsBudgetSuggestion(text: string) {
+  return /\b(suggest|cadang|recommend|allocation|split|pecahan|agih|budget|bajet)\b/i.test(text) && /\b(budget|bajet|rm|allocation|split|pecahan)\b/i.test(text);
+}
+
+export function wantsGuestPlanning(text: string) {
+  return /\b(guest|tetamu|rsvp|jemputan|headcount|pax)\b/i.test(text) && /\b(add|create|import|organize|susun|group|confirm|confirmed|pending|declined|tidak hadir|hadir)\b/i.test(text);
 }
 
 export function wantsVendorMessage(text: string) {
@@ -204,6 +216,100 @@ export function daysUntil(dateString: string) {
 
 export function money(value: number) {
   return `RM${Number.isFinite(value) ? value.toLocaleString('en-MY') : '0'}`;
+}
+
+export function parseMoneyAmount(text: string) {
+  const explicitMatch = text.match(/\b(?:rm|myr)\s*(\d{1,3}(?:[,\s]?\d{3})+|\d{4,7})(?:\.\d{1,2})?\b/i);
+  const looseMatches = Array.from(text.matchAll(/\b(\d{1,3}(?:[,\s]?\d{3})+|\d{5,7})(?:\.\d{1,2})?\b/gi));
+  const looseMatch = looseMatches.find((candidate) => {
+    const before = text[candidate.index ? candidate.index - 1 : -1] || '';
+    const after = text[(candidate.index || 0) + candidate[0].length] || '';
+    return before !== '/' && before !== '-' && after !== '/' && after !== '-';
+  });
+  const match = explicitMatch || looseMatch;
+  if (!match) return null;
+  const value = Number(match[1].replace(/[,\s]/g, ''));
+  return Number.isFinite(value) ? value : null;
+}
+
+export function parsePlannerSetup(text: string, states: string[]): Partial<PlannerProfile> {
+  const patch: Partial<PlannerProfile> = {};
+  const date = parseAppointmentDate(text);
+  const budget = parseMoneyAmount(text);
+  const guestMatch = text.match(/\b(\d{1,5})\s*(?:pax|guest|guests|tetamu|orang)\b/i);
+  const coupleMatch =
+    text.match(/\b(?:couple|pasangan|pengantin)\s*(?:name|nama)?\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'&-]+?)\s*(?:,|\.|$)/i) ||
+    text.match(/\b([a-z][a-z\s.'&-]+?)\s*(?:&|and|dan)\s*([a-z][a-z\s.'&-]+?)\s*(?:wedding|majlis|kahwin)\b/i);
+  const groomMatch = text.match(/\b(?:groom|lelaki|pengantin lelaki)\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|\.|$)/i);
+  const brideMatch = text.match(/\b(?:bride|perempuan|pengantin perempuan)\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|\.|$)/i);
+  const state = states.find((candidate) => new RegExp(`\\b${candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text));
+
+  if (date) patch.majlisDate = dateKey(date);
+  if (budget && budget >= 1000) patch.totalBudget = budget;
+  if (guestMatch) patch.guestTarget = Number(guestMatch[1]);
+  if (state) patch.negeri = state;
+  if (groomMatch) patch.groomName = titleCase(groomMatch[1].trim());
+  if (brideMatch) patch.brideName = titleCase(brideMatch[1].trim());
+  if (coupleMatch) {
+    if (coupleMatch[2]) {
+      patch.groomName = patch.groomName || titleCase(coupleMatch[1].trim());
+      patch.brideName = patch.brideName || titleCase(coupleMatch[2].trim());
+      patch.coupleName = `${patch.groomName} & ${patch.brideName}`;
+    } else {
+      patch.coupleName = titleCase(coupleMatch[1].trim());
+    }
+  }
+
+  return patch;
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((part) => (part ? `${part[0].toUpperCase()}${part.slice(1).toLowerCase()}` : part))
+    .join(' ');
+}
+
+export function parseGuestList(text: string): Guest[] {
+  const lines = text
+    .split(/\n|;/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const sourceLines = lines.length > 1 ? lines : [text.trim()];
+
+  return sourceLines
+    .map((line, index) => {
+      const cleaned = line
+        .replace(/\b(add|create|guest|guests|tetamu|rsvp|jemputan)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const nameMatch =
+        cleaned.match(/\b(?:name|nama)\s*(?:is|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|$)/i) ||
+        cleaned.match(/^([a-z][a-z\s.'-]+?)(?:\s+\d+\s*(?:pax|orang)|,|$)/i);
+      const name = nameMatch?.[1]?.trim();
+      if (!name || name.length < 2 || /\b(pax|orang|confirmed|pending|declined)\b/i.test(name)) return null;
+
+      const paxMatch = cleaned.match(/\b(\d{1,3})\s*(?:pax|orang)\b/i);
+      const groupMatch = cleaned.match(/\b(?:group|kumpulan|side|family|sebelah)\s*(?:is|=|:)?\s*([a-z][a-z\s-]+?)(?:,|$)/i);
+      const phoneMatch = cleaned.match(/\b(?:\+?6?01\d[-\s]?\d{3,4}[-\s]?\d{4}|\d{3}[-\s]?\d{3,4}[-\s]?\d{4})\b/);
+      const status: Guest['status'] = /\b(declined|tak hadir|tidak hadir)\b/i.test(cleaned)
+        ? 'declined'
+        : /\b(confirm|confirmed|hadir)\b/i.test(cleaned)
+          ? 'confirmed'
+          : 'pending';
+
+      return {
+        id: `${Date.now()}-${index}`,
+        name: titleCase(name),
+        phone: phoneMatch?.[0] || '',
+        group: groupMatch?.[1] ? titleCase(groupMatch[1].trim()) : 'Kawan-kawan',
+        pax: paxMatch ? Number(paxMatch[1]) || 1 : 1,
+        status
+      };
+    })
+    .filter((guest): guest is Guest => Boolean(guest));
 }
 
 export function formatAppointmentsText(appointments: Appointment[]) {
