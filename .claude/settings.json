@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next *)",
+      "Bash(node -e \"const fs = require\\('fs'\\); const c = fs.readFileSync\\('components/PlannerWorkspace.tsx','utf8'\\); const lines = c.split\\('\\\\n'\\); for\\(let i=lines.length-30;i<lines.length;i++\\) console.log\\(i+1, lines[i]\\);\")"
+    ]
+  }
+}

@@ -59,14 +59,20 @@ function cleanChecklistLine(line: string) {
   return line
     .replace(/^\s*(?:[-*]|\d+[.)]|\[[ xX]\])\s*/, '')
     .replace(/\*\*/g, '')
+    .replace(/^#+\s*/, '')
     .trim();
 }
+
+const CONVERSATIONAL_PREFIXES = /^(boleh|ok|ya|baik|tentu|sure|saya|ini|berikut|here|here's|of course|certainly|noted|no problem|sebenarnya|actually|great|bagus|alright|dengan pleasure|dengan senang)/i;
 
 export function checklistFromAnswer(answer: string) {
   const items = answer
     .split('\n')
     .map(cleanChecklistLine)
-    .filter((line) => line.length > 3)
+    .filter((line) => line.length > 4)
+    .filter((line) => !CONVERSATIONAL_PREFIXES.test(line))
+    .filter((line) => !line.endsWith(':'))
+    .filter((line) => line.length < 120)
     .filter((line) => !/^demo mode aktif/i.test(line))
     .filter((line) => !/^sources?:/i.test(line))
     .slice(0, 12);

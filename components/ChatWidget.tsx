@@ -1,8 +1,9 @@
 'use client';
 
-import { FormEvent, RefObject } from 'react';
+import { FormEvent, RefObject, useEffect, useRef, useState } from 'react';
 import type { Message } from './planner/types';
 import Composer from './ui/Composer';
+import Markdown from './ui/Markdown';
 
 type ChatWidgetProps = {
   messages: Message[];
@@ -24,6 +25,91 @@ type ChatWidgetProps = {
   onSubmit: (event: FormEvent) => void;
 };
 
+function AssistantAvatar() {
+  return (
+    <div className="msg-avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 4V2M8 4h8a4 4 0 0 1 4 4v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8a4 4 0 0 1 4-4Z" />
+        <path d="M8 12h.01M16 12h.01M9 16h6" />
+      </svg>
+    </div>
+  );
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+type MessageBubbleProps = {
+  message: Message;
+  isStreaming: boolean;
+  sourcesLabel: string;
+  emptyTypingLabel: string;
+};
+
+function MessageBubble({ message, isStreaming, sourcesLabel, emptyTypingLabel }: MessageBubbleProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  }
+
+  return (
+    <div className="bubble">
+      {message.content ? (
+        <Markdown content={message.content} streaming={isStreaming} />
+      ) : (
+        <p className="typing">{emptyTypingLabel}</p>
+      )}
+      {message.sources && message.sources.length > 0 ? (
+        <div className="sources">
+          <strong>{sourcesLabel}</strong>
+          {message.sources.map((source) => (
+            <span key={source.id}>{source.title}</span>
+          ))}
+        </div>
+      ) : null}
+      {message.content && !isStreaming ? (
+        <div className="bubble-actions">
+          <button
+            type="button"
+            className={`bubble-copy-btn${copied ? ' copied' : ''}`}
+            aria-label={copied ? 'Copied' : 'Copy message'}
+            onClick={handleCopy}
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
 export default function ChatWidget({
   messages,
   input,
@@ -43,29 +129,60 @@ export default function ChatWidget({
   onVoiceMode,
   onSubmit
 }: ChatWidgetProps) {
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const handle = () => {
+      setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 120);
+    };
+    el.addEventListener('scroll', handle, { passive: true });
+    handle();
+    return () => el.removeEventListener('scroll', handle);
+  }, [messages]);
+
+  function scrollToBottom() {
+    messagesEndRef?.current?.scrollIntoView({ behavior: 'smooth' });
+  }
+
   return (
     <>
-      <div className="messages">
-        {messages.map((message, index) => (
-          <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-            <div className="bubble">
-              {message.content ? (
-                message.content.split('\n').map((line, lineIndex) => <p key={lineIndex}>{line || '\u00a0'}</p>)
+      <div className="messages" ref={messagesContainerRef}>
+        {messages.map((message, index) => {
+          const isStreaming = loading && message.role === 'assistant' && index === messages.length - 1;
+          return (
+            <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
+              {message.role === 'assistant' && <AssistantAvatar />}
+              {message.role === 'assistant' ? (
+                <MessageBubble
+                  message={message}
+                  isStreaming={isStreaming}
+                  sourcesLabel={sourcesLabel}
+                  emptyTypingLabel={emptyTypingLabel}
+                />
               ) : (
-                <p className="typing">{emptyTypingLabel}</p>
-              )}
-              {message.sources && message.sources.length > 0 ? (
-                <div className="sources">
-                  <strong>{sourcesLabel}</strong>
-                  {message.sources.map((source) => (
-                    <span key={source.id}>{source.title}</span>
+                <div className="bubble">
+                  {message.content.split('\n').map((line, li) => (
+                    <p key={li}>{line || ' '}</p>
                   ))}
                 </div>
-              ) : null}
-            </div>
-          </article>
-        ))}
+              )}
+            </article>
+          );
+        })}
         {messagesEndRef ? <div ref={messagesEndRef} /> : null}
+        {showScrollBtn ? (
+          <button
+            type="button"
+            className="scroll-to-bottom-btn"
+            aria-label={language === 'ms' ? 'Tatal ke bawah' : 'Scroll to bottom'}
+            onClick={scrollToBottom}
+          >
+            <ChevronDownIcon />
+          </button>
+        ) : null}
       </div>
 
       <Composer

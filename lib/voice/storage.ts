@@ -16,8 +16,8 @@ export type VoicePreferences = {
 
 const DEFAULTS: VoicePreferences = {
   voiceURI: null,
-  rate: 0.95,
-  pitch: 1,
+  rate: 1,
+  pitch: 1.05,
   autoSpeak: true,
   bargeIn: true,
   mode: 'continuous',
