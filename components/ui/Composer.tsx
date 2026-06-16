@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 type SpeechRecognitionConstructor = new () => {
   continuous: boolean;
@@ -93,8 +93,28 @@ export default function Composer({
   const [isDictating, setIsDictating] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState('');
   const recognitionRef = useRef<InstanceType<SpeechRecognitionConstructor> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
   const hasInput = input.trim().length >= minSubmitLength;
   const canSubmit = hasInput && !disabled;
+
+  // Auto-resize textarea to fit content, up to max-height
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [input]);
+
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (canSubmit) {
+        formRef.current?.requestSubmit();
+      }
+    }
+  }
 
   function toggleDictation() {
     const speechWindow = window as SpeechWindow;
@@ -145,7 +165,7 @@ export default function Composer({
   }
 
   return (
-    <form className={className} onSubmit={onSubmit}>
+    <form ref={formRef} className={className} onSubmit={onSubmit}>
       {commandSuggestions.length > 0 ? (
         <div className="composer-suggestions" aria-label="Suggested commands">
           {commandSuggestions.map((suggestion) => (
@@ -159,11 +179,17 @@ export default function Composer({
           ))}
         </div>
       ) : null}
-      <input
+      <textarea
+        ref={textareaRef}
+        className="composer-input"
         value={input}
-        onChange={(event) => onInputChange(event.target.value)}
+        rows={1}
         placeholder={placeholder}
         aria-label={inputAriaLabel}
+        autoComplete="off"
+        spellCheck
+        onChange={(event) => onInputChange(event.target.value)}
+        onKeyDown={handleKeyDown}
       />
       {showDictate ? (
         <button

@@ -173,25 +173,72 @@ export function waitForVoices(timeoutMs = 2000): Promise<SpeechSynthesisVoice[]>
 
 const SENTENCE_REGEX = /[^.!?\n]+[.!?]+|[^.!?\n]+$/g;
 
+// Abbreviations whose trailing period must not be treated as a sentence end
+const ABBREV_RE = /\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|No|etc|approx|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\./gi;
+
+function splitLongSentence(sentence: string): string[] {
+  // For very long sentences, break at '; ' then ', ' boundaries
+  const semi = sentence.split(/;\s+/);
+  if (semi.length > 1) {
+    return semi.map((p, i) => (i < semi.length - 1 ? p + ';' : p)).filter((p) => p.trim().length > 0);
+  }
+
+  const chunks = sentence.split(/,\s+/);
+  if (chunks.length <= 2) return [sentence];
+
+  const result: string[] = [];
+  let current = '';
+  for (let i = 0; i < chunks.length; i += 1) {
+    const chunk = chunks[i];
+    if (!current) {
+      current = chunk;
+    } else if (current.length < 55) {
+      current += ', ' + chunk;
+    } else {
+      result.push(current + (i < chunks.length - 1 ? ',' : ''));
+      current = chunk;
+    }
+  }
+  if (current) result.push(current);
+  return result.filter((s) => s.trim().length > 0);
+}
+
 export function splitIntoSentences(text: string): string[] {
   if (!text) return [];
-  const normalized = text.replace(/\s+/g, ' ').trim();
+  let normalized = text.replace(/\s+/g, ' ').trim();
   if (!normalized) return [];
+
+  // Temporarily protect abbreviation periods and ellipsis
+  normalized = normalized.replace(ABBREV_RE, '$1\x01').replace(/\.{3}/g, '\x02');
+
   const parts: string[] = [];
-  let match: RegExpExecArray | null;
   const regex = new RegExp(SENTENCE_REGEX.source, 'g');
+  let match: RegExpExecArray | null;
   while ((match = regex.exec(normalized)) !== null) {
-    const segment = match[0].trim();
-    if (segment) parts.push(segment);
+    const segment = match[0]
+      .replace(/\x01/g, '.')
+      .replace(/\x02/g, '...')
+      .trim();
+    if (!segment) continue;
+    if (segment.length > 100) {
+      parts.push(...splitLongSentence(segment));
+    } else {
+      parts.push(segment);
+    }
   }
   return parts;
 }
+
+// Abbreviation endings that should not trigger a sentence break in the stream
+const STREAMING_ABBREV_END = /\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|etc|No|approx)$/i;
 
 export type StreamingTtsOptions = {
   voice: SpeechSynthesisVoice | null;
   lang: string;
   rate?: number;
   pitch?: number;
+  humanize?: (text: string) => string;
+  prosodyForSentence?: (sentence: string, index: number, isLast: boolean) => { rate: number; pitch: number };
   onSentenceStart?: (sentence: string, index: number) => void;
   onSentenceEnd?: (sentence: string, index: number) => void;
   onComplete?: (fullText: string) => void;
@@ -234,13 +281,19 @@ export function createStreamingTts(options: StreamingTtsOptions): StreamingTtsHa
     const sentence = queue.shift()!;
     const index = currentIndex;
     currentIndex += 1;
+    // isLast is true when queue is now empty and streaming is done
+    const isLast = finished && queue.length === 0;
+    const spoken = options.humanize ? options.humanize(sentence) : sentence;
+    const prosody = options.prosodyForSentence
+      ? options.prosodyForSentence(sentence, index, isLast)
+      : { rate: options.rate, pitch: options.pitch };
     options.onSentenceStart?.(sentence, index);
     controller.speak({
-      text: sentence,
+      text: spoken,
       voice: options.voice,
       lang: options.lang,
-      rate: options.rate,
-      pitch: options.pitch,
+      rate: prosody.rate,
+      pitch: prosody.pitch,
       onEnd: () => {
         options.onSentenceEnd?.(sentence, index);
         next();
@@ -267,6 +320,11 @@ export function createStreamingTts(options: StreamingTtsOptions): StreamingTtsHa
         if (chunk) pending += chunk;
       } else {
         const punctuation = chunk;
+        // Don't split on a lone "." that follows a known abbreviation
+        if (punctuation === '.' && STREAMING_ABBREV_END.test(pending.trimEnd())) {
+          pending += punctuation;
+          continue;
+        }
         if (pending && punctuation) {
           const sentence = (pending + punctuation).trim();
           if (sentence) {

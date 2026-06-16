@@ -120,7 +120,8 @@ export default function LiveVoiceSheet({
   });
 
   const phase = voice.phase;
-  const isFallback = voice.support !== 'full' && voice.support !== 'unavailable';
+  const isTtsOnly = voice.support === 'text-only-tts';
+  const isFallback = voice.support === 'push-to-talk-only';
   const isUnavailable = voice.support === 'unavailable';
   const isListening = phase === 'listening' || phase === 'requesting-mic';
   const waveform = useMemo(() => <Waveform active={isListening} rms={voice.rms} />, [isListening, voice.rms]);
@@ -192,8 +193,21 @@ export default function LiveVoiceSheet({
           <div className="live-voice-waveform">{waveform}</div>
           <strong className="live-voice-phase-label">{label}</strong>
           <p className="live-voice-instruction">
-            {phase === 'error' && voice.errorMessage ? voice.errorMessage : instruction}
+            {isTtsOnly
+              ? (language === 'ms'
+                  ? 'Input suara tidak disokong dalam browser ini. Tap soalan di bawah dan MajlisMate akan jawab dengan suara.'
+                  : 'Voice input is not supported in this browser. Tap a question below and MajlisMate will reply by speaking.')
+              : phase === 'error' && voice.errorMessage
+                ? voice.errorMessage
+                : instruction}
           </p>
+          {isTtsOnly ? (
+            <p className="live-voice-hotkey">
+              {language === 'ms'
+                ? 'Guna Chrome, Edge atau Safari untuk input suara penuh.'
+                : 'Use Chrome, Edge or Safari for full voice input.'}
+            </p>
+          ) : null}
           {voice.mode === 'push-to-talk' && voice.support === 'full' ? (
             <p className="live-voice-hotkey">
               {language === 'ms'
@@ -272,6 +286,17 @@ export default function LiveVoiceSheet({
               }}
             >
               {language === 'ms' ? 'Tutup' : 'Close'}
+            </button>
+          ) : isTtsOnly ? (
+            <button
+              type="button"
+              className="live-voice-secondary"
+              onClick={() => {
+                voice.stop();
+                onClose();
+              }}
+            >
+              {language === 'ms' ? 'Guna chat biasa' : 'Use text chat'}
             </button>
           ) : isFallback ? (
             <>

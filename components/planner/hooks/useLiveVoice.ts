@@ -20,6 +20,24 @@ import {
   type VoicePreferences
 } from '../../../lib/voice/storage';
 import { listVoicesForLanguage, pickBestVoice, type ScoredVoice } from '../../../lib/voice/voices';
+import { humanize, isQuestionSentence, sentenceProsody } from '../../../lib/voice/prosody';
+
+const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
+  en: [
+    'Got it, one sec.',
+    'Sure, let me check.',
+    'Hmm, one moment.',
+    "Okay, let me look into that.",
+    'Alright, one sec.',
+  ],
+  ms: [
+    'Okay, sekejap ya.',
+    'Baik, jap saya tengok.',
+    'Hmm, sekejap.',
+    'Ok, saya semak dulu ya.',
+    'Alright, tunggu sekejap.',
+  ],
+};
 
 export type VoicePhase = 'idle' | 'requesting-mic' | 'listening' | 'thinking' | 'speaking' | 'error';
 
@@ -317,11 +335,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     (text: string) => {
       const tts = ttsRef.current;
       if (!tts) return;
-      const cleaned = text
-        .replace(/\[[^\]]*\]\([^)]*\)/g, '')
-        .replace(/[#*_`>-]/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const cleaned = humanize(text, language);
       if (!cleaned) return;
       const segments = splitIntoSentences(cleaned);
       if (segments.length === 0) return;
@@ -334,12 +348,20 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
           if (phaseRef.current === 'speaking') setPhase('idle');
           return;
         }
+        const isLast = index === segments.length - 1;
+        const prosody = sentenceProsody(
+          index,
+          isQuestionSentence(segments[index]),
+          preferences.rate,
+          preferences.pitch,
+          isLast
+        );
         tts.speak({
           text: segments[index],
           voice: selectedVoice?.voice ?? null,
           lang: capabilitiesRef.current?.speechSynthesisLang ?? 'en-US',
-          rate: preferences.rate,
-          pitch: preferences.pitch,
+          rate: prosody.rate,
+          pitch: prosody.pitch,
           onStart: () => {
             if (preferences.bargeIn) startBargeInMonitor();
           },
@@ -349,7 +371,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       };
       playAt(0);
     },
-    [selectedVoice, preferences.rate, preferences.pitch, preferences.bargeIn, startBargeInMonitor]
+    [selectedVoice, preferences.rate, preferences.pitch, preferences.bargeIn, startBargeInMonitor, language]
   );
 
   const handleFinalTranscript = useCallback(
@@ -371,10 +393,8 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       // Schedule a "thinking acknowledgment" so the user gets instant feedback
       // that we heard them. Cancelled the moment the AI starts speaking.
       clearThinkingAck();
-      const ackText =
-        language === 'ms'
-          ? 'OK, saya semak sebentar.'
-          : 'OK, let me check that.';
+      const acks = THINKING_ACKS[language];
+      const ackText = acks[Math.floor(Math.random() * acks.length)];
       thinkingAckRef.current = window.setTimeout(() => {
         speakImmediate(ackText);
       }, 700);
@@ -392,6 +412,9 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
           lang: answerLang,
           rate: preferences.rate,
           pitch: preferences.pitch,
+          humanize: (text) => humanize(text, language),
+          prosodyForSentence: (sentence, index, isLast) =>
+            sentenceProsody(index, isQuestionSentence(sentence), preferences.rate, preferences.pitch, isLast),
           onSentenceStart: (sentence, index) => {
             // First sentence is about to speak — cancel the acknowledgment if it's still pending
             if (index === 0) clearThinkingAck();
@@ -490,8 +513,8 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     if (!tts) return;
     const greeting =
       language === 'ms'
-        ? 'Hai! Saya MajlisMate. Tekan mula dan cakap apa-apa soalan.'
-        : "Hi! I'm MajlisMate. Tap start and ask me anything.";
+        ? 'Hai! Saya MajlisMate — ada apa yang boleh saya bantu hari ni?'
+        : "Hey! I'm MajlisMate — what can I help you with today?";
     tts.cancel();
     setPhase('speaking');
     tts.speak({

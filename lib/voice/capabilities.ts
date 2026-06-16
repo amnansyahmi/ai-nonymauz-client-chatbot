@@ -84,8 +84,9 @@ export type VoiceSupportLevel = 'full' | 'text-only-tts' | 'push-to-talk-only' |
 export function classifySupport(capabilities: VoiceCapabilities): VoiceSupportLevel {
   if (!capabilities.isSecureContext) return 'unavailable';
   if (!capabilities.hasSpeechSynthesis) return 'unavailable';
-  if (!capabilities.hasSpeechRecognition) return 'push-to-talk-only';
-  if (capabilities.isIOS && !capabilities.hasWebkitSpeechRecognition) return 'push-to-talk-only';
-  if (capabilities.isFirefox) return 'push-to-talk-only';
+  // Firefox and devices with no STT at all: TTS works, but voice input is impossible
+  if (!capabilities.hasSpeechRecognition) return 'text-only-tts';
+  if (capabilities.isFirefox) return 'text-only-tts';
+  if (capabilities.isIOS && !capabilities.hasWebkitSpeechRecognition) return 'text-only-tts';
   return 'full';
 }

@@ -13008,61 +13008,84 @@ textarea:focus {
   position: sticky !important;
   bottom: 0 !important;
   display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 48px !important;
-  align-items: center !important;
+  grid-template-columns: minmax(0, 1fr) 42px !important;
+  align-items: end !important;
   gap: 8px !important;
-  width: calc(100% - 56px) !important;
-  margin: 0 28px 24px !important;
-  min-height: 74px !important;
-  border: 1px solid var(--mm-border) !important;
-  border-radius: var(--mm-radius-pill) !important;
+  width: calc(100% - 48px) !important;
+  margin: 0 24px 20px !important;
+  min-height: 0 !important;
+  border: 1px solid #dedede !important;
+  border-radius: 28px !important;
   background: #ffffff !important;
-  padding: 8px 10px 8px 22px !important;
-  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.1) !important;
+  padding: 7px 8px 7px 14px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08) !important;
 }
 
 .assistant-drawer .menu-assistant-form:focus-within {
-  border-color: #d8d8d8 !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12) !important;
+  border-color: #d0d0d0 !important;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.1) !important;
 }
 
-.assistant-drawer .menu-assistant-form input {
+/* textarea from Composer — strip browser defaults, match chat menu */
+.assistant-drawer .menu-assistant-form .composer-input {
   width: 100% !important;
   min-width: 0 !important;
-  min-height: 48px !important;
+  min-height: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
   background: transparent !important;
-  padding: 0 !important;
+  padding: 8px 4px !important;
   color: var(--mm-text) !important;
   font: inherit !important;
-  font-size: 0.98rem !important;
+  font-size: 0.95rem !important;
   outline: none !important;
   box-shadow: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
-.assistant-drawer .menu-assistant-form input::placeholder {
-  color: #8f96a3 !important;
+.assistant-drawer .menu-assistant-form .composer-input:focus,
+.assistant-drawer .menu-assistant-form .composer-input:hover {
+  border: 0 !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 
-.assistant-drawer .menu-assistant-form .menu-assistant-submit {
+.assistant-drawer .menu-assistant-form .composer-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Send button — same dark pill as chat menu */
+.assistant-drawer .menu-assistant-form .composer-voice-button {
   display: inline-grid !important;
   place-items: center !important;
-  width: 48px !important;
-  min-width: 48px !important;
-  height: 48px !important;
-  min-height: 48px !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
   border: 0 !important;
-  border-radius: var(--mm-radius-pill) !important;
-  background: #111111 !important;
+  border-radius: 999px !important;
+  background: #0d0d0d !important;
   color: #ffffff !important;
   padding: 0 !important;
   box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background 140ms ease !important;
 }
 
-.assistant-drawer .menu-assistant-form .menu-assistant-submit:disabled {
-  background: #f1f1f1 !important;
-  color: #b7b7b7 !important;
+.assistant-drawer .menu-assistant-form .composer-voice-button:hover {
+  background: #2b2b2b !important;
+}
+
+.assistant-drawer .menu-assistant-form .composer-voice-button:disabled {
+  background: #e8e8e8 !important;
+  color: #b0b0b0 !important;
+  cursor: default !important;
+}
+
+.assistant-drawer .menu-assistant-form .composer-voice-button svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
 @media (max-width: 760px) {
@@ -13084,23 +13107,21 @@ textarea:focus {
   }
 
   .assistant-drawer .menu-assistant-form {
-    grid-template-columns: minmax(0, 1fr) 44px !important;
-    width: calc(100% - 24px) !important;
-    min-height: 62px !important;
-    margin: 0 12px max(12px, env(safe-area-inset-bottom)) !important;
-    padding: 7px 8px 7px 18px !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+    width: calc(100% - 32px) !important;
+    margin: 0 16px max(12px, env(safe-area-inset-bottom)) !important;
+    padding: 6px 7px 6px 14px !important;
   }
 
-  .assistant-drawer .menu-assistant-form input {
-    min-height: 44px !important;
+  .assistant-drawer .menu-assistant-form .composer-input {
     font-size: 0.92rem !important;
   }
 
-  .assistant-drawer .menu-assistant-form .menu-assistant-submit {
-    width: 44px !important;
-    min-width: 44px !important;
-    height: 44px !important;
-    min-height: 44px !important;
+  .assistant-drawer .menu-assistant-form .composer-voice-button {
+    width: 40px !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    min-height: 40px !important;
   }
 }
 
@@ -13147,4 +13168,863 @@ textarea:focus {
   .assistant-drawer .menu-assistant-messages {
     padding: 16px 18px !important;
   }
+}
+
+/* =============================================
+   MARKDOWN RENDERING IN CHAT BUBBLES
+   ============================================= */
+
+.bubble p {
+  margin: 0 0 6px;
+}
+.bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.bubble .md-heading {
+  margin: 8px 0 4px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.bubble .md-heading:first-child {
+  margin-top: 0;
+}
+.bubble .md-h1 { font-size: 1.05rem; }
+.bubble .md-h2 { font-size: 1rem; }
+.bubble .md-h3 { font-size: 0.95rem; }
+
+.bubble .md-list {
+  margin: 4px 0 8px;
+  padding-left: 22px;
+}
+.bubble .md-list:last-child {
+  margin-bottom: 0;
+}
+.bubble .md-list li {
+  margin-bottom: 3px;
+  line-height: 1.5;
+}
+.bubble .md-list li:last-child {
+  margin-bottom: 0;
+}
+.bubble .md-ol {
+  list-style-type: decimal;
+}
+
+.bubble .md-pre {
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 10px 12px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre;
+}
+.bubble .md-pre:last-child {
+  margin-bottom: 0;
+}
+
+.message.user .bubble .md-pre {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bubble .md-inline-code {
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.07);
+  padding: 1px 5px;
+  font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+  font-size: 0.85em;
+}
+.message.user .bubble .md-inline-code {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Blinking streaming cursor */
+@keyframes md-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.md-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 0.9em;
+  margin-left: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  vertical-align: text-bottom;
+  animation: md-cursor-blink 900ms step-end infinite;
+}
+
+/* =============================================
+   ASSISTANT AVATAR
+   ============================================= */
+
+.message {
+  align-items: flex-start;
+}
+
+.msg-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 3px;
+  margin-right: 8px;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--bg);
+}
+.msg-avatar svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+/* =============================================
+   COPY BUTTON ON ASSISTANT BUBBLES
+   ============================================= */
+
+.bubble-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 140ms;
+}
+.message:hover .bubble-actions {
+  opacity: 1;
+}
+
+.bubble-copy-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 120ms, color 120ms, border-color 120ms;
+}
+.bubble-copy-btn:hover {
+  background: var(--bg-2);
+  color: var(--ink);
+}
+.bubble-copy-btn.copied {
+  color: var(--success);
+  border-color: var(--success);
+}
+.bubble-copy-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+/* =============================================
+   AUTO-EXPANDING TEXTAREA COMPOSER
+   ============================================= */
+
+.composer-input {
+  display: block;
+  width: 100%;
+  min-height: 38px;
+  max-height: 160px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  padding: 8px 4px;
+  font: inherit;
+  font-size: inherit;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  outline: none;
+  scrollbar-width: thin;
+}
+.composer-input::placeholder {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* Keep icon buttons anchored to bottom-left when textarea grows tall */
+.main-chat-panel .chat-form {
+  align-items: end;
+}
+
+/* Override the global textarea border rule — composer sits inside the form pill, needs no border of its own */
+.main-chat-panel .chat-form .composer-input {
+  border: 0 !important;
+  background: transparent !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.main-chat-panel .chat-form .composer-input:focus,
+.main-chat-panel .chat-form .composer-input:hover {
+  border: 0 !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+@media (max-width: 640px) {
+  .msg-avatar {
+    width: 22px;
+    height: 22px;
+    margin-right: 6px;
+  }
+  .bubble-actions {
+    opacity: 1;
+  }
+}
+
+/* =============================================
+   MAJLISMATE LIVE — GLOBAL ENTRY BUTTONS
+   ============================================= */
+
+/* Titlebar Live button */
+.workspace-live-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #0d0d0d;
+  color: #fff;
+  padding: 6px 12px 6px 9px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 140ms ease, transform 100ms ease;
+}
+
+.workspace-live-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.workspace-live-button:hover {
+  background: #2b2b2b;
+}
+
+.workspace-live-button:active {
+  transform: scale(0.97);
+}
+
+.workspace-live-button.is-active {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  animation: live-btn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2); }
+  50% { box-shadow: 0 0 0 5px rgba(124, 58, 237, 0.08); }
+}
+
+/* Sidebar Live button */
+.sidebar-live-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 32px);
+  margin: 8px 16px 4px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #0d0d0d;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 140ms ease;
+  position: relative;
+}
+
+.sidebar-live-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.sidebar-live-button:hover {
+  background: #2b2b2b;
+}
+
+.sidebar-live-button.is-active {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
+}
+
+.sidebar-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  margin-left: auto;
+  flex-shrink: 0;
+  animation: live-dot-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes live-dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Scroll-to-bottom button ───────────────────────── */
+.main-chat-panel .messages {
+  position: relative;
+}
+
+.scroll-to-bottom-btn {
+  position: sticky;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  margin-right: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: #0d0d0d;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+  transition: background 140ms ease, transform 140ms ease;
+  flex-shrink: 0;
+}
+
+.scroll-to-bottom-btn:hover {
+  background: #2a2a2a;
+  transform: translateY(-2px);
+}
+
+.scroll-to-bottom-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Mobile bottom nav: 6 columns with Live button ── */
+@media (max-width: 760px) {
+  .mobile-bottom-nav {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+
+  .mobile-live-btn {
+    min-height: 54px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: #0d0d0d !important;
+    color: #fff !important;
+    padding: 5px 2px !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    cursor: pointer !important;
+  }
+
+  .mobile-live-btn.is-active {
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%) !important;
+  }
+
+  .mobile-live-btn svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+}
+
+/* ── Risk Alerts sidebar widget ────────────────────── */
+.risk-alerts {
+  margin: 4px 12px 8px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: #fff;
+}
+
+.risk-alerts__header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.risk-alerts__icon svg {
+  width: 15px;
+  height: 15px;
+  stroke: #6b7280;
+  flex-shrink: 0;
+}
+
+.risk-alerts__title {
+  flex: 1;
+  letter-spacing: 0.01em;
+}
+
+.risk-alerts__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.risk-alerts__badge--high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.risk-alerts__badge--medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.risk-alerts__badge--info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.risk-alerts__chevron svg {
+  width: 14px;
+  height: 14px;
+  stroke: #9ca3af;
+  flex-shrink: 0;
+}
+
+.risk-alerts__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.risk-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 12px;
+}
+
+.risk-alert + .risk-alert {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.risk-alert__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.risk-alert--high .risk-alert__dot {
+  background: #ef4444;
+}
+
+.risk-alert--medium .risk-alert__dot {
+  background: #f59e0b;
+}
+
+.risk-alert--info .risk-alert__dot {
+  background: #3b82f6;
+}
+
+.risk-alert__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.risk-alert__level {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.risk-alert--high .risk-alert__level {
+  color: #b91c1c;
+}
+
+.risk-alert--medium .risk-alert__level {
+  color: #92400e;
+}
+
+.risk-alert--info .risk-alert__level {
+  color: #1e40af;
+}
+
+.risk-alert__title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.35;
+  margin: 0 0 2px;
+}
+
+.risk-alert__detail {
+  font-size: 0.72rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0 0 5px;
+}
+
+.risk-alert__action {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #7c3aed;
+}
+
+.risk-alert__action:hover {
+  text-decoration: underline;
+}
+
+/* ── Checklist: inline title editing ──────────────── */
+.checklist-title-editable {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checklist-title-editable:hover .checklist-title-edit-hint {
+  opacity: 1;
+}
+
+.checklist-title-edit-hint {
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.checklist-title-input {
+  font-size: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  border: 0 !important;
+  border-bottom: 2px solid #7c3aed !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 2px !important;
+  width: 100%;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ── Checklist: inline text editing ───────────────── */
+.checklist-task-text {
+  cursor: text;
+  display: block;
+  border-radius: 4px;
+  transition: background 100ms ease;
+}
+
+.checklist-task-row:not(.done) .checklist-task-text:hover {
+  background: rgba(124, 58, 237, 0.06);
+}
+
+.checklist-inline-edit {
+  display: block;
+  width: 100%;
+  font-size: inherit;
+  font-weight: 600;
+  border: 0 !important;
+  border-bottom: 1.5px solid #7c3aed !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 2px !important;
+  box-shadow: none !important;
+  outline: none !important;
+  min-height: 0 !important;
+}
+
+/* ── Checklist: date trigger inline ───────────────── */
+.checklist-date-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+.checklist-date-trigger:hover {
+  color: #7c3aed;
+}
+
+.checklist-date-input {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.78rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 3px 6px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+  min-height: 0 !important;
+}
+
+/* ── Checklist: AI suggest deadline ───────────────── */
+.checklist-suggest-btn {
+  border: 0;
+  background: transparent;
+  padding: 0 0 0 6px;
+  font: inherit;
+  font-size: 0.7rem;
+  color: #7c3aed;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.checklist-suggest-btn:hover {
+  text-decoration: underline;
+}
+
+/* ── Checklist: note preview ──────────────────────── */
+.checklist-note-preview {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  color: #6b7280;
+  font-style: italic;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 340px;
+}
+
+/* ── Checklist: note button ───────────────────────── */
+.checklist-note-btn {
+  border: 0;
+  background: transparent;
+  padding: 2px 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: opacity 140ms ease;
+}
+
+.checklist-task-row:hover .checklist-note-btn,
+.checklist-note-btn.has-note {
+  opacity: 1;
+}
+
+/* ── Checklist: note expand area ─────────────────── */
+.checklist-note-area {
+  padding: 8px 12px 10px 52px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.checklist-note-input {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+  font: inherit !important;
+  font-size: 0.8rem !important;
+  resize: vertical;
+  box-shadow: none !important;
+  min-height: 0 !important;
+}
+
+.checklist-note-input:focus {
+  border-color: #7c3aed !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.12) !important;
+}
+
+.checklist-note-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.checklist-note-save {
+  background: #7c3aed;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checklist-note-save:hover {
+  background: #6d28d9;
+}
+
+.checklist-note-actions button:not(.checklist-note-save) {
+  border: 1px solid #e5e7eb;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* ── Checklist: selection mode ────────────────────── */
+.checklist-select-mode-btn {
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #374151;
+  transition: background 120ms, color 120ms;
+}
+
+.checklist-select-mode-btn.active {
+  background: #f3e8ff;
+  border-color: #7c3aed;
+  color: #7c3aed;
+}
+
+.checklist-select-toggle {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.checklist-select-box {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  transition: border-color 120ms, background 120ms;
+  flex-shrink: 0;
+}
+
+.checklist-task-row.is-selected .checklist-select-box {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.checklist-task-row.is-selected {
+  background: rgba(124, 58, 237, 0.04);
+}
+
+/* ── Checklist: bulk action bar ───────────────────── */
+.checklist-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  color: #e0d7ff;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.checklist-bulk-bar > span {
+  flex: 1;
+}
+
+.checklist-bulk-done {
+  background: #7c3aed;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checklist-bulk-done:hover {
+  background: #6d28d9;
+}
+
+.checklist-bulk-delete {
+  background: transparent;
+  color: #fca5a5;
+  border: 1px solid rgba(252, 165, 165, 0.3);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checklist-bulk-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
 }

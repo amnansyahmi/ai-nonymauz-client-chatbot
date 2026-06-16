@@ -24,6 +24,7 @@ export type ChecklistItem = {
   phaseEn?: string;
   status?: 'not-started' | 'in-progress' | 'done';
   deadline?: string;
+  note?: string;
 };
 
 export type AppLanguage = 'ms' | 'en';

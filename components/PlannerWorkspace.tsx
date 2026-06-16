@@ -22,6 +22,9 @@ import MenuAssistant, {
   type MenuAssistantTab
 } from './planner/MenuAssistant';
 import { BudgetPanel, DashboardPanel, RsvpPanel, VendorsPanel } from './planner/WorkspacePanels';
+import RiskAlerts from './planner/components/RiskAlerts';
+import { detectRisks } from './planner/riskDetector';
+import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
 import type {
   ActiveTab,
   ActivityItem,
@@ -202,6 +205,10 @@ export default function PlannerWorkspace() {
   const [checklistFilter, setChecklistFilter] = useState('all');
   const [checklistView, setChecklistView] = useState<'next' | 'timeline' | 'category' | 'completed'>('next');
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [checklistSelectMode, setChecklistSelectMode] = useState(false);
+  const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
+  const [isEditingChecklistTitle, setIsEditingChecklistTitle] = useState(false);
+  const [checklistTitleDraft, setChecklistTitleDraft] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
   const [calendarView, setCalendarView] = useState<'month' | 'agenda'>('month');
@@ -632,7 +639,7 @@ export default function PlannerWorkspace() {
     };
   }
 
-  async function ask(question: string, targetTab?: MenuAssistantTab): Promise<string | null> {
+  async function ask(question: string, targetTab?: MenuAssistantTab, opts?: { suppressTabSwitch?: boolean }): Promise<string | null> {
     const trimmed = question.trim();
     if (!trimmed || loading || menuLoading) return null;
 
@@ -649,8 +656,8 @@ export default function PlannerWorkspace() {
     const didApplyBudgetUpdate = applyDetectedBudgetUpdate(trimmed);
 
     if (shouldCreateChecklist) {
-      setActiveTab('checklist');
-      setChecklistTitle(trimmed.length > 64 ? `${trimmed.slice(0, 61)}...` : trimmed);
+      if (!opts?.suppressTabSwitch) setActiveTab('checklist');
+      setChecklistTitle(language === 'ms' ? 'Checklist Perkahwinan' : 'Wedding Checklist');
       setChecklistItems([]);
     }
 
@@ -798,7 +805,7 @@ export default function PlannerWorkspace() {
           setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
           setSelectedDate(appointment.date);
           setPendingAppointment(appointment);
-          setActiveTab('calendar');
+          if (!opts?.suppressTabSwitch) setActiveTab('calendar');
           addActivity(`Appointment drafted: ${appointment.title}.`);
         }
       }
@@ -829,7 +836,7 @@ export default function PlannerWorkspace() {
           setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
           setSelectedDate(appointment.date);
           setPendingAppointment(appointment);
-          setActiveTab('calendar');
+          if (!opts?.suppressTabSwitch) setActiveTab('calendar');
           addActivity(`Appointment drafted: ${appointment.title}.`);
         }
       }
@@ -931,6 +938,62 @@ export default function PlannerWorkspace() {
       current.map((item) => (item.id === id ? { ...item, status, completed: status === 'done' } : item))
     );
     addActivity('Checklist status updated.');
+  }
+
+  function updateChecklistItemText(id: string, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setChecklistItems((current) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              text: trimmed,
+              textMs: language === 'ms' ? trimmed : item.textMs,
+              textEn: language === 'en' ? trimmed : item.textEn
+            }
+          : item
+      )
+    );
+  }
+
+  function updateChecklistDeadline(id: string, deadline: string) {
+    setChecklistItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, deadline: deadline || undefined } : item))
+    );
+  }
+
+  function updateChecklistNote(id: string, note: string) {
+    setChecklistItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, note } : item))
+    );
+  }
+
+  function toggleChecklistSelect(id: string) {
+    setSelectedChecklistIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function bulkMarkChecklistDone() {
+    setChecklistItems((current) =>
+      current.map((item) =>
+        selectedChecklistIds.has(item.id) ? { ...item, completed: true, status: 'done' } : item
+      )
+    );
+    setSelectedChecklistIds(new Set());
+    setChecklistSelectMode(false);
+    addActivity(`${selectedChecklistIds.size} checklist items marked done.`);
+  }
+
+  function bulkRemoveChecklist() {
+    const count = selectedChecklistIds.size;
+    setChecklistItems((current) => current.filter((item) => !selectedChecklistIds.has(item.id)));
+    setSelectedChecklistIds(new Set());
+    setChecklistSelectMode(false);
+    addActivity(`${count} checklist items removed.`);
   }
 
   function startAppointmentAssistant() {
@@ -1525,6 +1588,7 @@ export default function PlannerWorkspace() {
   const confirmedGuests = guests.filter((guest) => guest.status === 'confirmed').reduce((sum, guest) => sum + guest.pax, 0);
   const declinedGuests = guests.filter((guest) => guest.status === 'declined').reduce((sum, guest) => sum + guest.pax, 0);
   const pendingGuests = guests.filter((guest) => guest.status === 'pending').reduce((sum, guest) => sum + guest.pax, 0);
+  const riskAlerts = detectRisks({ plannerProfile, checklistItems, budgetItems, appointments, guests, pendingGuests, totalPlanned, totalPaid });
   const urgentChecklist = checklistItems
     .filter((item) => !item.completed)
     .filter((item) => {
@@ -1715,10 +1779,10 @@ export default function PlannerWorkspace() {
   const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
     ? copy.defaultTemplate
     : checklistTitle;
-  const getItemText = (item: ChecklistItem, selectedLanguage = language) =>
-    selectedLanguage === 'ms' ? item.textMs || item.text : item.textEn || item.text;
-  const getItemPhase = (item: ChecklistItem, selectedLanguage = language) =>
-    selectedLanguage === 'ms' ? item.phaseMs || item.phase : item.phaseEn || item.phase;
+  const getItemText = (item: ChecklistItem, selectedLanguage: AppLanguage = language): string =>
+    (selectedLanguage === 'ms' ? item.textMs || item.text : item.textEn || item.text) ?? '';
+  const getItemPhase = (item: ChecklistItem, selectedLanguage: AppLanguage = language): string =>
+    (selectedLanguage === 'ms' ? item.phaseMs || item.phase : item.phaseEn || item.phase) ?? '';
   const getChecklistPriority = (item: ChecklistItem) => {
     if (item.completed || item.status === 'done') return { className: 'done', label: language === 'ms' ? 'Selesai' : 'Done' };
     if (!item.deadline) return { className: 'later', label: language === 'ms' ? 'Later' : 'Later' };
@@ -2087,65 +2151,51 @@ export default function PlannerWorkspace() {
       return `${item.label} ${item.detail}`.toLowerCase().includes(query);
     })
     .slice(0, 9);
-  const renderChecklistTask = (item: ChecklistItem, options?: { compact?: boolean }) => {
-    const priority = getChecklistPriority(item);
-    const status = getChecklistStatus(item);
-    const dueLabel = item.deadline
-      ? `${language === 'ms' ? 'Due' : 'Due'} ${item.deadline}`
-      : language === 'ms' ? 'Tiada tarikh' : 'No date';
-
-    return (
-      <li key={item.id} className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}`}>
-        <div className="checklist-task-main">
-          <button
-            type="button"
-            className="checklist-task-toggle"
-            role="checkbox"
-            aria-checked={item.completed}
-            aria-label={`${item.completed ? 'Mark incomplete' : 'Mark done'}: ${getItemText(item)}`}
-            onClick={() => toggleChecklistItem(item.id)}
-          >
-            <span className="visually-hidden">{item.completed ? 'Done' : 'Not done'}</span>
-          </button>
-          <span className="checklist-task-check" aria-hidden="true" />
-          <span className="checklist-task-copy">
-            <strong>{getItemText(item)}</strong>
-            {!options?.compact && getItemText(item, otherLanguage) !== getItemText(item) ? (
-              <small>{getItemText(item, otherLanguage)}</small>
-            ) : null}
-            <small>{getItemPhase(item) || copy.custom} · {dueLabel}</small>
-          </span>
-        </div>
-        <span className={`priority-chip ${priority.className}`}>{priority.label}</span>
-        <div className="checklist-row-actions">
-          {status !== 'done' ? (
-            <button type="button" onClick={() => updateChecklistStatus(item.id, status === 'in-progress' ? 'not-started' : 'in-progress')}>
-              {status === 'in-progress' ? copy.notStarted : copy.inProgress}
-            </button>
-          ) : null}
-          {!options?.compact ? (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveTab('calendar');
-                setIsContextAssistantOpen(true);
-                setAppointmentAssistantActive(true);
-                setMenuInputs((current) => ({
-                  ...current,
-                  calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(item)} on ${item.deadline || selectedDate} at `
-                }));
-              }}
-            >
-              {checklistSchedulePrompt}
-            </button>
-          ) : null}
-          <button type="button" aria-label={`Remove ${item.text}`} onClick={() => removeChecklistItem(item.id)}>
-            {copy.remove}
-          </button>
-        </div>
-      </li>
-    );
+  const checklistRowCopy = {
+    custom: copy.custom,
+    notStarted: copy.notStarted,
+    inProgress: copy.inProgress,
+    remove: copy.remove,
+    schedule: checklistSchedulePrompt,
+    noDate: language === 'ms' ? 'Tiada tarikh' : 'No date',
+    suggest: language === 'ms' ? '✨ Cadang' : '✨ Suggest',
+    addNote: language === 'ms' ? 'Tambah nota' : 'Add note',
+    saveNote: language === 'ms' ? 'Simpan' : 'Save'
   };
+
+  const renderChecklistTask = (item: ChecklistItem, options?: { compact?: boolean }) => (
+    <ChecklistTaskRow
+      key={item.id}
+      item={item}
+      language={language}
+      otherLanguage={otherLanguage}
+      compact={options?.compact}
+      majlisDate={plannerProfile.majlisDate || undefined}
+      isSelectable={checklistSelectMode}
+      isSelected={selectedChecklistIds.has(item.id)}
+      getItemText={getItemText}
+      getItemPhase={getItemPhase}
+      getPriority={getChecklistPriority}
+      getStatus={getChecklistStatus}
+      onToggle={() => toggleChecklistItem(item.id)}
+      onRemove={() => removeChecklistItem(item.id)}
+      onUpdateStatus={(status) => updateChecklistStatus(item.id, status)}
+      onUpdateText={(text) => updateChecklistItemText(item.id, text)}
+      onUpdateDeadline={(deadline) => updateChecklistDeadline(item.id, deadline)}
+      onUpdateNote={(note) => updateChecklistNote(item.id, note)}
+      onSelect={() => toggleChecklistSelect(item.id)}
+      onSchedule={!options?.compact ? () => {
+        setActiveTab('calendar');
+        setIsContextAssistantOpen(true);
+        setAppointmentAssistantActive(true);
+        setMenuInputs((current) => ({
+          ...current,
+          calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(item)} on ${item.deadline || selectedDate} at `
+        }));
+      } : undefined}
+      copyLabels={checklistRowCopy}
+    />
+  );
 
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
@@ -2164,8 +2214,8 @@ export default function PlannerWorkspace() {
             setIsLiveVoiceOpen(false);
           }}
           onSendText={(text) => {
-            setInput(text);
             setActiveTab('chat');
+            void ask(text, undefined, { suppressTabSwitch: true });
           }}
           voicePrompts={liveVoicePrompts}
         />
@@ -2267,6 +2317,25 @@ export default function PlannerWorkspace() {
               {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
             </button>
           </nav>
+          <button
+            type="button"
+            className={`sidebar-live-button${liveVoice.phase !== 'idle' ? ' is-active' : ''}`}
+            onClick={() => setIsLiveVoiceOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" />
+              <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+            </svg>
+            {copy.live}
+            {liveVoice.phase !== 'idle' ? (
+              <span className="sidebar-live-dot" aria-hidden="true" />
+            ) : null}
+          </button>
+          <RiskAlerts
+            alerts={riskAlerts}
+            language={language}
+            onNavigate={(tab) => { selectTab(tab); setIsSidebarOpen(false); }}
+          />
           <div className="couple-profile-card">
             <button type="button" className="couple-profile-main" onClick={() => setIsSettingsOpen(true)}>
               <div className="couple-avatar" aria-hidden="true">{coupleInitials}</div>
@@ -2327,6 +2396,18 @@ export default function PlannerWorkspace() {
                   <HistoryIcon />
                 </button>
               ) : null}
+              <button
+                type="button"
+                className={`workspace-live-button${liveVoice.phase !== 'idle' ? ' is-active' : ''}`}
+                aria-label={language === 'ms' ? 'Buka MajlisMate Live' : 'Open MajlisMate Live'}
+                onClick={() => setIsLiveVoiceOpen(true)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" />
+                  <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+                </svg>
+                {copy.live}
+              </button>
               <button
                 type="button"
                 className="workspace-command-button"
@@ -2426,7 +2507,37 @@ export default function PlannerWorkspace() {
           <div className="checklist-hero">
             <div>
               <p className="eyebrow">{language === 'ms' ? 'Checklist planner' : 'Checklist planner'}</p>
-              <h3>{displayChecklistTitle}</h3>
+              {isEditingChecklistTitle ? (
+                <input
+                  className="checklist-title-input"
+                  value={checklistTitleDraft}
+                  onChange={(e) => setChecklistTitleDraft(e.target.value)}
+                  onBlur={() => {
+                    const t = checklistTitleDraft.trim();
+                    if (t) setChecklistTitle(t);
+                    setIsEditingChecklistTitle(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const t = checklistTitleDraft.trim();
+                      if (t) setChecklistTitle(t);
+                      setIsEditingChecklistTitle(false);
+                    }
+                    if (e.key === 'Escape') setIsEditingChecklistTitle(false);
+                  }}
+                  autoFocus
+                  aria-label={language === 'ms' ? 'Nama checklist' : 'Checklist name'}
+                />
+              ) : (
+                <h3
+                  className="checklist-title-editable"
+                  title={language === 'ms' ? 'Klik untuk tukar nama' : 'Click to rename'}
+                  onClick={() => { setChecklistTitleDraft(displayChecklistTitle); setIsEditingChecklistTitle(true); }}
+                >
+                  {displayChecklistTitle}
+                  <span className="checklist-title-edit-hint" aria-hidden="true">✏️</span>
+                </h3>
+              )}
               <p>
                 {language === 'ms'
                   ? 'Fokus pada task yang paling penting dulu, kemudian semak timeline bila perlukan gambaran penuh.'
@@ -2482,11 +2593,39 @@ export default function PlannerWorkspace() {
               ))}
             </div>
             <div className="checklist-export-actions">
+              {checklistItems.length > 0 ? (
+                <button
+                  type="button"
+                  className={`checklist-select-mode-btn${checklistSelectMode ? ' active' : ''}`}
+                  onClick={() => {
+                    setChecklistSelectMode((v) => !v);
+                    setSelectedChecklistIds(new Set());
+                  }}
+                >
+                  {checklistSelectMode
+                    ? (language === 'ms' ? 'Batal pilih' : 'Cancel')
+                    : (language === 'ms' ? 'Pilih' : 'Select')}
+                </button>
+              ) : null}
               <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>Copy</button>
               <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>TXT</button>
               <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>Print</button>
             </div>
           </div>
+
+          {checklistSelectMode && selectedChecklistIds.size > 0 ? (
+            <div className="checklist-bulk-bar">
+              <span>
+                {selectedChecklistIds.size} {language === 'ms' ? 'dipilih' : 'selected'}
+              </span>
+              <button type="button" className="checklist-bulk-done" onClick={bulkMarkChecklistDone}>
+                {language === 'ms' ? '✓ Tandakan selesai' : '✓ Mark done'}
+              </button>
+              <button type="button" className="checklist-bulk-delete" onClick={bulkRemoveChecklist}>
+                {language === 'ms' ? 'Buang' : 'Delete'}
+              </button>
+            </div>
+          ) : null}
 
           <div className="checklist-template-row" aria-label="Wedding checklist templates">
             <span>{language === 'ms' ? 'Template' : 'Templates'}</span>
@@ -3536,6 +3675,19 @@ export default function PlannerWorkspace() {
               <span>{item.label}</span>
             </button>
           ))}
+          <button
+            type="button"
+            className={`mobile-live-btn${liveVoice.phase !== 'idle' ? ' is-active' : ''}`}
+            onClick={() => setIsLiveVoiceOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+            <span>Live</span>
+          </button>
         </nav>
       </div>
 
