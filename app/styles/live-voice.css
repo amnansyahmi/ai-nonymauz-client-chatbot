@@ -16,6 +16,7 @@
 
 /* ── Sheet ─────────────────────────────────────────── */
 .live-voice-sheet {
+  position: relative;
   width: min(680px, 100%);
   max-height: min(92vh, 860px);
   background-color: #111118;
@@ -33,14 +34,94 @@
   animation: lvv-sheet-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ── Orb tap button (mobile primary action) ────────── */
+.live-orb-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+}
+
+.live-orb-btn:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.6);
+  outline-offset: 8px;
+  border-radius: 50%;
+}
+
+.live-orb-btn:active .live-orb__core {
+  transform: scale(0.9) !important;
+  transition: transform 80ms ease-out !important;
+}
+
+.live-orb-hint {
+  display: none;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* ── Mobile: orb IS the button ─────────────────────── */
 @media (max-width: 640px) {
   .live-voice-backdrop {
     padding: 0;
     align-items: end;
   }
+
   .live-voice-sheet {
-    border-radius: 24px 24px 0 0;
-    max-height: 92vh;
+    border-radius: 28px 28px 0 0;
+    max-height: 88dvh;
+    overflow: hidden;
+  }
+
+  /* Smaller orb on mobile — overrides inline style */
+  .live-orb {
+    width: 130px !important;
+    height: 130px !important;
+  }
+
+  /* Show hint below orb */
+  .live-orb-hint {
+    display: block;
+  }
+
+  /* Compact stage */
+  .live-voice-stage {
+    padding: 10px 16px 6px;
+    gap: 6px;
+  }
+
+  /* Slim waveform */
+  .live-voice-waveform {
+    height: 22px;
+  }
+
+  /* Compact captions */
+  .live-voice-captions {
+    padding: 6px 14px;
+  }
+  .live-voice-captions article {
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  /* Hide the traditional CTA button — orb handles it */
+  .live-voice-actions {
+    display: none;
+  }
+
+  /* Compact current-line banner */
+  .live-voice-current-line {
+    padding: 8px 16px;
   }
 }
 
@@ -283,6 +364,22 @@
 @keyframes lvv-ring-pulse {
   0%, 100% { transform: scale(0.88); opacity: 0.55; }
   50% { transform: scale(1.08); opacity: 1; }
+}
+
+/* ── Mic icon (idle / error state) ────────────────── */
+.live-orb__mic-icon {
+  position: absolute;
+  width: 30%;
+  height: 30%;
+  color: rgba(255, 255, 255, 0.92);
+  z-index: 2;
+  pointer-events: none;
+  animation: lvv-mic-appear 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes lvv-mic-appear {
+  from { opacity: 0; transform: scale(0.65); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /* ── Orb core ─────────────────────────────────────── */
