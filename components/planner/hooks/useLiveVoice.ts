@@ -335,7 +335,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     (text: string) => {
       const tts = ttsRef.current;
       if (!tts) return;
-      const cleaned = humanize(text, language);
+      const cleaned = humanize(text, language, selectedVoice?.voice.lang);
       if (!cleaned) return;
       const segments = splitIntoSentences(cleaned);
       if (segments.length === 0) return;
@@ -412,7 +412,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
           lang: answerLang,
           rate: preferences.rate,
           pitch: preferences.pitch,
-          humanize: (text) => humanize(text, language),
+          humanize: (text) => humanize(text, language, answerVoice?.voice.lang),
           prosodyForSentence: (sentence, index, isLast) =>
             sentenceProsody(index, isQuestionSentence(sentence), preferences.rate, preferences.pitch, isLast),
           onSentenceStart: (sentence, index) => {

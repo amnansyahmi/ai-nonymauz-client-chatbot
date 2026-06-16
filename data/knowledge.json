@@ -1,6 +1,6 @@
 {
   "clientName": "MajlisMate.ai",
-  "lastUpdated": "2026-06-10",
+  "lastUpdated": "2026-06-16",
   "documents": [
     {
       "id": "majlis-overview",
@@ -49,6 +49,24 @@
       "title": "Advice Boundaries",
       "category": "policy",
       "content": "MajlisMate.ai can provide planning guidance, templates, checklists, and suggested questions. It should not provide legal, medical, financial, religious rulings, or binding contract advice. For those topics, suggest consulting the relevant professional or authority."
+    },
+    {
+      "id": "prosedur-perkahwinan-islam-malaysia",
+      "title": "Prosedur Perkahwinan Islam Malaysia (Official Government Procedure)",
+      "category": "legal-procedure",
+      "content": "Source: Malaysia.gov.my (official government portal, last updated March 2026). The official Islamic marriage procedure in Malaysia for Muslim couples has three mandatory steps:\n\nStep 1 — Kursus Pra-Perkahwinan Islam (Pre-Marriage Course): Wajib dihadiri oleh bakal pengantin (mandatory for all prospective spouses). Some exemptions apply based on applicant status and requirements of each state Islamic department. Application and registration is done through the SPPIM online portal at sppim.gov.my. The course covers rights and responsibilities in marriage, family law, and Islamic marriage guidance.\n\nStep 2 — Permohonan Kebenaran Berkahwin (Application for Marriage Permission): Couples must apply for an official marriage permission letter (surat kebenaran berkahwin) either online via the SPPIM portal or in person at the state Pejabat Agama Islam (Islamic Religious Office). Each state in Malaysia has different procedures, forms, and requirements — couples must check with their respective state Islamic department. The permission letter is valid for 90 days from the date of issuance (90 hari dari tarikh dikeluarkan). All required supporting documents must be submitted and approved before the permission is granted.\n\nStep 3 — Akad Nikah (Marriage Solemnization): The nikah ceremony is conducted by an authorized marriage officer (jurunikah bertauliah) appointed by the state Islamic authority, based on the marriage permission that was obtained. After the ceremony is completed, the couple receives the marriage certificate (sijil nikah) from the jurunikah or from the Pejabat Agama Islam.\n\nImportant notes: Procedures and fees differ by state. Couples should contact their respective Pejabat Agama Islam Daerah (PAID) early. For enquiries, contact Jabatan Digital Negara (JDN) at 603-8000 8000 or mygovernment@malaysia.gov.my. Always refer to the official SPPIM portal (sppim.gov.my) for the latest forms and updates."
+    },
+    {
+      "id": "sppim-kursus-pra-kahwin",
+      "title": "SPPIM — Kursus Pra-Perkahwinan dan Pendaftaran Nikah Online",
+      "category": "legal-procedure",
+      "content": "SPPIM (Sistem Pengurusan Perkahwinan Islam Malaysia) is the official online system for Malaysian Islamic marriage administration at sppim.gov.my. Through SPPIM, couples can: (1) register and attend the mandatory Kursus Pra-Perkahwinan Islam online; (2) apply for the Surat Kebenaran Berkahwin (marriage permission) online; (3) track application status. The Kursus Pra-Perkahwinan Islam is a government-mandated course that all Muslim couples in Malaysia must complete before getting married. Exemptions may apply for widows, widowers, or divorcees depending on state rules. The kebenaran berkahwin (marriage permission) obtained via SPPIM is valid for 90 days. Couples should complete the kursus and apply for permission at least 3 to 6 months before their intended nikah date to allow sufficient processing time."
+    },
+    {
+      "id": "nikah-dokumen-keperluan",
+      "title": "Dokumen Diperlukan untuk Nikah Islam Malaysia",
+      "category": "legal-procedure",
+      "content": "For Islamic marriage registration in Malaysia, typical required documents include: (1) MyKad (identity card) for both bride and groom; (2) Birth certificate (salinan sijil kelahiran); (3) Certificate of completion of Kursus Pra-Perkahwinan Islam (sijil kursus); (4) Surat Kebenaran Berkahwin from the state Pejabat Agama; (5) If previously married: divorce certificate (sijil cerai) or spouse's death certificate (sijil kematian); (6) For wali (guardian) of bride: wali's MyKad; (7) For cases requiring wali hakim: supporting documents as required by the Pejabat Agama. Requirements and exact document lists differ by state — always verify with the relevant state Jabatan Agama Islam (JAI) or Majlis Agama Islam Negeri (MAIN). For cross-state marriages (merentas negeri), additional permissions may be needed from both states."
     }
   ]
 }

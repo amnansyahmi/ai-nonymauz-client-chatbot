@@ -255,17 +255,7 @@ export default function PlannerWorkspace() {
   const [isLiveVoiceOpen, setIsLiveVoiceOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const liveVoicePrompts = language === 'ms'
-    ? [
-        'Tambah appointment esok pukul 3 petang untuk vendor follow-up',
-        'Buat checklist untuk sebulan sebelum majlis',
-        'Cadangkan bajet untuk 300 tetamu'
-      ]
-    : [
-        'Add an appointment tomorrow at 3 PM for vendor follow-up',
-        'Create a checklist for one month before the wedding',
-        'Suggest a budget for 300 guests'
-      ];
+
 
   useEffect(() => {
     const storedMessages = safeJsonParse<Message[]>(localStorage.getItem(storageKeys.messages), [defaultAssistantMessage]);
@@ -2213,11 +2203,6 @@ export default function PlannerWorkspace() {
           onClose={() => {
             setIsLiveVoiceOpen(false);
           }}
-          onSendText={(text) => {
-            setActiveTab('chat');
-            void ask(text, undefined, { suppressTabSwitch: true });
-          }}
-          voicePrompts={liveVoicePrompts}
         />
       ) : null}
 

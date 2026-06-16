@@ -1,5 +1,68 @@
 import type { AppLanguage } from '../../components/planner/types';
 
+// Phonetic corrections for common Malay wedding terms when read by an English TTS voice.
+// English phoneme rules mispronounce Malay vowels — "a" becomes "ay", "i" becomes "ai", etc.
+// These substitutions guide the English TTS to produce sounds closer to Malay pronunciation.
+// ONLY applied when the active voice is not ms-MY or id-ID.
+const MALAY_PHONETIC: Array<[RegExp, string]> = [
+  // Nikah / ceremony
+  [/\bbernikah\b/gi,    'ber-nee-kah'],
+  [/\bnikahkan\b/gi,    'nee-kah-kan'],
+  [/\bnikah\b/gi,       'nee-kah'],
+  [/\bakad\b/gi,        'ah-kad'],
+  [/\bbersanding\b/gi,  'ber-sahn-ding'],
+  [/\bsanding\b/gi,     'sahn-ding'],
+  [/\bpelamin\b/gi,     'peh-lah-meen'],
+  [/\bpengantin\b/gi,   'peng-ahn-teen'],
+  [/\bberinai\b/gi,     'beh-ree-nai'],
+  [/\bandaman\b/gi,     'un-dah-mun'],
+  [/\bkenduri\b/gi,     'ken-doo-ree'],
+  [/\bwalimah\b/gi,     'wah-lee-mah'],
+  [/\bmajlis\b/gi,      'mah-jliss'],
+  // People / roles
+  [/\bjurunikah\b/gi,   'joo-roo-nee-kah'],
+  [/\bwali\b/gi,        'wah-lee'],
+  [/\btetamu\b/gi,      'teh-tah-moo'],
+  [/\bjemputan\b/gi,    'jem-poo-tun'],
+  // Budget / finance
+  [/\bmahar\b/gi,       'mah-har'],
+  [/\bhantaran\b/gi,    'hun-tah-run'],
+  [/\bbajet\b/gi,       'bah-jet'],
+  // Venue / space
+  [/\bdewan\b/gi,       'deh-wun'],
+  [/\bnegeri\b/gi,      'neh-geh-ree'],
+  [/\bpejabat\b/gi,     'peh-jah-bat'],
+  // Common words that English TTS distorts
+  [/\bselamat\b/gi,     'seh-lah-maht'],
+  [/\bterima\b/gi,      'teh-ree-mah'],
+  [/\bkahwin\b/gi,      'kah-win'],
+  [/\bbersama\b/gi,     'ber-sah-mah'],
+  [/\btidak\b/gi,       'tee-dak'],
+  [/\bboleh\b/gi,       'boh-leh'],
+  [/\bsudah\b/gi,       'soo-dah'],
+  [/\bbelum\b/gi,       'beh-loom'],
+  [/\buntuk\b/gi,       'oon-took'],
+  [/\bdengan\b/gi,      'deng-an'],
+  [/\bsebab\b/gi,       'seh-bab'],
+  [/\bkerana\b/gi,      'keh-rah-nah'],
+  [/\bsesama\b/gi,      'seh-sah-mah'],
+  [/\btapi\b/gi,        'tah-pee'],
+  [/\bjuga\b/gi,        'joo-gah'],
+  [/\bkalau\b/gi,       'kah-lao'],
+  [/\bpihak\b/gi,       'pee-hak'],
+  [/\bperkara\b/gi,     'per-kah-rah'],
+  [/\bkepada\b/gi,      'keh-pah-dah'],
+  [/\bseperti\b/gi,     'seh-per-tee'],
+];
+
+function applyMalayPhonetics(text: string): string {
+  let result = text;
+  for (const [pattern, replacement] of MALAY_PHONETIC) {
+    result = result.replace(pattern, replacement);
+  }
+  return result;
+}
+
 const CONTRACTIONS_EN: Array<[RegExp, string]> = [
   [/\bI am\b/g, "I'm"],
   [/\bdo not\b/g, "don't"],
@@ -65,7 +128,7 @@ function expandNumbers(text: string, language: AppLanguage): string {
   return result;
 }
 
-export function humanize(text: string, language: AppLanguage): string {
+export function humanize(text: string, language: AppLanguage, voiceLang?: string): string {
   if (!text) return text;
 
   let result = stripMarkdown(text);
@@ -77,6 +140,17 @@ export function humanize(text: string, language: AppLanguage): string {
       result = result.replace(pattern, replacement);
     }
     result = result.replace(/(\w{20,})\s+and\s+/g, '$1, and ');
+  }
+
+  // Apply Malay phonetic corrections when the active TTS voice is not a
+  // Malay (ms-*) or Indonesian (id-*) voice — English voices mispronounce
+  // Malay vowels, so we guide the engine with explicit phonetic spellings.
+  if (language === 'ms' && voiceLang) {
+    const vl = voiceLang.toLowerCase();
+    const isMalayOrIndonesian = vl.startsWith('ms') || vl.startsWith('id');
+    if (!isMalayOrIndonesian) {
+      result = applyMalayPhonetics(result);
+    }
   }
 
   return result.replace(/\s{2,}/g, ' ').trim();

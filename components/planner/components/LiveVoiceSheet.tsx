@@ -17,8 +17,6 @@ export type LiveVoiceSheetProps = {
   voice: UseLiveVoiceResult;
   isOpen: boolean;
   onClose: () => void;
-  onSendText: (text: string) => void;
-  voicePrompts: string[];
 };
 
 type Phase = UseLiveVoiceResult['phase'];
@@ -45,9 +43,7 @@ export default function LiveVoiceSheet({
   language,
   voice,
   isOpen,
-  onClose,
-  onSendText,
-  voicePrompts
+  onClose
 }: LiveVoiceSheetProps) {
   const greetedOnOpenRef = useRef(false);
   const userCaption = voice.interimTranscript || voice.finalTranscript;
@@ -189,7 +185,32 @@ export default function LiveVoiceSheet({
 
         <div className="live-voice-stage" aria-live="polite">
           <VoiceLeds active={isListening || phase === 'speaking'} rms={voice.rms} count={5} />
-          <LiveOrb state={phase} rms={voice.rms} ttsSentence={voice.ttsSentence} />
+          <button
+            type="button"
+            className="live-orb-btn"
+            aria-label={
+              phase === 'idle' || phase === 'error'
+                ? (language === 'ms' ? 'Ketuk untuk mula bercakap' : 'Tap to start talking')
+                : (language === 'ms' ? 'Ketuk untuk berhenti' : 'Tap to stop')
+            }
+            disabled={isUnavailable || isTtsOnly || phase === 'requesting-mic'}
+            onClick={() => {
+              if (phase === 'idle' || phase === 'error') {
+                void voice.pushToTalk();
+              } else {
+                voice.stop();
+              }
+            }}
+          >
+            <LiveOrb state={phase} rms={voice.rms} ttsSentence={voice.ttsSentence} />
+            <span className="live-orb-hint" aria-hidden="true">
+              {phase === 'idle' || phase === 'error'
+                ? (language === 'ms' ? 'ketuk untuk mula' : 'tap to start')
+                : phase === 'requesting-mic'
+                  ? (language === 'ms' ? 'menyambung...' : 'connecting...')
+                  : (language === 'ms' ? 'ketuk untuk berhenti' : 'tap to stop')}
+            </span>
+          </button>
           <div className="live-voice-waveform">{waveform}</div>
           <strong className="live-voice-phase-label">{label}</strong>
           <p className="live-voice-instruction">
@@ -257,22 +278,6 @@ export default function LiveVoiceSheet({
               )}
             </p>
           </article>
-        </div>
-
-        <div className="live-voice-prompts" aria-label={language === 'ms' ? 'Contoh soalan' : 'Example questions'}>
-          {voicePrompts.slice(0, 4).map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => {
-                onSendText(prompt);
-                voice.stop();
-                onClose();
-              }}
-            >
-              {prompt}
-            </button>
-          ))}
         </div>
 
         <div className="live-voice-actions">
