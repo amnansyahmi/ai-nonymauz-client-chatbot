@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import PwaRegister from '../components/PwaRegister';
 import './globals.css';
 import './styles/planner-overrides.css';
+import './styles/live-voice.css';
 
 export const metadata: Metadata = {
   title: 'MajlisMate.ai',

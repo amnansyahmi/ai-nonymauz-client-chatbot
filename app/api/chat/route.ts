@@ -1,32 +1,14 @@
 import { NextRequest } from 'next/server';
-import { formatContext, getClientName, retrieveContext } from '../../../lib/retrieval';
+import { z } from 'zod';
+import { chatRequestSchema, type ChatRequest } from '../../../lib/chatSchema';
+import { formatContext, getClientName, retrieveContext, type KnowledgeDoc } from '../../../lib/retrieval';
+import { clientKeyFromRequest, SimpleRateLimiter } from '../../../lib/rateLimit';
+import { encodeSseError, encodeSseEvent, parseSseEvents, type StreamEvent } from '../../../lib/stream/sse';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-type IncomingMessage = {
-  role: 'user' | 'assistant';
-  content: string;
-};
-
-type ChatMessage = {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-};
-
-type PlannerContext = {
-  groomName?: string;
-  brideName?: string;
-  majlisDate?: string;
-  negeri?: string;
-  totalBudget?: number;
-  guestTarget?: number;
-  checklistSummary?: string;
-  budgetSummary?: string[];
-  upcomingAppointments?: Array<{ title: string; date: string; time?: string; vendor?: string; location?: string }>;
-};
-
-type AppLanguage = 'ms' | 'en';
+const limiter = new SimpleRateLimiter({ windowMs: 60_000, max: 30 });
 
 const WEDDING_RELATED_PATTERN =
   /\b(akad|andaman|baju|banquet|bride|bridal|budget|caterer|catering|ceremony|checklist|decor|dewan|engagement|event|florist|groom|guest|hantaran|hotel|invitation|jemputan|kahwin|kenduri|majlis|makeup|nikah|pelamin|photographer|reception|rsvp|sanding|seating|venue|vendor|wedding)\b/i;
@@ -37,8 +19,24 @@ const CODING_REQUEST_PATTERN =
 const CREATION_REQUEST_PATTERN =
   /\b(create|buat|generate|write|build|make|design)\b[\s\S]{0,80}\b(prompt|copy|template|caption|message|wording|content)\b/i;
 
-function sse(payload: unknown) {
-  return `data: ${JSON.stringify(payload)}\n\n`;
+type ChatMessage = {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+};
+
+type AppLanguage = 'ms' | 'en';
+
+function sseHeaders(): HeadersInit {
+  return {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    Connection: 'keep-alive',
+    'X-Accel-Buffering': 'no'
+  };
+}
+
+function sseDone(): string {
+  return encodeSseEvent({ type: 'done' });
 }
 
 function isCodingRequest(message: string) {
@@ -73,18 +71,10 @@ function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage) {
   return 'Saya dah noted. Langkah terbaik sekarang ialah tukarkan perkara ini kepada satu tindakan planning yang jelas.\n\nCuba pilih kategori:\n- Checklist\n- Bajet\n- Vendor\n- Tetamu\n- Appointment\n\nContoh: “Buat checklist untuk bulan terakhir” atau “Draft mesej WhatsApp untuk caterer.”';
 }
 
-function extractTextFromJson(data: any): string {
-  const text =
-    data?.choices?.[0]?.delta?.content ||
-    data?.choices?.[0]?.message?.content ||
-    data?.delta?.content ||
-    data?.answer ||
-    data?.response ||
-    data?.content ||
-    data?.message ||
-    '';
-
-  return typeof text === 'string' ? text : '';
+function cleanDemoText(text: string) {
+  return text
+    .replace(/â€™/g, "'")
+    .replace(/â€œ|â€/g, '"');
 }
 
 async function forwardAiNonymauzStream(
@@ -93,33 +83,36 @@ async function forwardAiNonymauzStream(
   messages: ChatMessage[],
   language: AppLanguage
 ) {
-  const baseUrl = process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '');
-  const apiKey = process.env.AI_NONYMAUZ_API_KEY;
-  const model = process.env.AI_NONYMAUZ_MODEL || 'ai-nonymauz-support';
+  const env = {
+    baseUrl: process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '') ?? '',
+    apiKey: process.env.AI_NONYMAUZ_API_KEY ?? '',
+    model: process.env.AI_NONYMAUZ_MODEL || 'ai-nonymauz-support',
+    maxTokens: Number(process.env.AI_NONYMAUZ_MAX_TOKENS || 700)
+  };
 
-  if (!baseUrl || !apiKey || apiKey === 'your-secret-api-key') {
+  if (!env.baseUrl || !env.apiKey || env.apiKey === 'your-secret-api-key') {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-    const demoAnswer = buildDemoPlannerAnswer(userMessage, language);
+    const demoAnswer = cleanDemoText(buildDemoPlannerAnswer(userMessage, language));
 
     for (const word of demoAnswer.split(/(\s+)/)) {
-      controller.enqueue(encoder.encode(sse({ type: 'delta', text: word })));
+      controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: word })));
       await new Promise((resolve) => setTimeout(resolve, 8));
     }
     return;
   }
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const response = await fetch(`${env.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'text/event-stream, application/json, text/plain',
-      Authorization: `Bearer ${apiKey}`
+      Authorization: `Bearer ${env.apiKey}`
     },
     body: JSON.stringify({
-      model,
+      model: env.model,
       messages,
       temperature: 0.2,
-      max_tokens: Number(process.env.AI_NONYMAUZ_MAX_TOKENS || 700),
+      max_tokens: env.maxTokens,
       stream: true
     })
   });
@@ -133,18 +126,18 @@ async function forwardAiNonymauzStream(
 
   if (!response.body) {
     const text = await response.text();
-    controller.enqueue(encoder.encode(sse({ type: 'delta', text })));
+    controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text })));
     return;
   }
 
   if (!contentType.includes('text/event-stream')) {
     const raw = await response.text();
     try {
-      const parsed = JSON.parse(raw);
-      const text = extractTextFromJson(parsed) || raw;
-      controller.enqueue(encoder.encode(sse({ type: 'delta', text })));
+      const parsed: unknown = JSON.parse(raw);
+      const text = parsed && typeof parsed === 'object' ? extractFromUnknown(parsed) : '';
+      controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: text || raw })));
     } catch {
-      controller.enqueue(encoder.encode(sse({ type: 'delta', text: raw })));
+      controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: raw })));
     }
     return;
   }
@@ -158,95 +151,58 @@ async function forwardAiNonymauzStream(
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
-
-      const payload = trimmed.replace(/^data:\s*/, '').trim();
-      if (!payload || payload === '[DONE]') continue;
-
-      try {
-        const parsed = JSON.parse(payload);
-        const text = extractTextFromJson(parsed);
-        if (text) controller.enqueue(encoder.encode(sse({ type: 'delta', text })));
-      } catch {
-        controller.enqueue(encoder.encode(sse({ type: 'delta', text: payload })));
-      }
-    }
+    const { events, remaining } = parseSseEvents(buffer);
+    buffer = remaining;
+    forwardSseEvents(controller, encoder, events);
   }
 
-  const tail = buffer.trim();
-  if (tail.startsWith('data:')) {
-    const payload = tail.replace(/^data:\s*/, '').trim();
-    if (payload && payload !== '[DONE]') {
-      try {
-        const parsed = JSON.parse(payload);
-        const text = extractTextFromJson(parsed);
-        if (text) controller.enqueue(encoder.encode(sse({ type: 'delta', text })));
-      } catch {
-        controller.enqueue(encoder.encode(sse({ type: 'delta', text: payload })));
-      }
+  const tail = parseSseEvents(buffer);
+  forwardSseEvents(controller, encoder, tail.events);
+}
+
+function extractFromUnknown(data: unknown): string {
+  if (!data || typeof data !== 'object') return '';
+  const record = data as Record<string, unknown>;
+  const choices = record.choices;
+  if (Array.isArray(choices) && choices[0] && typeof choices[0] === 'object') {
+    const choice = choices[0] as Record<string, unknown>;
+    const delta = choice.delta as Record<string, unknown> | undefined;
+    const message = choice.message as Record<string, unknown> | undefined;
+    if (delta && typeof delta.content === 'string') return delta.content;
+    if (message && typeof message.content === 'string') return message.content;
+  }
+  for (const key of ['delta', 'answer', 'response', 'content', 'message']) {
+    const value = record[key];
+    if (typeof value === 'string') return value;
+  }
+  return '';
+}
+
+function forwardSseEvents(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  encoder: TextEncoder,
+  events: StreamEvent[]
+) {
+  for (const event of events) {
+    if (event.type === 'delta' && event.text) {
+      controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: event.text })));
+    } else if (event.type === 'error') {
+      controller.enqueue(encoder.encode(encodeSseError(event.error)));
     }
   }
 }
 
-export async function POST(request: NextRequest) {
-  const encoder = new TextEncoder();
+function buildSystemPrompt(
+  language: AppLanguage,
+  plannerContext: ChatRequest['plannerContext'],
+  selectedDocs: KnowledgeDoc[]
+) {
+  const languageName = language === 'en' ? 'English' : 'Malay/Bahasa Melayu';
+  const clientName = getClientName();
+  const chatbotName = process.env.CHATBOT_NAME || 'MajlisMate.ai';
+  const context = formatContext(selectedDocs);
 
-  try {
-    const body = await request.json();
-    const messages = Array.isArray(body.messages) ? (body.messages as IncomingMessage[]) : [];
-    const language: AppLanguage = body.language === 'en' ? 'en' : 'ms';
-    const languageName = language === 'en' ? 'English' : 'Malay/Bahasa Melayu';
-    const plannerContext = (body.plannerContext || {}) as PlannerContext;
-    const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content;
-
-    if (!latestUserMessage || latestUserMessage.trim().length < 2) {
-      return new Response(sse({ type: 'error', error: language === 'en' ? 'Please provide a valid question.' : 'Sila masukkan soalan yang sah.' }), {
-        status: 400,
-        headers: { 'Content-Type': 'text/event-stream; charset=utf-8' }
-      });
-    }
-
-    if (isCodingRequest(latestUserMessage)) {
-      const redirectMessage = language === 'en'
-        ? 'I cannot help create code, HTML, CSS, scripts, apps, or websites. I can still help with non-code wedding planning, such as invitation wording, vendor messages, checklists, timelines, budgets, RSVP planning, and appointment planning.'
-        : 'Saya tak boleh bantu cipta kod, HTML, CSS, skrip, app, atau website. Saya masih boleh bantu perancangan kahwin tanpa kod seperti wording jemputan, mesej vendor, checklist, timeline, bajet, RSVP, dan appointment.';
-
-      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
-        headers: {
-          'Content-Type': 'text/event-stream; charset=utf-8',
-          'Cache-Control': 'no-cache, no-transform',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no'
-        }
-      });
-    }
-
-    if (isUnrelatedCreationRequest(latestUserMessage)) {
-      const redirectMessage = language === 'en'
-        ? 'I can help create non-code prompts, copy, wording, and templates when they are for your wedding or majlis planning. For example, ask me to write invitation wording, a vendor-message template, a majlis checklist prompt, or RSVP reminder copy.'
-        : 'Saya boleh bantu cipta prompt, copy, wording, dan template tanpa kod bila ia berkaitan wedding atau majlis. Contohnya, minta saya tulis wording jemputan, template mesej vendor, prompt checklist majlis, atau copy reminder RSVP.';
-
-      return new Response(`${sse({ type: 'sources', sources: [] })}${sse({ type: 'delta', text: redirectMessage })}${sse({ type: 'done' })}`, {
-        headers: {
-          'Content-Type': 'text/event-stream; charset=utf-8',
-          'Cache-Control': 'no-cache, no-transform',
-          Connection: 'keep-alive',
-          'X-Accel-Buffering': 'no'
-        }
-      });
-    }
-
-    const selectedDocs = retrieveContext(latestUserMessage, 3);
-    const context = formatContext(selectedDocs);
-    const clientName = getClientName();
-    const chatbotName = process.env.CHATBOT_NAME || 'MajlisMate.ai';
-
-    const systemPrompt = `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
+  return `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
 Rules:
 1. Stay focused on wedding and event planning, but treat adjacent questions as in-scope when they can help the user's wedding.
@@ -263,18 +219,77 @@ Internal knowledge context:
 ${context}
 
 Current planner context from the local MajlisMate.ai workspace:
-- Groom name: ${plannerContext.groomName || 'not set'}
-- Bride name: ${plannerContext.brideName || 'not set'}
-- Majlis date: ${plannerContext.majlisDate || 'not set'}
-- Negeri: ${plannerContext.negeri || 'not set'}
-- Total budget: ${plannerContext.totalBudget ? `RM${plannerContext.totalBudget}` : 'not set'}
-- Guest target: ${plannerContext.guestTarget || 'not set'}
-- Checklist progress: ${plannerContext.checklistSummary || 'not set'}
-- Budget snapshot: ${(plannerContext.budgetSummary || []).join('; ') || 'not set'}
-- Upcoming appointments: ${(plannerContext.upcomingAppointments || [])
-      .map((appointment) => `${appointment.date}${appointment.time ? ` ${appointment.time}` : ''} - ${appointment.title}`)
+- Groom name: ${plannerContext?.groomName || 'not set'}
+- Bride name: ${plannerContext?.brideName || 'not set'}
+- Majlis date: ${plannerContext?.majlisDate || 'not set'}
+- Negeri: ${plannerContext?.negeri || 'not set'}
+- Total budget: ${plannerContext?.totalBudget ? `RM${plannerContext.totalBudget}` : 'not set'}
+- Guest target: ${plannerContext?.guestTarget || 'not set'}
+- Checklist progress: ${plannerContext?.checklistSummary || 'not set'}
+- Budget snapshot: ${(plannerContext?.budgetSummary || []).join('; ') || 'not set'}
+  - Upcoming appointments: ${(plannerContext?.upcomingAppointments || [])
+      .map((appointment: { date: string; time?: string; title: string }) =>
+        `${appointment.date}${appointment.time ? ` ${appointment.time}` : ''} - ${appointment.title}`
+      )
       .join('; ') || 'not set'}`;
+}
 
+export async function POST(request: NextRequest) {
+  const encoder = new TextEncoder();
+  const key = clientKeyFromRequest(request);
+  const limit = limiter.hit(key);
+  if (!limit.allowed) {
+    return new Response(encodeSseError('Too many requests. Please slow down.'), {
+      status: 429,
+      headers: {
+        ...sseHeaders(),
+        'Retry-After': String(Math.ceil(limit.resetInMs / 1000))
+      }
+    });
+  }
+
+  try {
+    const raw = await request.json();
+    const parsed = chatRequestSchema.safeParse(raw);
+    if (!parsed.success) {
+      return new Response(encodeSseError('Invalid request payload.'), {
+        status: 400,
+        headers: sseHeaders()
+      });
+    }
+
+    const { messages, language, plannerContext } = parsed.data;
+    const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content?.trim();
+
+    if (!latestUserMessage || latestUserMessage.length < 2) {
+      return new Response(
+        encodeSseError(language === 'en' ? 'Please provide a valid question.' : 'Sila masukkan soalan yang sah.'),
+        { status: 400, headers: sseHeaders() }
+      );
+    }
+
+    if (isCodingRequest(latestUserMessage)) {
+      const redirect = language === 'en'
+        ? 'I cannot help create code, HTML, CSS, scripts, apps, or websites. I can still help with non-code wedding planning, such as invitation wording, vendor messages, checklists, timelines, budgets, RSVP planning, and appointment planning.'
+        : 'Saya tak boleh bantu cipta kod, HTML, CSS, skrip, app, atau website. Saya masih boleh bantu perancangan kahwin tanpa kod seperti wording jemputan, mesej vendor, checklist, timeline, bajet, RSVP, dan appointment.';
+      return new Response(
+        `${encodeSseEvent({ type: 'sources', sources: [] })}${encodeSseEvent({ type: 'delta', text: redirect })}${sseDone()}`,
+        { headers: sseHeaders() }
+      );
+    }
+
+    if (isUnrelatedCreationRequest(latestUserMessage)) {
+      const redirect = language === 'en'
+        ? 'I can help create non-code prompts, copy, wording, and templates when they are for your wedding or majlis planning. For example, ask me to write invitation wording, a vendor-message template, a majlis checklist prompt, or RSVP reminder copy.'
+        : 'Saya boleh bantu cipta prompt, copy, wording, dan template tanpa kod bila ia berkaitan wedding atau majlis. Contohnya, minta saya tulis wording jemputan, template mesej vendor, prompt checklist majlis, atau copy reminder RSVP.';
+      return new Response(
+        `${encodeSseEvent({ type: 'sources', sources: [] })}${encodeSseEvent({ type: 'delta', text: redirect })}${sseDone()}`,
+        { headers: sseHeaders() }
+      );
+    }
+
+    const selectedDocs = retrieveContext(latestUserMessage, 3);
+    const systemPrompt = buildSystemPrompt(language, plannerContext, selectedDocs);
     const aiMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...messages.slice(-6).map((message) => ({ role: message.role, content: message.content }))
@@ -285,7 +300,7 @@ Current planner context from the local MajlisMate.ai workspace:
         try {
           controller.enqueue(
             encoder.encode(
-              sse({
+              encodeSseEvent({
                 type: 'sources',
                 sources: selectedDocs.map((doc) => ({ id: doc.id, title: doc.title, category: doc.category }))
               })
@@ -293,29 +308,28 @@ Current planner context from the local MajlisMate.ai workspace:
           );
 
           await forwardAiNonymauzStream(controller, encoder, aiMessages, language);
-          controller.enqueue(encoder.encode(sse({ type: 'done' })));
+          controller.enqueue(encoder.encode(sseDone()));
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unexpected error';
-          controller.enqueue(encoder.encode(sse({ type: 'error', error: message })));
+          controller.enqueue(encoder.encode(encodeSseError(message)));
         } finally {
           controller.close();
         }
       }
     });
 
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/event-stream; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no'
-      }
-    });
+    return new Response(stream, { headers: sseHeaders() });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return new Response(encodeSseError('Invalid request payload.'), {
+        status: 400,
+        headers: sseHeaders()
+      });
+    }
     const message = error instanceof Error ? error.message : 'Unexpected error';
-    return new Response(sse({ type: 'error', error: message }), {
+    return new Response(encodeSseError(message), {
       status: 500,
-      headers: { 'Content-Type': 'text/event-stream; charset=utf-8' }
+      headers: sseHeaders()
     });
   }
 }

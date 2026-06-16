@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   budgetSuggestions,
   checklistTemplates,
@@ -12,6 +12,9 @@ import {
   vendorDirectory
 } from './planner/data';
 import ChatWidget from './ChatWidget';
+import { useLiveVoice } from './planner/hooks/useLiveVoice';
+import LiveVoiceSheet from './planner/components/LiveVoiceSheet';
+import { askStream } from '../lib/chatStream';
 import MenuAssistant, {
   createMenuAssistantMessages,
   createMenuInputs,
@@ -242,7 +245,20 @@ export default function PlannerWorkspace() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isLiveVoiceOpen, setIsLiveVoiceOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  const liveVoicePrompts = language === 'ms'
+    ? [
+        'Tambah appointment esok pukul 3 petang untuk vendor follow-up',
+        'Buat checklist untuk sebulan sebelum majlis',
+        'Cadangkan bajet untuk 300 tetamu'
+      ]
+    : [
+        'Add an appointment tomorrow at 3 PM for vendor follow-up',
+        'Create a checklist for one month before the wedding',
+        'Suggest a budget for 300 guests'
+      ];
 
   useEffect(() => {
     const storedMessages = safeJsonParse<Message[]>(localStorage.getItem(storageKeys.messages), [defaultAssistantMessage]);
@@ -616,9 +632,9 @@ export default function PlannerWorkspace() {
     };
   }
 
-  async function ask(question: string, targetTab?: MenuAssistantTab) {
+  async function ask(question: string, targetTab?: MenuAssistantTab): Promise<string | null> {
     const trimmed = question.trim();
-    if (!trimmed || loading || menuLoading) return;
+    if (!trimmed || loading || menuLoading) return null;
 
     const isMenuAssistant = Boolean(targetTab);
     const currentMessages = targetTab ? menuMessages[targetTab] : messages;
@@ -768,6 +784,8 @@ export default function PlannerWorkspace() {
         }
       }
 
+      const finalAnswer = fullAnswer.trim() || copy.noAnswer;
+
       if (shouldCreateChecklist) {
         const generatedItems = checklistFromAnswer(fullAnswer);
         setChecklistItems((generatedItems.length > 0 ? generatedItems : fallbackChecklist(trimmed)).map((item) => ({ ...item, status: 'not-started' })));
@@ -787,6 +805,7 @@ export default function PlannerWorkspace() {
       if (shouldDraftVendorMessage) {
         addActivity('AI drafted a vendor message.');
       }
+      return finalAnswer;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unexpected error';
       const friendlyMessage = /fetch|network|failed to get response|no response body/i.test(message)
@@ -814,6 +833,7 @@ export default function PlannerWorkspace() {
           addActivity(`Appointment drafted: ${appointment.title}.`);
         }
       }
+      return friendlyMessage;
     } finally {
       if (targetTab) {
         setMenuLoading(null);
@@ -1644,6 +1664,54 @@ export default function PlannerWorkspace() {
       custom: 'Custom'
     }
   }[language];
+
+  const askVoiceStream = useCallback(
+    async (question: string) => {
+      const trimmed = question.trim();
+      if (!trimmed) {
+        return {
+          deltas: (async function* () {
+            yield copy.welcome;
+          })(),
+          cancel: () => {}
+        };
+      }
+
+      const recentMessages = messages.slice(-6).map(({ role, content }) => ({ role, content }));
+      if (recentMessages[recentMessages.length - 1]?.content !== trimmed) {
+        recentMessages.push({ role: 'user', content: trimmed });
+      }
+      const plannerContext = {
+        groomName: plannerProfile.groomName,
+        brideName: plannerProfile.brideName,
+        majlisDate: plannerProfile.majlisDate,
+        negeri: plannerProfile.negeri,
+        totalBudget: plannerProfile.totalBudget,
+        guestTarget: plannerProfile.guestTarget,
+        upcomingAppointments: appointments.slice(0, 3).map((appointment: { title: string; date: string; time?: string; vendor?: string; location?: string }) => ({
+          title: appointment.title,
+          date: appointment.date,
+          time: appointment.time,
+          vendor: appointment.vendor,
+          location: appointment.location
+        }))
+      };
+
+      return askStream({
+        messages: recentMessages as Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+        language,
+        plannerContext
+      });
+    },
+    [messages, plannerProfile, appointments, language, copy.welcome]
+  );
+
+  const liveVoice = useLiveVoice({ language, ask: askVoiceStream });
+
+  useEffect(() => {
+    void liveVoice.phase;
+  }, [liveVoice.phase]);
+
   const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
     ? copy.defaultTemplate
     : checklistTitle;
@@ -1902,7 +1970,7 @@ export default function PlannerWorkspace() {
     setIsSidebarOpen(false);
     setIsContextAssistantOpen(false);
   };
-  const currentHour = new Date().getHours();
+  const currentHour = isHydrated ? new Date().getHours() : 9;
   const timeGreeting = currentHour < 12 ? copy.morning : currentHour < 18 ? copy.afternoon : copy.evening;
   const greetingName =
     plannerProfile.coupleName.trim() ||
@@ -1943,6 +2011,7 @@ export default function PlannerWorkspace() {
             : normalizedInput.includes('appoint') || normalizedInput.includes('jadual') || normalizedInput.includes('tempah')
               ? [language === 'ms' ? 'Buat appointment vendor minggu ini' : 'Schedule a vendor appointment this week', language === 'ms' ? 'Apa perlu confirm dengan vendor?' : 'What should I confirm with the vendor?']
               : [];
+  void commandSuggestions;
   const mobileNavItems: Array<{ tab: ActiveTab; label: string; icon: Parameters<typeof MenuIcon>[0]['name'] }> = [
     { tab: 'chat', label: copy.chat, icon: 'chat' },
     { tab: 'checklist', label: copy.checklist, icon: 'checklist' },
@@ -2085,6 +2154,22 @@ export default function PlannerWorkspace() {
       ) : null}
 
       {statusMessage ? <div className="pwa-banner success">{statusMessage}</div> : null}
+
+      {isLiveVoiceOpen ? (
+        <LiveVoiceSheet
+          language={language}
+          voice={liveVoice}
+          isOpen={isLiveVoiceOpen}
+          onClose={() => {
+            setIsLiveVoiceOpen(false);
+          }}
+          onSendText={(text) => {
+            setInput(text);
+            setActiveTab('chat');
+          }}
+          voicePrompts={liveVoicePrompts}
+        />
+      ) : null}
 
       <div className={`planner-body ${activeMenuTab ? 'has-assistant' : ''} ${isSidebarOpen ? 'sidebar-open' : ''}`}>
         <aside className="planner-sidebar" aria-label="Planner menu">
@@ -2332,6 +2417,7 @@ export default function PlannerWorkspace() {
             messagesEndRef={messagesEndRef}
             onInputChange={setInput}
             onCommandSuggestion={(suggestion) => setInput(suggestion)}
+            onVoiceMode={() => setIsLiveVoiceOpen(true)}
             onSubmit={onSubmit}
           />
         </div>

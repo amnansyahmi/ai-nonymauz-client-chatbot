@@ -41,6 +41,7 @@ type ComposerProps = {
   showVoiceWhenEmpty?: boolean;
   onInputChange: (value: string) => void;
   onCommandSuggestion?: (value: string) => void;
+  onVoiceMode?: () => void;
   onSubmit: (event: FormEvent) => void;
 };
 
@@ -86,6 +87,7 @@ export default function Composer({
   showVoiceWhenEmpty = true,
   onInputChange,
   onCommandSuggestion,
+  onVoiceMode,
   onSubmit
 }: ComposerProps) {
   const [isDictating, setIsDictating] = useState(false);
@@ -135,6 +137,10 @@ export default function Composer({
   }
 
   function handleVoiceMode() {
+    if (onVoiceMode) {
+      onVoiceMode();
+      return;
+    }
     setVoiceNotice(language === 'en' ? 'Voice chat is coming soon. Use dictation for now.' : 'Voice chat akan datang. Buat masa ini guna dictation dulu.');
   }
 
