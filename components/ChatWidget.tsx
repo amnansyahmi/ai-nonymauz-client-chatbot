@@ -20,6 +20,7 @@ type ChatWidgetProps = {
   messagesEndRef?: RefObject<HTMLDivElement | null>;
   onInputChange: (value: string) => void;
   onCommandSuggestion?: (value: string) => void;
+  onVoiceMode?: () => void;
   onSubmit: (event: FormEvent) => void;
 };
 
@@ -39,6 +40,7 @@ export default function ChatWidget({
   messagesEndRef,
   onInputChange,
   onCommandSuggestion,
+  onVoiceMode,
   onSubmit
 }: ChatWidgetProps) {
   return (
@@ -78,6 +80,7 @@ export default function ChatWidget({
         commandSuggestions={commandSuggestions}
         onCommandSuggestion={onCommandSuggestion}
         onInputChange={onInputChange}
+        onVoiceMode={onVoiceMode}
         onSubmit={onSubmit}
       />
     </>
