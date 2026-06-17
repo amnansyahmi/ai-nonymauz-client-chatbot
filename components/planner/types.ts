@@ -4,6 +4,8 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   sources?: Source[];
+  actions?: import('../../lib/planner/chatActions').PlannerAction[];
+  actionsState?: 'pending' | 'applied' | 'dismissed';
 };
 
 export type StreamEvent = {
@@ -72,6 +74,12 @@ export type Vendor = {
   instagram?: string;
   rating: number;
   note: string;
+  // Optional metadata for live results fetched from Google Maps.
+  address?: string;
+  website?: string;
+  mapsUri?: string;
+  ratingCount?: number;
+  source?: 'directory' | 'google';
 };
 
 export type ActivityItem = {

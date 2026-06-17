@@ -9,6 +9,7 @@ export type AskStreamRequest = {
   messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
   language?: 'ms' | 'en';
   plannerContext?: Record<string, unknown>;
+  voiceMode?: boolean;
   signal?: AbortSignal;
 };
 
@@ -16,6 +17,7 @@ export async function askStream({
   messages,
   language = 'ms',
   plannerContext,
+  voiceMode,
   signal
 }: AskStreamRequest): Promise<ChatStream> {
   const controller = new AbortController();
@@ -26,7 +28,7 @@ export async function askStream({
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, language, plannerContext }),
+    body: JSON.stringify({ messages, language, plannerContext, voiceMode }),
     signal: controller.signal
   });
 

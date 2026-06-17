@@ -165,18 +165,14 @@ export function formatChecklistText(title: string, items: ChecklistItem[]) {
 
 export function generateDefaultChecklist(majlisDate?: string): ChecklistItem[] {
   const weddingDate = majlisDate ? new Date(`${majlisDate}T00:00:00`) : null;
-  const phaseOffsets: Record<string, number> = {
-    'Fasa 1 - Asas': 270,
-    'Fasa 2 - Vendor Utama': 180,
-    'Fasa 3 - Persediaan': 60,
-    'Fasa 4 - Final': 7
-  };
 
   return defaultChecklistTemplate.flatMap((group, groupIndex) =>
     group.items.map((item, itemIndex) => {
       const phase = group.phase;
+      // daysOffset > 0 = days BEFORE wedding; daysOffset < 0 = days AFTER wedding
+      const offset = (group as { daysOffset?: number }).daysOffset ?? 0;
       const dueDate = weddingDate
-        ? new Date(weddingDate.getFullYear(), weddingDate.getMonth(), weddingDate.getDate() - phaseOffsets[phase.ms])
+        ? new Date(weddingDate.getFullYear(), weddingDate.getMonth(), weddingDate.getDate() - offset)
         : null;
 
       return {

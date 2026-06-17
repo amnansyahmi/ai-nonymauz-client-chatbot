@@ -71,55 +71,105 @@ export const defaultPlannerProfile: PlannerProfile = {
   completed: false
 };
 
+// daysOffset = days before (-) or after (+) the wedding date to set as phase deadline
 export const defaultChecklistTemplate = [
   {
-    phase: { ms: 'Fasa 1 - Asas', en: 'Phase 1 - Foundation' },
+    phase: { ms: '6-12 Bulan Sebelum', en: '6-12 Months Before' },
+    daysOffset: 270,
     items: [
-      { ms: 'Isi maklumat majlis', en: 'Fill in wedding details' },
-      { ms: 'Confirm tarikh majlis dengan keluarga dua belah', en: 'Confirm the wedding date with both families' },
-      { ms: 'Apply permohonan nikah online', en: 'Submit the online nikah application' },
-      { ms: 'Daftar kursus pra-perkahwinan', en: 'Register for the pre-marriage course' },
-      { ms: 'Tempah jurunikah', en: 'Book the marriage officiant' },
-      { ms: 'Tetapkan bajet keseluruhan', en: 'Set the overall wedding budget' },
-      { ms: 'Tempah dewan / lokasi majlis', en: 'Book the hall or wedding venue' },
-      { ms: 'Bayar deposit dewan', en: 'Pay the venue deposit' }
+      { ms: 'Anggarkan jumlah tetamu & buat senarai kasar', en: 'Estimate guest count and draft a rough list' },
+      { ms: 'Tetapkan bajet keseluruhan majlis', en: 'Set the overall wedding budget' },
+      { ms: 'Rancang aturcara & format majlis', en: 'Plan the programme and majlis format' },
+      { ms: 'Daftar & hadir kursus pra-perkahwinan', en: 'Register for and attend the pre-marriage course' },
+      { ms: 'Survey & tempah lokasi / dewan majlis', en: 'Survey and book the wedding venue or hall' },
+      { ms: 'Survey & tempah jurufoto & juruvideo', en: 'Survey and book photographer and videographer' },
+      { ms: 'Bincang konsep & barang hantaran', en: 'Discuss hantaran concept and items' },
+      { ms: 'Pilih & janji temu dengan katerer', en: 'Choose and set appointment with caterer' },
+      { ms: 'Buka akaun tabungan khas untuk kahwin', en: 'Open a dedicated wedding savings account' }
     ]
   },
   {
-    phase: { ms: 'Fasa 2 - Vendor Utama', en: 'Phase 2 - Main Vendors' },
+    phase: { ms: '5 Bulan Sebelum', en: '5 Months Before' },
+    daysOffset: 150,
     items: [
-      { ms: 'Tempah katerer ATAU confirm orang rewang', en: 'Book catering or confirm the rewang team' },
-      { ms: 'Tempah jurufoto & juruvideo', en: 'Book photographer and videographer' },
-      { ms: 'Tempah juruandam / makeup', en: 'Book makeup or bridal styling' },
-      { ms: 'Survey & tempah baju pengantin', en: 'Survey and book wedding attire' },
-      { ms: 'Buat fitting baju pengantin', en: 'Schedule wedding attire fitting' },
-      { ms: 'Settle hantaran dua belah', en: 'Finalize hantaran for both sides' },
-      { ms: 'Tempah penghias majlis', en: 'Book wedding decorator' },
-      { ms: 'Tempah PA system & MC', en: 'Book PA system and emcee' }
+      { ms: 'Urus & siapkan dokumen permohonan nikah', en: 'Prepare and submit nikah application documents' },
+      { ms: 'Tempah pengacara majlis / DJ / Audio System', en: 'Book emcee, DJ, and audio system' },
+      { ms: 'Tetapkan konsep, tema & warna pelamin', en: 'Finalise pelamin concept, theme, and colour' },
+      { ms: 'Tentukan tema / warna pakaian untuk keluarga', en: 'Decide family attire theme and colour' },
+      { ms: 'Mula beli & kumpul barang hantaran', en: 'Start buying and collecting hantaran items' },
+      { ms: 'Apply cuti hari majlis & sehari sebelum', en: 'Apply for leave on wedding day and day before' },
+      { ms: 'Survey & tempah pakej / tiket bulan madu', en: 'Survey and book honeymoon package or tickets' },
+      { ms: 'Booking penginapan untuk tetamu luar', en: 'Book accommodation for outstation guests' },
+      { ms: 'Bincang & tentukan pelamin nikah', en: 'Discuss and decide on nikah pelamin' }
     ]
   },
   {
-    phase: { ms: 'Fasa 3 - Persediaan', en: 'Phase 3 - Preparation' },
+    phase: { ms: '2-3 Bulan Sebelum', en: '2-3 Months Before' },
+    daysOffset: 75,
     items: [
-      { ms: 'Siapkan senarai tetamu penuh', en: 'Complete the full guest list' },
-      { ms: 'Hantar jemputan & setup RSVP', en: 'Send invitations and set up RSVP' },
-      { ms: 'Hantar reminder RSVP', en: 'Send RSVP reminders' },
-      { ms: 'Confirm headcount & bagi ke katerer', en: 'Confirm headcount and share it with the caterer' },
-      { ms: 'Tempah cenderahati', en: 'Order wedding favors' },
-      { ms: 'Confirm semua vendor', en: 'Confirm all vendors' },
-      { ms: 'Briefing kepada pembantu & keluarga', en: 'Brief helpers and family members' }
+      { ms: 'Buat ujian HIV di klinik atau hospital', en: 'Complete HIV test at clinic or hospital' },
+      { ms: 'Serahkan semua dokumen di Pejabat Agama Islam', en: 'Submit all documents to the Islamic Affairs Office' },
+      { ms: 'Semak & pastikan semua vendor dah confirm booking', en: 'Verify all vendor bookings are confirmed' },
+      { ms: 'Sediakan senarai tugasan untuk ahli keluarga', en: 'Prepare task list for family members' },
+      { ms: 'Pilih baju majlis & pergi ambil ukuran di butik', en: 'Choose wedding attire and take measurements at boutique' },
+      { ms: 'Pilih pengapit & tentukan tema pakaian mereka', en: 'Choose bridesmaids/groomsmen and decide attire theme' },
+      { ms: 'Buat food testing dengan caterer', en: 'Do food tasting session with caterer' },
+      { ms: 'Confirm dekorasi pelamin & lawatan ke butik', en: 'Confirm pelamin decor and visit the boutique' },
+      { ms: 'Tempah kad kahwin cetak & kad digital', en: 'Order printed and digital wedding invitations' },
+      { ms: 'Uruskan bunga pahar, telur berinai & goodies tetamu', en: 'Arrange bunga pahar, henna eggs, and guest goodies' }
     ]
   },
   {
-    phase: { ms: 'Fasa 4 - Final', en: 'Phase 4 - Final' },
+    phase: { ms: '1 Bulan Sebelum', en: '1 Month Before' },
+    daysOffset: 30,
     items: [
-      { ms: 'Confirm semua vendor seminggu sebelum', en: 'Confirm all vendors one week before' },
-      { ms: 'Bagi nombor final ke katerer 5 hari sebelum', en: 'Give the final number to the caterer five days before' },
-      { ms: 'Briefing terakhir semua pembantu', en: 'Run the final briefing with all helpers' },
-      { ms: 'Confirm parking & pengangkutan', en: 'Confirm parking and transport' },
-      { ms: 'Confirm penginapan tetamu jauh', en: 'Confirm accommodation for outstation guests' },
-      { ms: 'Prepare barang penting hari majlis', en: 'Prepare important wedding-day items' },
-      { ms: 'Rehat & serah urusan kepada pembantu', en: 'Rest and hand over tasks to helpers' }
+      { ms: 'Semak status permohonan nikah di Pejabat Agama', en: 'Check nikah application status at Islamic Affairs Office' },
+      { ms: 'Finalkan & hantar senarai tetamu', en: 'Finalise and send out guest list' },
+      { ms: 'Pos kad kahwin & buka RSVP', en: 'Send out wedding cards and open RSVP' },
+      { ms: 'Cuba solekan penuh dengan juruandam', en: 'Do full makeup trial with the makeup artist' },
+      { ms: 'Rancang & finalkan susunan tempat duduk tetamu', en: 'Plan and finalise guest seating arrangement' },
+      { ms: 'Buat rawatan spa, facial & jaga kulit', en: 'Do spa, facial, and skincare treatments' },
+      { ms: 'Tempah & confirm juru ukir inai', en: 'Book and confirm henna artist' },
+      { ms: 'Siapkan & gubah dekorasi hantaran', en: 'Prepare and arrange hantaran decorations' },
+      { ms: 'Uruskan kereta pengantin & laluan konvoi', en: 'Arrange bridal car and convoy route' }
+    ]
+  },
+  {
+    phase: { ms: '1 Minggu Sebelum', en: '1 Week Before' },
+    daysOffset: 7,
+    items: [
+      { ms: 'Sahkan kehadiran pendaftaran pernikahan', en: 'Confirm attendance at marriage registration' },
+      { ms: 'Sediakan duit tunai untuk jurunikah, saksi & lain-lain', en: 'Prepare cash for nikah officiant, witnesses, and others' },
+      { ms: 'Ambil baju kahwin di butik & cuba sekali lagi', en: 'Collect wedding attire from boutique and try on again' },
+      { ms: 'Hias & siapkan bilik pengantin sepenuhnya', en: 'Decorate and fully prepare the bridal room' },
+      { ms: 'Sahkan semua vendor — pelamin, caterer, DJ, kek, kompang', en: 'Confirm all vendors — pelamin, caterer, DJ, cake, kompang' },
+      { ms: 'Bagi taklimat tugasan kepada keluarga & sahabat', en: 'Brief family members and helpers on their tasks' },
+      { ms: 'Siapkan sampul bayaran untuk vendor hari majlis', en: 'Prepare payment envelopes for day-of vendors' }
+    ]
+  },
+  {
+    phase: { ms: 'Sehari Sebelum', en: 'Day Before' },
+    daysOffset: 1,
+    items: [
+      { ms: 'Pastikan baju untuk majlis siap & dah iron', en: 'Ensure all outfits are ready and ironed' },
+      { ms: 'Confirm sekali lagi dengan semua vendor', en: 'Do a final confirmation with all vendors' },
+      { ms: 'Charge semua telefon, power bank & bateri kamera', en: 'Charge all phones, power banks, and camera batteries' },
+      { ms: 'Kemas & pack beg pengantin untuk esok', en: 'Pack the bridal bag for the wedding day' },
+      { ms: 'Pastikan semua penanda arah dah dipasang', en: 'Ensure all directional signs are installed' },
+      { ms: 'Rehat dan tidur awal', en: 'Rest and sleep early' }
+    ]
+  },
+  {
+    phase: { ms: 'Selepas Kahwin', en: 'After Wedding' },
+    daysOffset: -14,
+    items: [
+      { ms: 'Daftar & ambil sijil nikah di Pejabat Agama (dalam 7 hari)', en: 'Register and collect nikah certificate within 7 days' },
+      { ms: 'Tukar nama & status di MyKad — JPN', en: 'Update name and marital status on MyKad at JPN' },
+      { ms: 'Kemaskini maklumat di EPF / KWSP', en: 'Update information at EPF / KWSP' },
+      { ms: 'Kemaskini polisi insurans & takaful', en: 'Update insurance and takaful policies' },
+      { ms: 'Kemaskini maklumat di semua akaun bank', en: 'Update information at all bank accounts' },
+      { ms: 'Pulangkan atau selesaikan baki bayaran semua vendor', en: 'Return items or settle remaining payments with all vendors' },
+      { ms: 'Backup semua gambar & video dari photographer', en: 'Back up all photos and videos from photographer' }
     ]
   }
 ];

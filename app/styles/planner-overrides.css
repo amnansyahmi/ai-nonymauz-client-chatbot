@@ -25,8 +25,9 @@
   overflow: hidden !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: 14px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
+  transition: border-color 140ms ease !important;
 }
 
 .budget-row-card::before,
@@ -65,7 +66,7 @@
 
 .budget-row-summary:hover,
 .budget-row-summary:focus-visible {
-  background: #fafaf8 !important;
+  background: var(--mm-surface-subtle) !important;
   transform: none !important;
 }
 
@@ -181,7 +182,7 @@
     min-height: 46px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 14px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     color: var(--mm-text) !important;
     padding: 0 14px !important;
     font-size: 0.95rem !important;
@@ -209,7 +210,7 @@
     padding: 10px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 16px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     box-shadow: var(--mm-shadow-soft) !important;
   }
 

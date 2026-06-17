@@ -25,6 +25,12 @@ import { BudgetPanel, DashboardPanel, RsvpPanel, VendorsPanel } from './planner/
 import RiskAlerts from './planner/components/RiskAlerts';
 import { detectRisks } from './planner/riskDetector';
 import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
+import WeeklyBriefing from './planner/components/WeeklyBriefing';
+import VendorMessageSheet from './planner/components/VendorMessageSheet';
+import NotificationToggle from './planner/components/NotificationToggle';
+import { buildWeeklyBriefing } from '../lib/planner/weeklyBriefing';
+import { parseChatActions, stripActionBlock, type PlannerAction } from '../lib/planner/chatActions';
+import { collectDueReminders, fireReminders } from '../lib/notifications';
 import type {
   ActiveTab,
   ActivityItem,
@@ -203,7 +209,7 @@ export default function PlannerWorkspace() {
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [checklistFilter, setChecklistFilter] = useState('all');
-  const [checklistView, setChecklistView] = useState<'next' | 'timeline' | 'category' | 'completed'>('next');
+  const [checklistView, setChecklistView] = useState<'all' | 'next' | 'timeline' | 'category' | 'completed'>('all');
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
@@ -235,6 +241,9 @@ export default function PlannerWorkspace() {
   });
   const [savedVendors, setSavedVendors] = useState<string[]>([]);
   const [vendorFilter, setVendorFilter] = useState({ negeri: 'All', category: 'All' });
+  const [googleVendors, setGoogleVendors] = useState<Vendor[]>([]);
+  const [vendorSearchLoading, setVendorSearchLoading] = useState(false);
+  const [vendorSearchInfo, setVendorSearchInfo] = useState('');
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [appointmentDraft, setAppointmentDraft] = useState<AppointmentDraft>({
     title: '',
@@ -253,6 +262,8 @@ export default function PlannerWorkspace() {
   const [isOffline, setIsOffline] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isLiveVoiceOpen, setIsLiveVoiceOpen] = useState(false);
+  const [vendorMessageTarget, setVendorMessageTarget] = useState<Vendor | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -372,6 +383,33 @@ export default function PlannerWorkspace() {
     if (!isHydrated) return;
     localStorage.setItem(storageKeys.plannerProfile, JSON.stringify(plannerProfile));
   }, [isHydrated, plannerProfile]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    setNotificationsEnabled(localStorage.getItem('mm-notifications-enabled') === '1');
+  }, [isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    localStorage.setItem('mm-notifications-enabled', notificationsEnabled ? '1' : '0');
+  }, [notificationsEnabled, isHydrated]);
+
+  // Proactive reminders: fire due task / appointment notifications while enabled.
+  // fireReminders de-dupes by tag, so re-running on data changes is safe.
+  useEffect(() => {
+    if (!notificationsEnabled) return;
+    const run = () => fireReminders(collectDueReminders(checklistItems, appointments, language));
+    run();
+    const id = window.setInterval(run, 30 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, [notificationsEnabled, checklistItems, appointments, language]);
+
+  // Live Google Maps vendor results are tied to the active filter — clear them
+  // when the filter changes so stale results are not shown.
+  useEffect(() => {
+    setGoogleVendors([]);
+    setVendorSearchInfo('');
+  }, [vendorFilter.category, vendorFilter.negeri]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -510,27 +548,54 @@ export default function PlannerWorkspace() {
 
   function applySmartBudgetSuggestion(total?: number) {
     const base = Math.max(total || plannerProfile.totalBudget || totalPlanned || totalActual || 30000, 10000);
-    const allocationRules = [
-      { test: (category: string) => /venue|dewan|hall/i.test(category), percent: 0.24 },
-      { test: (category: string) => /cater|katering|catering/i.test(category), percent: 0.34 },
-      { test: (category: string) => /pelamin|dekor|decor/i.test(category), percent: 0.1 },
-      { test: (category: string) => /baju|andaman|mua|makeup/i.test(category), percent: 0.1 },
-      { test: (category: string) => /photo|foto|video/i.test(category), percent: 0.1 },
-      { test: (category: string) => /contingency|kecemasan|buffer/i.test(category), percent: 0.07 }
+    // Guest-aware: bigger guest counts mean catering eats a larger slice.
+    const guests = plannerProfile.guestTarget || 0;
+    const cateringPercent = guests > 600 ? 0.36 : guests > 300 ? 0.32 : 0.3;
+
+    const blueprint: Array<{ match: RegExp; label: string; percent: number }> = [
+      { match: /venue|dewan|hall/i, label: 'Venue / Dewan', percent: 0.18 },
+      { match: /cater|katering|catering/i, label: 'Catering', percent: cateringPercent },
+      { match: /pelamin|dekor|decor/i, label: 'Pelamin & Dekorasi', percent: 0.1 },
+      { match: /baju|pengantin|attire|dress/i, label: 'Baju Pengantin', percent: 0.06 },
+      { match: /andaman|mua|makeup|make-?up/i, label: 'Andaman / MUA', percent: 0.06 },
+      { match: /photo|foto/i, label: 'Photography', percent: 0.06 },
+      { match: /video/i, label: 'Videography', percent: 0.05 },
+      { match: /kad|invitation|jemputan/i, label: 'Kad Jemputan', percent: 0.02 },
+      { match: /cender|doorgift|door gift|gift/i, label: 'Cenderahati', percent: 0.04 },
+      { match: /hantaran/i, label: 'Hantaran', percent: 0.05 },
+      { match: /kompang|hiburan|entertain/i, label: 'Kompang & Hiburan', percent: 0.02 },
+      { match: /transport/i, label: 'Transport', percent: 0.02 },
+      { match: /pengin|accommod|hotel|stay/i, label: 'Penginapan', percent: 0.03 }
     ];
+    const allocatedPercent = blueprint.reduce((sum, item) => sum + item.percent, 0);
+    const contingencyPercent = Math.max(0.05, 1 - allocatedPercent);
 
     setPlannerProfile((current) => ({ ...current, totalBudget: base }));
-    setBudgetItems((current) =>
-      current.map((item) => {
-        const allocation = allocationRules.find((rule) => rule.test(item.category));
-        if (allocation) return { ...item, planned: Math.round(base * allocation.percent) };
-        if (item.planned > 0) return item;
-        return { ...item, planned: Math.round(base * 0.05) };
-      })
-    );
+    setBudgetItems((current) => {
+      const next = [...current];
+      const ensure = (match: RegExp, label: string, planned: number) => {
+        const index = next.findIndex((item) => match.test(item.category));
+        if (index >= 0) {
+          next[index] = { ...next[index], planned };
+        } else {
+          next.push({
+            id: `budget-auto-${label.replace(/\W+/g, '')}-${Date.now()}`,
+            category: label,
+            planned,
+            actual: 0,
+            paid: 0,
+            status: 'not-started',
+            note: ''
+          });
+        }
+      };
+      blueprint.forEach((item) => ensure(item.match, item.label, Math.round(base * item.percent)));
+      ensure(/conting|kecemasan|buffer/i, 'Contingency', Math.round(base * contingencyPercent));
+      return next;
+    });
     setActiveTab('budget');
-    addActivity(`AI suggested budget allocation from ${money(base)}.`);
-    setStatusMessage(language === 'ms' ? 'Cadangan bajet dimasukkan.' : 'Budget suggestion applied.');
+    addActivity(`AI suggested a full budget allocation from ${money(base)}.`);
+    setStatusMessage(language === 'ms' ? 'Cadangan bajet penuh dimasukkan.' : 'Full budget suggestion applied.');
   }
 
   function applyGuestPlanningFromText(text: string) {
@@ -616,6 +681,34 @@ export default function PlannerWorkspace() {
   }
 
   function buildPlannerContext() {
+    const openChecklistForContext = checklistItems
+      .filter((item) => !(item.completed || item.status === 'done'))
+      .map((item) => {
+        const text = item.textMs || item.text;
+        const status = item.status || 'not-started';
+        const d = item.deadline ? daysUntil(item.deadline) : null;
+        const when = d !== null
+          ? d < 0 ? `overdue ${Math.abs(d)} hari`
+          : d === 0 ? 'due HARI INI'
+          : d <= 7 ? `due dalam ${d} hari`
+          : d <= 30 ? `due dalam ${d} hari`
+          : `due ${item.deadline}`
+          : 'tiada tarikh';
+        const phase = item.phase ? ` [${item.phase}]` : '';
+        const score = (d !== null ? (d < 0 ? d - 1000 : d) : 9999) + (status === 'in-progress' ? -0.5 : 0);
+        return { text, status, d, when, phase, score };
+      })
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 20);
+
+    const overdueCount = openChecklistForContext.filter((i) => i.d !== null && i.d < 0).length;
+    const weekCount = openChecklistForContext.filter((i) => i.d !== null && i.d !== null && i.d >= 0 && i.d <= 7).length;
+    const itemLines = openChecklistForContext
+      .map((i) => `• ${i.text}${i.phase} — ${i.status}, ${i.when}`)
+      .join('\n');
+
+    const checklistSummary = `${completedCount}/${checklistItems.length} selesai | ${overdueCount} overdue | ${weekCount} due minggu ini\nTask terbuka (ikut keutamaan):\n${itemLines}`;
+
     return {
       majlisDate: plannerProfile.majlisDate,
       groomName: plannerProfile.groomName,
@@ -623,8 +716,8 @@ export default function PlannerWorkspace() {
       negeri: plannerProfile.negeri,
       totalBudget: plannerProfile.totalBudget,
       guestTarget: plannerProfile.guestTarget,
-      checklistSummary: `${completedCount}/${checklistItems.length} checklist items done`,
-      budgetSummary: budgetItems.map((item) => `${item.category}: planned ${money(item.planned)}, paid ${money(item.paid)}`).slice(0, 6),
+      checklistSummary: checklistSummary.slice(0, 3500),
+      budgetSummary: budgetItems.map((item) => `${item.category}: planned ${money(item.planned)}, actual ${money(item.actual)}, paid ${money(item.paid)}`).slice(0, 10),
       upcomingAppointments: appointments.filter((appointment) => appointment.date >= dateKey(new Date())).sort(sortAppointments).slice(0, 5)
     };
   }
@@ -734,17 +827,18 @@ export default function PlannerWorkspace() {
 
           if (event.type === 'delta' && event.text) {
             fullAnswer += event.text;
+            const displayContent = stripActionBlock(fullAnswer);
             if (targetTab) {
               setMenuMessages((current) => ({
                 ...current,
                 [targetTab]: current[targetTab].map((message, index) =>
-                  index === assistantIndex ? { ...message, content: fullAnswer, sources: currentSources } : message
+                  index === assistantIndex ? { ...message, content: displayContent, sources: currentSources } : message
                 )
               }));
             } else {
               setMessages((current) =>
                 current.map((message, index) =>
-                  index === assistantIndex ? { ...message, content: fullAnswer, sources: currentSources } : message
+                  index === assistantIndex ? { ...message, content: displayContent, sources: currentSources } : message
                 )
               );
             }
@@ -782,6 +876,30 @@ export default function PlannerWorkspace() {
       }
 
       const finalAnswer = fullAnswer.trim() || copy.noAnswer;
+      const parsedActions = parseChatActions(fullAnswer);
+      const displayAnswer = stripActionBlock(finalAnswer).trim() || copy.noAnswer;
+
+      if (targetTab) {
+        setMenuMessages((current) => ({
+          ...current,
+          [targetTab]: current[targetTab].map((message, index) =>
+            index === assistantIndex ? { ...message, content: displayAnswer } : message
+          )
+        }));
+      } else {
+        setMessages((current) =>
+          current.map((message, index) =>
+            index === assistantIndex
+              ? {
+                  ...message,
+                  content: displayAnswer,
+                  actions: parsedActions.length > 0 ? parsedActions : undefined,
+                  actionsState: parsedActions.length > 0 ? 'pending' : undefined
+                }
+              : message
+          )
+        );
+      }
 
       if (shouldCreateChecklist) {
         const generatedItems = checklistFromAnswer(fullAnswer);
@@ -893,7 +1011,7 @@ export default function PlannerWorkspace() {
           : item
       )
     );
-    repairChecklistScroll(checklistView === 'next' ? 'focus-list' : 'clamp');
+    repairChecklistScroll(checklistView === 'next' || checklistView === 'all' ? 'focus-list' : 'clamp');
     addActivity('Checklist item updated.');
   }
 
@@ -1192,6 +1310,173 @@ export default function PlannerWorkspace() {
     addActivity('Guest removed.');
   }
 
+  function applyPlannerAction(action: PlannerAction, salt = 0) {
+    const newId = `act-${Date.now()}-${salt}`;
+    switch (action.type) {
+      case 'add_checklist_item': {
+        setChecklistItems((current) => [
+          ...current,
+          {
+            id: `${newId}-${current.length}`,
+            text: action.text,
+            textMs: language === 'ms' ? action.text : undefined,
+            textEn: language === 'en' ? action.text : undefined,
+            completed: false,
+            status: 'not-started',
+            phase: action.phase || copy.custom,
+            deadline: action.deadline
+          }
+        ]);
+        addActivity(`AI action: checklist item added (${action.text}).`);
+        break;
+      }
+      case 'add_budget_item': {
+        setBudgetItems((current) => {
+          if (current.some((item) => item.category.trim().toLowerCase() === action.category.trim().toLowerCase())) {
+            return current;
+          }
+          return [
+            ...current,
+            {
+              id: newId,
+              category: action.category,
+              planned: action.planned || 0,
+              actual: 0,
+              paid: 0,
+              status: 'not-started',
+              note: action.note || ''
+            }
+          ];
+        });
+        addActivity(`AI action: budget item added (${action.category}).`);
+        break;
+      }
+      case 'add_appointment': {
+        setAppointments((current) => [
+          ...current,
+          {
+            id: newId,
+            title: action.title,
+            date: action.date,
+            time: action.time || '',
+            location: action.location || '',
+            vendor: action.vendor || '',
+            status: 'planned',
+            note: ''
+          }
+        ]);
+        addActivity(`AI action: appointment added (${action.title}).`);
+        break;
+      }
+      case 'add_guest': {
+        setGuests((current) => [
+          ...current,
+          {
+            id: newId,
+            name: action.name,
+            phone: action.phone || '',
+            group: action.group || 'Kawan-kawan',
+            pax: action.pax || 1,
+            status: 'pending'
+          }
+        ]);
+        addActivity(`AI action: guest added (${action.name}).`);
+        break;
+      }
+      case 'update_budget': {
+        const needle = action.category.trim().toLowerCase();
+        setBudgetItems((current) => {
+          const match =
+            current.find((item) => item.category.trim().toLowerCase() === needle) ||
+            current.find((item) => item.category.trim().toLowerCase().includes(needle) || needle.includes(item.category.trim().toLowerCase()));
+          if (!match) {
+            // No existing category — create it so the update is not lost.
+            return [
+              ...current,
+              {
+                id: newId,
+                category: action.category,
+                planned: action.planned || 0,
+                actual: action.actual || 0,
+                paid: action.paid || 0,
+                status: action.paid ? 'in-progress' : 'not-started',
+                note: ''
+              }
+            ];
+          }
+          return current.map((item) =>
+            item.id === match.id
+              ? {
+                  ...item,
+                  planned: action.planned !== undefined ? action.planned : item.planned,
+                  actual: action.actual !== undefined ? action.actual : item.actual,
+                  paid: action.paid !== undefined ? action.paid : item.paid,
+                  status: action.paid !== undefined && action.paid > 0 ? 'in-progress' : item.status
+                }
+              : item
+          );
+        });
+        addActivity(`AI action: budget updated (${action.category}).`);
+        break;
+      }
+      case 'complete_task': {
+        const needle = action.text.trim().toLowerCase();
+        setChecklistItems((current) =>
+          current.map((item) => {
+            const text = getItemText(item).trim().toLowerCase();
+            const matches = text === needle || text.includes(needle) || needle.includes(text);
+            return matches ? { ...item, completed: true, status: 'done' } : item;
+          })
+        );
+        addActivity(`AI action: task completed (${action.text}).`);
+        break;
+      }
+      case 'update_appointment': {
+        const needle = action.title.trim().toLowerCase();
+        setAppointments((current) =>
+          current.map((appointment) => {
+            const title = appointment.title.trim().toLowerCase();
+            const matches = title === needle || title.includes(needle) || needle.includes(title);
+            if (!matches) return appointment;
+            return {
+              ...appointment,
+              date: action.date || appointment.date,
+              time: action.time || appointment.time,
+              status: action.status || appointment.status
+            };
+          })
+        );
+        addActivity(`AI action: appointment updated (${action.title}).`);
+        break;
+      }
+      case 'set_profile': {
+        setPlannerProfile((current) => ({
+          ...current,
+          majlisDate: action.majlisDate || current.majlisDate,
+          negeri: action.negeri || current.negeri,
+          totalBudget: action.totalBudget !== undefined ? action.totalBudget : current.totalBudget,
+          guestTarget: action.guestTarget !== undefined ? action.guestTarget : current.guestTarget
+        }));
+        addActivity('AI action: wedding profile updated.');
+        break;
+      }
+    }
+  }
+
+  function applyMessageActions(messageIndex: number, actions: PlannerAction[]) {
+    actions.forEach((action, index) => applyPlannerAction(action, index));
+    setMessages((current) =>
+      current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'applied' } : message))
+    );
+    setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+  }
+
+  function dismissMessageActions(messageIndex: number) {
+    setMessages((current) =>
+      current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'dismissed' } : message))
+    );
+  }
+
   function toggleSavedVendor(id: string) {
     setSavedVendors((current) => {
       const isSaved = current.includes(id);
@@ -1201,13 +1486,53 @@ export default function PlannerWorkspace() {
   }
 
   function askVendorMessage(vendor: Vendor) {
-    setActiveTab('chat');
-    setInput(`Draft a WhatsApp message to ${vendor.name} for ${vendor.category} in ${vendor.negeri}. Ask about availability, package, price range, deposit, setup timing, and what they need from us.`);
+    setVendorMessageTarget(vendor);
   }
 
   function askVendorQuestions(vendor: Vendor) {
     setActiveTab('chat');
     setInput(`Create a short checklist of questions to ask ${vendor.name} before booking. Focus on package inclusions, hidden charges, deposit, cancellation, setup timing, and final confirmation.`);
+  }
+
+  async function searchNearbyVendors() {
+    const category = vendorFilter.category !== 'All' ? vendorFilter.category : 'wedding vendor';
+    const negeri = vendorFilter.negeri !== 'All' ? vendorFilter.negeri : (plannerProfile.negeri || '');
+    setVendorSearchLoading(true);
+    setVendorSearchInfo('');
+    try {
+      const response = await fetch('/api/vendors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, negeri })
+      });
+      const data = await response.json();
+      const vendors: Vendor[] = Array.isArray(data?.vendors) ? data.vendors : [];
+      setGoogleVendors(vendors);
+      if (data?.fallback) {
+        setVendorSearchInfo(
+          language === 'ms'
+            ? 'Carian Google Maps belum disambung (perlu API key). Memaparkan senarai tempatan.'
+            : 'Google Maps search is not connected (API key needed). Showing the built-in directory.'
+        );
+      } else if (vendors.length === 0) {
+        setVendorSearchInfo(
+          language === 'ms' ? 'Tiada vendor dijumpai. Cuba kategori atau negeri lain.' : 'No vendors found. Try another category or state.'
+        );
+      } else {
+        setVendorSearchInfo(
+          language === 'ms'
+            ? `${vendors.length} vendor sebenar dijumpai dari Google Maps.`
+            : `${vendors.length} live vendors found from Google Maps.`
+        );
+        addActivity(`Fetched ${vendors.length} vendors from Google Maps (${category}).`);
+      }
+    } catch {
+      setVendorSearchInfo(
+        language === 'ms' ? 'Carian gagal. Cuba lagi sebentar.' : 'Search failed. Please try again.'
+      );
+    } finally {
+      setVendorSearchLoading(false);
+    }
   }
 
   function askVendorComparison(vendors: Vendor[]) {
@@ -1606,11 +1931,13 @@ export default function PlannerWorkspace() {
   const checklistPhases = Array.from(new Set(checklistItems.map((item) => item.phase).filter(Boolean))) as string[];
   const vendorCategories = Array.from(new Set(vendorDirectory.map((vendor) => vendor.category)));
   const vendorStates = Array.from(new Set(vendorDirectory.map((vendor) => vendor.negeri)));
-  const filteredVendors = vendorDirectory.filter((vendor) => {
+  const staticFilteredVendors = vendorDirectory.filter((vendor) => {
     const negeriMatch = vendorFilter.negeri === 'All' || vendor.negeri === vendorFilter.negeri;
     const categoryMatch = vendorFilter.category === 'All' || vendor.category === vendorFilter.category;
     return negeriMatch && categoryMatch;
   });
+  // Live Google Maps results (when fetched) appear first, then the curated list.
+  const filteredVendors = [...googleVendors, ...staticFilteredVendors];
   const contextAssistantTab: MenuAssistantTab | null = activeTab === 'chat' ? null : (activeTab as MenuAssistantTab);
   const activeMenuTab = isContextAssistantOpen ? contextAssistantTab : null;
   const otherLanguage: AppLanguage = language === 'ms' ? 'en' : 'ms';
@@ -1639,7 +1966,7 @@ export default function PlannerWorkspace() {
       note: 'wedding planning dari hati untuk hati',
       welcome: 'hi, i MajlisMate',
       welcomeText: 'cerita kat i pasal wedding you - i tolong susun checklist, bajet, tetamu, semua. update i je bila ada progress',
-      placeholder: 'Tanya pasal majlis, vendor, bajet, checklist, appointment...',
+      placeholder: 'Tanya MajlisMate',
       checklistEyebrow: 'Checklist interaktif',
       done: 'selesai',
       allItems: 'Semua checklist',
@@ -1690,7 +2017,7 @@ export default function PlannerWorkspace() {
       note: 'wedding planning from the heart',
       welcome: 'hi, I am MajlisMate',
       welcomeText: 'tell me about your wedding - I can organize the checklist, budget, guests, vendors, and progress',
-      placeholder: 'Ask about the wedding, vendors, budget, checklist, appointment...',
+      placeholder: 'Ask MajlisMate',
       checklistEyebrow: 'Interactive checklist',
       done: 'done',
       allItems: 'All checklist items',
@@ -1720,7 +2047,7 @@ export default function PlannerWorkspace() {
   }[language];
 
   const askVoiceStream = useCallback(
-    async (question: string) => {
+    async (question: string, opts?: { voiceMode?: boolean }) => {
       const trimmed = question.trim();
       if (!trimmed) {
         return {
@@ -1754,7 +2081,8 @@ export default function PlannerWorkspace() {
       return askStream({
         messages: recentMessages as Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
         language,
-        plannerContext
+        plannerContext,
+        voiceMode: opts?.voiceMode ?? false
       });
     },
     [messages, plannerProfile, appointments, language, copy.welcome]
@@ -1839,6 +2167,21 @@ export default function PlannerWorkspace() {
     }
   ].filter((group) => group.items.length > 0);
   const completedChecklistItems = checklistItems.filter((item) => getChecklistStatus(item) === 'done');
+  const overdueChecklistItems = openChecklistItems
+    .filter((item) => { const d = item.deadline ? daysUntil(item.deadline) : null; return d !== null && d < 0; })
+    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
+  const inProgressChecklistItems = openChecklistItems
+    .filter((item) => {
+      const d = item.deadline ? daysUntil(item.deadline) : null;
+      return !(d !== null && d < 0) && getChecklistStatus(item) === 'in-progress';
+    })
+    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
+  const notStartedChecklistItems = openChecklistItems
+    .filter((item) => {
+      const d = item.deadline ? daysUntil(item.deadline) : null;
+      return !(d !== null && d < 0) && getChecklistStatus(item) === 'not-started';
+    })
+    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
   const checklistPhaseGroups = checklistPhases.map((phase) => ({
     phase,
     items: checklistItems.filter((item) => item.phase === phase)
@@ -1847,6 +2190,7 @@ export default function PlannerWorkspace() {
     ? checklistPhaseGroups
     : [{ phase: copy.custom, items: checklistItems }];
   const checklistViewOptions = [
+    { value: 'all' as const, label: language === 'ms' ? 'Semua' : 'All', count: checklistItems.length },
     { value: 'next' as const, label: language === 'ms' ? 'Seterusnya' : 'Next', count: nextChecklistItems.length },
     { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistPhaseGroups.length || checklistItems.length },
     { value: 'category' as const, label: language === 'ms' ? 'Kategori' : 'Category', count: checklistCategoryGroups.length },
@@ -1886,6 +2230,33 @@ export default function PlannerWorkspace() {
     .sort(sortAppointments)[0];
   const overBudgetItems = budgetItems.filter((item) => item.actual > item.planned && item.planned > 0);
   const remainingToPay = Math.max(totalActual - totalPaid, 0);
+  const weeklyBriefing = buildWeeklyBriefing(
+    {
+      partnerName:
+        plannerProfile.coupleName.trim() ||
+        [plannerProfile.groomName, plannerProfile.brideName].filter(Boolean).join(' & ') ||
+        undefined,
+      daysLeft,
+      urgentTaskTitles: openChecklistItems
+        .filter((item) => getChecklistPriority(item).className === 'urgent')
+        .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+        .map((item) => getItemText(item)),
+      weekTaskTitles: openChecklistItems
+        .filter((item) => getChecklistPriority(item).className === 'soon')
+        .sort((first, second) => scoreChecklistItem(first) - scoreChecklistItem(second))
+        .map((item) => getItemText(item)),
+      overBudget: overBudgetItems.map((item) => ({ category: item.category, over: item.actual - item.planned })),
+      remainingToPay,
+      nextAppointment: globalNextAppointment
+        ? { title: globalNextAppointment.title, date: globalNextAppointment.date }
+        : null,
+      pendingGuests,
+      progressPct: planningProgress,
+      doneCount: completedCount,
+      totalCount: totalChecklistItems
+    },
+    language
+  );
   const budgetAlert =
     overBudgetItems.length > 0
       ? `${overBudgetItems.length} over budget`
@@ -2145,10 +2516,11 @@ export default function PlannerWorkspace() {
     custom: copy.custom,
     notStarted: copy.notStarted,
     inProgress: copy.inProgress,
+    done: copy.doneStatus,
     remove: copy.remove,
     schedule: checklistSchedulePrompt,
     noDate: language === 'ms' ? 'Tiada tarikh' : 'No date',
-    suggest: language === 'ms' ? '✨ Cadang' : '✨ Suggest',
+    suggest: language === 'ms' ? 'Cadang' : 'Suggest',
     addNote: language === 'ms' ? 'Tambah nota' : 'Add note',
     saveNote: language === 'ms' ? 'Simpan' : 'Save'
   };
@@ -2174,6 +2546,14 @@ export default function PlannerWorkspace() {
       onUpdateDeadline={(deadline) => updateChecklistDeadline(item.id, deadline)}
       onUpdateNote={(note) => updateChecklistNote(item.id, note)}
       onSelect={() => toggleChecklistSelect(item.id)}
+      onLongPressSelect={!options?.compact ? () => {
+        setChecklistSelectMode(true);
+        setSelectedChecklistIds((current) => {
+          const next = new Set(current);
+          next.add(item.id);
+          return next;
+        });
+      } : undefined}
       onSchedule={!options?.compact ? () => {
         setActiveTab('calendar');
         setIsContextAssistantOpen(true);
@@ -2203,6 +2583,19 @@ export default function PlannerWorkspace() {
           onClose={() => {
             setIsLiveVoiceOpen(false);
           }}
+          onApplyActions={(actions) => {
+            actions.forEach((action, index) => applyPlannerAction(action, index));
+            setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+          }}
+        />
+      ) : null}
+
+      {vendorMessageTarget ? (
+        <VendorMessageSheet
+          vendor={vendorMessageTarget}
+          profile={plannerProfile}
+          language={language}
+          onClose={() => setVendorMessageTarget(null)}
         />
       ) : null}
 
@@ -2424,6 +2817,28 @@ export default function PlannerWorkspace() {
             </div>
           </div>
           {activeTab === 'dashboard' ? (
+        <>
+        <NotificationToggle
+          language={language}
+          enabled={notificationsEnabled}
+          onChange={setNotificationsEnabled}
+        />
+        <WeeklyBriefing
+          briefing={weeklyBriefing}
+          language={language}
+          isSpeaking={liveVoice.phase === 'speaking'}
+          canSpeak={liveVoice.support !== 'unavailable'}
+          onSpeak={() => liveVoice.speakNow(weeklyBriefing.speech)}
+          onStopSpeak={() => liveVoice.cancelTts()}
+          onAsk={() => {
+            setActiveTab('chat');
+            setInput(
+              language === 'ms'
+                ? 'Berdasarkan fokus minggu ini, apa langkah seterusnya yang patut saya buat?'
+                : 'Based on this week’s focus, what are the next steps I should take?'
+            );
+          }}
+        />
         <DashboardPanel
           plannerProfile={plannerProfile}
           daysLeft={daysLeft}
@@ -2449,6 +2864,7 @@ export default function PlannerWorkspace() {
             setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');
           }}
         />
+        </>
       ) : activeTab === 'chat' ? (
         <div className={`main-chat-panel ${messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? 'empty-chat' : 'active-chat'}`}>
           <div className="chat-welcome">
@@ -2484,6 +2900,8 @@ export default function PlannerWorkspace() {
             onInputChange={setInput}
             onCommandSuggestion={(suggestion) => setInput(suggestion)}
             onVoiceMode={() => setIsLiveVoiceOpen(true)}
+            onApplyActions={applyMessageActions}
+            onDismissActions={dismissMessageActions}
             onSubmit={onSubmit}
           />
         </div>
@@ -2650,6 +3068,65 @@ export default function PlannerWorkspace() {
           {checklistItems.length > 0 ? (
             <div className="checklist-workspace-grid">
               <section className="checklist-main-list">
+                {checklistView === 'all' ? (
+                  <div className="checklist-status-groups">
+                    {overdueChecklistItems.length > 0 ? (
+                      <section className="checklist-status-group status-overdue">
+                        <div className="checklist-status-header">
+                          <span className="status-dot" />
+                          <h4>{language === 'ms' ? 'Overdue' : 'Overdue'}</h4>
+                          <em>{overdueChecklistItems.length}</em>
+                        </div>
+                        <ul className="checklist-task-list">
+                          {overdueChecklistItems.map((item) => renderChecklistTask(item))}
+                        </ul>
+                      </section>
+                    ) : null}
+                    {inProgressChecklistItems.length > 0 ? (
+                      <section className="checklist-status-group status-in-progress">
+                        <div className="checklist-status-header">
+                          <span className="status-dot" />
+                          <h4>{language === 'ms' ? 'Sedang diurus' : 'In progress'}</h4>
+                          <em>{inProgressChecklistItems.length}</em>
+                        </div>
+                        <ul className="checklist-task-list">
+                          {inProgressChecklistItems.map((item) => renderChecklistTask(item))}
+                        </ul>
+                      </section>
+                    ) : null}
+                    {notStartedChecklistItems.length > 0 ? (
+                      <section className="checklist-status-group status-not-started">
+                        <div className="checklist-status-header">
+                          <span className="status-dot" />
+                          <h4>{language === 'ms' ? 'Belum mula' : 'Not started'}</h4>
+                          <em>{notStartedChecklistItems.length}</em>
+                        </div>
+                        <ul className="checklist-task-list">
+                          {notStartedChecklistItems.map((item) => renderChecklistTask(item))}
+                        </ul>
+                      </section>
+                    ) : null}
+                    {completedChecklistItems.length > 0 ? (
+                      <details className="checklist-status-group status-done">
+                        <summary className="checklist-status-header">
+                          <span className="status-dot" />
+                          <h4>{language === 'ms' ? 'Selesai' : 'Done'}</h4>
+                          <em>{completedChecklistItems.length}</em>
+                        </summary>
+                        <ul className="checklist-task-list">
+                          {completedChecklistItems.map((item) => renderChecklistTask(item, { compact: true }))}
+                        </ul>
+                      </details>
+                    ) : null}
+                    {checklistItems.length === 0 ? (
+                      <div className="empty-state action-empty">
+                        <strong>{language === 'ms' ? 'Checklist kosong.' : 'No checklist items yet.'}</strong>
+                        <span>{language === 'ms' ? 'Tambah task atau pilih template di atas.' : 'Add a task or pick a template above.'}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {checklistView === 'next' ? (
                   <>
                     <div className="checklist-section-heading">
@@ -3371,6 +3848,11 @@ export default function PlannerWorkspace() {
           askVendorQuestions={askVendorQuestions}
           askVendorComparison={askVendorComparison}
           addVendorToBudget={addVendorToBudget}
+          language={language}
+          defaultNegeri={plannerProfile.negeri}
+          onSearchNearby={searchNearbyVendors}
+          searchLoading={vendorSearchLoading}
+          searchInfo={vendorSearchInfo}
         />
       ) : null}
         </div>

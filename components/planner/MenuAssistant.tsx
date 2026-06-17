@@ -18,7 +18,7 @@ export const menuAssistantPrompts: Record<MenuAssistantTab, { title: string; des
   checklist: {
     title: 'Checklist assistant',
     description: 'Create, organize, and prioritize wedding tasks for this menu.',
-    placeholder: 'Ask to create, improve, or prioritize checklist items...',
+    placeholder: 'Ask MajlisMate.',
     quick: ['Create final week checklist', 'Prioritize incomplete tasks', 'Add vendor follow-up tasks']
   },
   calendar: {

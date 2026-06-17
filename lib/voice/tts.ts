@@ -237,6 +237,7 @@ export type StreamingTtsOptions = {
   lang: string;
   rate?: number;
   pitch?: number;
+  pauseBetweenMs?: number;
   humanize?: (text: string) => string;
   prosodyForSentence?: (sentence: string, index: number, isLast: boolean) => { rate: number; pitch: number };
   onSentenceStart?: (sentence: string, index: number) => void;
@@ -288,6 +289,15 @@ export function createStreamingTts(options: StreamingTtsOptions): StreamingTtsHa
       ? options.prosodyForSentence(sentence, index, isLast)
       : { rate: options.rate, pitch: options.pitch };
     options.onSentenceStart?.(sentence, index);
+    const resume = () => {
+      if (cancelled) return;
+      const pause = options.pauseBetweenMs ?? 0;
+      if (pause > 0) {
+        window.setTimeout(() => { if (!cancelled) next(); }, pause);
+      } else {
+        next();
+      }
+    };
     controller.speak({
       text: spoken,
       voice: options.voice,
@@ -296,14 +306,14 @@ export function createStreamingTts(options: StreamingTtsOptions): StreamingTtsHa
       pitch: prosody.pitch,
       onEnd: () => {
         options.onSentenceEnd?.(sentence, index);
-        next();
+        resume();
       },
       onError: (reason) => {
         options.onSentenceEnd?.(sentence, index);
         if (reason !== 'canceled' && reason !== 'interrupted') {
           options.onError?.(reason);
         }
-        next();
+        resume();
       }
     });
   }

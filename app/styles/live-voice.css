@@ -860,6 +860,84 @@
   align-items: center;
 }
 
+/* ── Malay voice install tip ─────────────────────── */
+.voice-settings__malay-tip {
+  border: 1px solid rgba(250, 204, 21, 0.25);
+  border-radius: 10px;
+  background: rgba(250, 204, 21, 0.06);
+  overflow: hidden;
+}
+
+.voice-settings__malay-tip-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 8px 10px;
+  cursor: pointer;
+  color: rgba(250, 204, 21, 0.85);
+  font-size: 0.77rem;
+  font-weight: 600;
+  gap: 6px;
+  text-align: left;
+}
+
+.voice-settings__malay-tip-toggle:hover {
+  background: rgba(250, 204, 21, 0.06);
+}
+
+.voice-settings__malay-tip-body {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voice-settings__malay-tip-body strong {
+  font-size: 0.77rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.voice-settings__malay-tip-body ol {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.voice-settings__malay-tip-body ol li {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+}
+
+.voice-settings__malay-tip-note {
+  font-size: 0.72rem;
+  color: rgba(250, 204, 21, 0.6);
+  margin: 0;
+  font-style: italic;
+}
+
+.voice-settings__refresh-btn {
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: rgba(167, 139, 250, 0.1);
+  color: rgba(167, 139, 250, 0.85);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease;
+  align-self: flex-start;
+}
+
+.voice-settings__refresh-btn:hover {
+  background: rgba(167, 139, 250, 0.2);
+}
+
 /* ── Voice Activity LEDs ──────────────────────────── */
 .voice-leds {
   display: inline-flex;
@@ -911,4 +989,287 @@
 @keyframes lvv-led-breathe {
   0%, 100% { opacity: 0.32; transform: scale(0.78); }
   50% { opacity: 0.8; transform: scale(1); }
+}
+
+/* ── Malay voice availability badge ───────────────── */
+.live-voice-voicebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+.live-voice-voicebadge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.live-voice-voicebadge.is-available {
+  background: rgba(52, 211, 153, 0.1);
+  border-color: rgba(52, 211, 153, 0.28);
+  color: rgba(110, 231, 183, 0.95);
+}
+
+.live-voice-voicebadge.is-available .live-voice-voicebadge__dot {
+  background: rgba(52, 211, 153, 0.95);
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.6);
+}
+
+.live-voice-voicebadge.is-fallback {
+  background: rgba(250, 204, 21, 0.08);
+  border-color: rgba(250, 204, 21, 0.24);
+  color: rgba(250, 204, 21, 0.85);
+}
+
+.live-voice-voicebadge.is-fallback .live-voice-voicebadge__dot {
+  background: rgba(250, 204, 21, 0.85);
+}
+
+/* ── Prompt suggestions (idle) ────────────────────── */
+.live-voice-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 4px;
+}
+
+.live-voice-suggestions__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+}
+
+.live-voice-suggestions__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.live-voice-suggestion-chip {
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  background: rgba(167, 139, 250, 0.08);
+  color: rgba(221, 214, 254, 0.92);
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, transform 100ms ease;
+}
+
+.live-voice-suggestion-chip:hover {
+  background: rgba(167, 139, 250, 0.16);
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+.live-voice-suggestion-chip:active {
+  transform: scale(0.97);
+}
+
+/* ── Conversation history ─────────────────────────── */
+.live-voice-history {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 4px 18px;
+}
+
+.live-voice-history__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: 0;
+  padding: 10px 2px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.live-voice-history__toggle:hover {
+  color: #f0f0f5;
+}
+
+.live-voice-history__chevron {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.live-voice-history__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+.live-voice-history__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.live-voice-history__item p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.live-voice-history__item p > span {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+
+.live-voice-history__user {
+  color: rgba(240, 240, 245, 0.78);
+}
+
+.live-voice-history__user > span {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.live-voice-history__assistant {
+  color: rgba(221, 214, 254, 0.85);
+}
+
+.live-voice-history__assistant > span {
+  color: rgba(167, 139, 250, 0.6);
+}
+
+.live-voice-history__clear {
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.live-voice-history__clear:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #f0f0f5;
+}
+
+/* ── Bigger assistant caption (vendor names, prices, addresses) ── */
+.live-voice-captions article:last-child > p {
+  max-height: 170px;
+}
+
+/* ── Voice action panel (confirm chips from spoken requests) ── */
+.live-voice-actionpanel {
+  margin: 0 18px 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 14px;
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.live-voice-actionpanel__title {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(221, 214, 254, 0.9);
+  margin-bottom: 8px;
+}
+
+.live-voice-actionpanel__list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-voice-actionpanel__chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.82rem;
+  color: rgba(240, 240, 245, 0.92);
+}
+
+.live-voice-actionpanel__kind {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(167, 139, 250, 0.85);
+}
+
+.live-voice-actionpanel__label {
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-voice-actionpanel__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.live-voice-actionpanel__apply {
+  border: 0;
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.live-voice-actionpanel__apply:hover {
+  opacity: 0.9;
+}
+
+.live-voice-actionpanel__dismiss {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.live-voice-actionpanel__dismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0f0f5;
 }

@@ -13,7 +13,7 @@ export const plannerContextSchema = z
     negeri: z.string().max(80).optional(),
     totalBudget: z.number().nonnegative().max(10_000_000).optional(),
     guestTarget: z.number().int().nonnegative().max(100_000).optional(),
-    checklistSummary: z.string().max(200).optional(),
+    checklistSummary: z.string().max(4000).optional(),
     budgetSummary: z.array(z.string().max(160)).max(50).optional(),
     upcomingAppointments: z
       .array(
@@ -33,7 +33,8 @@ export const plannerContextSchema = z
 export const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1).max(40),
   language: z.enum(['ms', 'en']).default('ms'),
-  plannerContext: plannerContextSchema.optional()
+  plannerContext: plannerContextSchema.optional(),
+  voiceMode: z.boolean().optional()
 });
 
 export type ChatRequest = z.infer<typeof chatRequestSchema>;

@@ -1,6 +1,9 @@
 import type { ScoredVoice } from './voices';
 
-const STORAGE_KEY = 'majlismate.voicePreferences.v1';
+// v2: barge-in now defaults OFF. Mic-based barge-in self-interrupts on laptops
+// without hardware echo cancellation (TTS leaks into the mic and cancels speech).
+// Bumping the key migrates everyone to the safer default.
+const STORAGE_KEY = 'majlismate.voicePreferences.v2';
 
 export type VoiceMode = 'continuous' | 'push-to-talk';
 
@@ -16,10 +19,10 @@ export type VoicePreferences = {
 
 const DEFAULTS: VoicePreferences = {
   voiceURI: null,
-  rate: 1,
-  pitch: 1.05,
+  rate: 0.88,
+  pitch: 1.0,
   autoSpeak: true,
-  bargeIn: true,
+  bargeIn: false,
   mode: 'continuous',
   greeting: true
 };

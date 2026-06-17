@@ -5,6 +5,43 @@ import type { AppLanguage, ChecklistItem } from '../types';
 
 type Priority = { className: string; label: string };
 
+function NoteIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 4h11l5 5v11a0 0 0 0 1 0 0H4z" />
+      <path d="M14 4v5h5" />
+      <path d="M8 13h7M8 17h5" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 type Props = {
   item: ChecklistItem;
   language: AppLanguage;
@@ -25,10 +62,12 @@ type Props = {
   onUpdateNote: (note: string) => void;
   onSelect?: () => void;
   onSchedule?: () => void;
+  onLongPressSelect?: () => void;
   copyLabels: {
     custom: string;
     notStarted: string;
     inProgress: string;
+    done: string;
     remove: string;
     schedule: string;
     noDate: string;
@@ -71,6 +110,7 @@ export default function ChecklistTaskRow({
   onUpdateNote,
   onSelect,
   onSchedule,
+  onLongPressSelect,
   copyLabels
 }: Props) {
   const [isEditing, setIsEditing] = useState(false);
@@ -81,6 +121,36 @@ export default function ChecklistTaskRow({
 
   const editInputRef = useRef<HTMLInputElement>(null);
   const noteRef = useRef<HTMLTextAreaElement>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  function clearLongPress() {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressStartRef.current = null;
+  }
+
+  function handleLongPressStart(e: React.PointerEvent) {
+    if (!onLongPressSelect || isSelectable || isEditing) return;
+    if (e.pointerType === 'mouse') return; // long-press is a touch affordance
+    longPressStartRef.current = { x: e.clientX, y: e.clientY };
+    longPressTimerRef.current = window.setTimeout(() => {
+      onLongPressSelect?.();
+      clearLongPress();
+    }, 450);
+  }
+
+  function handleLongPressMove(e: React.PointerEvent) {
+    const start = longPressStartRef.current;
+    if (!start) return;
+    if (Math.abs(e.clientX - start.x) > 10 || Math.abs(e.clientY - start.y) > 10) {
+      clearLongPress();
+    }
+  }
+
+  useEffect(() => clearLongPress, []);
 
   const priority = getPriority(item);
   const status = getStatus(item);
@@ -121,7 +191,14 @@ export default function ChecklistTaskRow({
   }
 
   return (
-    <li className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}${isSelected ? ' is-selected' : ''}`}>
+    <li
+      className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}${isSelected ? ' is-selected' : ''}`}
+      onPointerDown={handleLongPressStart}
+      onPointerMove={handleLongPressMove}
+      onPointerUp={clearLongPress}
+      onPointerCancel={clearLongPress}
+      onPointerLeave={clearLongPress}
+    >
       <div className="checklist-task-main">
         {isSelectable ? (
           <button
@@ -157,16 +234,29 @@ export default function ChecklistTaskRow({
               onKeyDown={handleEditKey}
             />
           ) : (
-            <strong
-              className="checklist-task-text"
-              role="button"
-              tabIndex={item.completed ? -1 : 0}
-              title={language === 'ms' ? 'Klik untuk edit' : 'Click to edit'}
-              onClick={startEdit}
-              onKeyDown={(e) => { if (e.key === 'Enter') startEdit(); }}
-            >
-              {getItemText(item)}
-            </strong>
+            <span className="checklist-task-titlebar">
+              <strong
+                className="checklist-task-text"
+                role="button"
+                tabIndex={item.completed ? -1 : 0}
+                title={language === 'ms' ? 'Klik untuk edit' : 'Click to edit'}
+                onClick={startEdit}
+                onKeyDown={(e) => { if (e.key === 'Enter') startEdit(); }}
+              >
+                {getItemText(item)}
+              </strong>
+              {!item.completed ? (
+                <button
+                  type="button"
+                  className="checklist-edit-btn"
+                  aria-label={language === 'ms' ? 'Edit task' : 'Edit task'}
+                  title={language === 'ms' ? 'Edit task' : 'Edit task'}
+                  onClick={startEdit}
+                >
+                  <EditIcon />
+                </button>
+              ) : null}
+            </span>
           )}
           {!compact && !isEditing && getItemText(item, otherLanguage) !== getItemText(item) ? (
             <small className="checklist-task-alt">{getItemText(item, otherLanguage)}</small>
@@ -189,6 +279,7 @@ export default function ChecklistTaskRow({
                 onClick={handleSuggestDeadline}
                 title={language === 'ms' ? 'Cadangkan tarikh berdasarkan fasa' : 'Suggest deadline based on phase'}
               >
+                <CalendarIcon />
                 {copyLabels.suggest}
               </button>
             ) : null}
@@ -214,17 +305,32 @@ export default function ChecklistTaskRow({
         </span>
       </div>
 
-      <span className={`priority-chip ${priority.className}`}>{priority.label}</span>
+      <button
+        type="button"
+        className={`priority-chip ${priority.className}`}
+        onClick={() => setDatePickerOpen((v) => !v)}
+        title={
+          language === 'ms'
+            ? 'Keutamaan ikut tarikh akhir — klik untuk tukar tarikh'
+            : 'Priority follows the deadline — click to change the date'
+        }
+      >
+        {priority.label}
+      </button>
 
       <div className="checklist-row-actions">
-        {status !== 'done' ? (
-          <button
-            type="button"
-            onClick={() => onUpdateStatus(status === 'in-progress' ? 'not-started' : 'in-progress')}
+        <label className={`checklist-status-select status-${status}`}>
+          <span className="visually-hidden">{language === 'ms' ? 'Status task' : 'Task status'}</span>
+          <span className="checklist-status-dot" aria-hidden="true" />
+          <select
+            value={status}
+            onChange={(e) => onUpdateStatus(e.target.value as 'not-started' | 'in-progress' | 'done')}
           >
-            {status === 'in-progress' ? copyLabels.notStarted : copyLabels.inProgress}
-          </button>
-        ) : null}
+            <option value="not-started">{copyLabels.notStarted}</option>
+            <option value="in-progress">{copyLabels.inProgress}</option>
+            <option value="done">{copyLabels.done}</option>
+          </select>
+        </label>
         <button
           type="button"
           className={`checklist-note-btn${item.note ? ' has-note' : ''}`}
@@ -235,15 +341,21 @@ export default function ChecklistTaskRow({
             setNotesOpen((v) => !v);
           }}
         >
-          {item.note ? '📝' : '✏️'}
+          <NoteIcon />
         </button>
         {!compact && onSchedule ? (
-          <button type="button" onClick={onSchedule}>
+          <button type="button" className="checklist-schedule-btn" onClick={onSchedule}>
             {copyLabels.schedule}
           </button>
         ) : null}
-        <button type="button" aria-label={`Remove ${item.text}`} onClick={onRemove}>
-          {copyLabels.remove}
+        <button
+          type="button"
+          className="checklist-remove-btn"
+          aria-label={`Remove ${item.text}`}
+          title={copyLabels.remove}
+          onClick={onRemove}
+        >
+          <TrashIcon />
         </button>
       </div>
 

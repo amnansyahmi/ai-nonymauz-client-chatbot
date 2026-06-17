@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AppLanguage } from '../types';
 import type { UseLiveVoiceResult } from '../hooks/useLiveVoice';
 import LiveOrb from './LiveOrb';
@@ -8,6 +8,7 @@ import Waveform from './Waveform';
 import VoiceLeds from './VoiceLeds';
 import VoiceSettings from './VoiceSettings';
 import type { VoiceMode } from '../../../lib/voice/storage';
+import { summarizeAction, type PlannerAction } from '../../../lib/planner/chatActions';
 import { splitIntoSentences } from '../../../lib/voice/tts';
 import { usePushToTalkHotkey } from '../../../lib/hooks/usePushToTalkHotkey';
 import { useVisibilityRecovery } from '../../../lib/hooks/useVisibilityRecovery';
@@ -17,35 +18,83 @@ export type LiveVoiceSheetProps = {
   voice: UseLiveVoiceResult;
   isOpen: boolean;
   onClose: () => void;
+  onApplyActions?: (actions: PlannerAction[]) => void;
 };
 
 type Phase = UseLiveVoiceResult['phase'];
 
+function friendlyError(raw: string, language: 'ms' | 'en'): string {
+  const lower = raw.toLowerCase();
+  if (lower.includes('not-allowed') || lower.includes('permission')) {
+    return language === 'ms'
+      ? 'Mikrofon dihalang. Buka tetapan pelayar dan benarkan akses.'
+      : 'Microphone blocked. Open browser settings and allow access.';
+  }
+  if (lower.includes('no-speech') || lower.includes('no_speech')) {
+    return language === 'ms'
+      ? 'Tak dengar apa-apa. Cuba cakap lagi.'
+      : "Didn't catch that. Tap and try speaking again.";
+  }
+  if (lower.includes('network') || lower.includes('fetch')) {
+    return language === 'ms'
+      ? 'Masalah sambungan. Semak internet dan cuba semula.'
+      : 'Connection issue. Check your internet and try again.';
+  }
+  if (lower.includes('audio-capture') || lower.includes('audio_capture')) {
+    return language === 'ms'
+      ? 'Mikrofon tidak dapat diakses. Mungkin digunakan oleh apl lain.'
+      : "Can't access mic. Another app may be using it.";
+  }
+  if (lower.includes('aborted')) {
+    return language === 'ms'
+      ? 'Sesi berakhir. Ketuk untuk mula semula.'
+      : 'Session ended. Tap to start again.';
+  }
+  return language === 'ms'
+    ? 'Ralat berlaku. Ketuk untuk cuba semula.'
+    : 'Something went wrong. Tap to try again.';
+}
+
 const PHASE_LABEL: Record<Phase, { ms: string; en: string }> = {
   idle: { ms: 'Sedia', en: 'Ready' },
-  'requesting-mic': { ms: 'Menyambung mikrofon', en: 'Connecting mic' },
-  listening: { ms: 'Sedang dengar', en: 'Listening' },
-  thinking: { ms: 'Sedang fikir', en: 'Thinking' },
-  speaking: { ms: 'Sedang bercakap', en: 'Speaking' },
+  'requesting-mic': { ms: 'Buka mikrofon', en: 'Connecting mic' },
+  listening: { ms: 'Tengah dengar', en: 'Listening' },
+  thinking: { ms: 'Tengah fikir', en: 'Thinking' },
+  speaking: { ms: 'Tengah cakap', en: 'Speaking' },
   error: { ms: 'Ralat', en: 'Error' }
 };
 
 const PHASE_INSTRUCTION: Record<Phase, { ms: string; en: string }> = {
-  idle: { ms: 'Tekan mula dan cakap apa-apa soalan.', en: 'Press start and ask anything.' },
-  'requesting-mic': { ms: 'Sila benarkan akses mikrofon.', en: 'Please allow microphone access.' },
-  listening: { ms: 'Cakap sekarang. MajlisMate akan jawab.', en: 'Speak now. MajlisMate will answer.' },
-  thinking: { ms: 'MajlisMate sedang fikir…', en: 'MajlisMate is thinking…' },
-  speaking: { ms: 'MajlisMate sedang bercakap.', en: 'MajlisMate is speaking.' },
-  error: { ms: 'Cuba lagi sebentar.', en: 'Please try again.' }
+  idle: { ms: 'Ketuk butang, lepas tu cakap je soalan anda.', en: 'Press start and ask anything.' },
+  'requesting-mic': { ms: 'Benarkan akses mikrofon dulu ya.', en: 'Please allow microphone access.' },
+  listening: { ms: 'Cakap je, saya dengar…', en: 'Speak now. MajlisMate will answer.' },
+  thinking: { ms: 'Jap, saya fikir dulu…', en: 'MajlisMate is thinking…' },
+  speaking: { ms: 'Ni jawapan dia…', en: 'MajlisMate is speaking.' },
+  error: { ms: 'Alamak, cuba sekali lagi.', en: 'Please try again.' }
+};
+
+const VOICE_SUGGESTIONS: Record<'ms' | 'en', readonly string[]> = {
+  ms: [
+    'Apa yang patut saya buat bulan ni?',
+    'Berapa bajet kahwin yang biasa?',
+    'Tolong senaraikan soalan untuk caterer.'
+  ],
+  en: [
+    'What should I do this month?',
+    'What is a typical wedding budget?',
+    'List questions to ask a caterer.'
+  ]
 };
 
 export default function LiveVoiceSheet({
   language,
   voice,
   isOpen,
-  onClose
+  onClose,
+  onApplyActions
 }: LiveVoiceSheetProps) {
   const greetedOnOpenRef = useRef(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const userCaption = voice.interimTranscript || voice.finalTranscript;
   const assistantCaption = voice.streamedAnswer || voice.spokenAnswer;
   const streamingSentences = useMemo(
@@ -120,7 +169,10 @@ export default function LiveVoiceSheet({
   const isFallback = voice.support === 'push-to-talk-only';
   const isUnavailable = voice.support === 'unavailable';
   const isListening = phase === 'listening' || phase === 'requesting-mic';
-  const waveform = useMemo(() => <Waveform active={isListening} rms={voice.rms} />, [isListening, voice.rms]);
+  const waveform = useMemo(
+    () => <Waveform active={isListening || phase === 'speaking'} rms={voice.rms} />,
+    [isListening, phase, voice.rms]
+  );
 
   if (!isOpen) return null;
 
@@ -151,6 +203,19 @@ export default function LiveVoiceSheet({
             <h3 id="live-voice-title">
               {language === 'ms' ? 'MajlisMate Live' : 'MajlisMate Live'}
             </h3>
+            {language === 'ms' ? (
+              <span
+                className={`live-voice-voicebadge ${voice.hasMalayVoice ? 'is-available' : 'is-fallback'}`}
+                title={
+                  voice.hasMalayVoice
+                    ? 'Suara Bahasa Melayu tersedia dalam pelayar ini.'
+                    : 'Tiada suara Melayu — guna suara Inggeris untuk baca teks Melayu.'
+                }
+              >
+                <span className="live-voice-voicebadge__dot" aria-hidden="true" />
+                {voice.hasMalayVoice ? 'Suara Melayu: ada' : 'Suara Melayu: tiada'}
+              </span>
+            ) : null}
           </div>
           <div className="live-voice-header-actions">
             <VoiceSettings
@@ -169,6 +234,7 @@ export default function LiveVoiceSheet({
               onClose={() => {
                 /* handled by VoiceSettings internal state */
               }}
+              onRefreshVoices={voice.refreshVoices}
             />
             <button
               type="button"
@@ -194,7 +260,15 @@ export default function LiveVoiceSheet({
                 : (language === 'ms' ? 'Ketuk untuk berhenti' : 'Tap to stop')
             }
             disabled={isUnavailable || isTtsOnly || phase === 'requesting-mic'}
+            onPointerDown={voice.mode === 'push-to-talk' && (phase === 'idle' || phase === 'error') ? (e) => {
+              e.preventDefault();
+              voice.beginPushToTalk();
+            } : undefined}
+            onPointerUp={voice.mode === 'push-to-talk' ? () => voice.endPushToTalk() : undefined}
+            onPointerCancel={voice.mode === 'push-to-talk' ? () => voice.endPushToTalk() : undefined}
+            onPointerLeave={voice.mode === 'push-to-talk' ? (e) => { if (e.buttons > 0) voice.endPushToTalk(); } : undefined}
             onClick={() => {
+              if (voice.mode === 'push-to-talk') return;
               if (phase === 'idle' || phase === 'error') {
                 void voice.pushToTalk();
               } else {
@@ -205,7 +279,9 @@ export default function LiveVoiceSheet({
             <LiveOrb state={phase} rms={voice.rms} ttsSentence={voice.ttsSentence} />
             <span className="live-orb-hint" aria-hidden="true">
               {phase === 'idle' || phase === 'error'
-                ? (language === 'ms' ? 'ketuk untuk mula' : 'tap to start')
+                ? voice.mode === 'push-to-talk'
+                  ? (language === 'ms' ? 'tahan untuk cakap' : 'hold to talk')
+                  : (language === 'ms' ? 'ketuk untuk mula' : 'tap to start')
                 : phase === 'requesting-mic'
                   ? (language === 'ms' ? 'menyambung...' : 'connecting...')
                   : (language === 'ms' ? 'ketuk untuk berhenti' : 'tap to stop')}
@@ -219,7 +295,7 @@ export default function LiveVoiceSheet({
                   ? 'Input suara tidak disokong dalam browser ini. Tap soalan di bawah dan MajlisMate akan jawab dengan suara.'
                   : 'Voice input is not supported in this browser. Tap a question below and MajlisMate will reply by speaking.')
               : phase === 'error' && voice.errorMessage
-                ? voice.errorMessage
+                ? friendlyError(voice.errorMessage, language)
                 : instruction}
           </p>
           {isTtsOnly ? (
@@ -235,6 +311,26 @@ export default function LiveVoiceSheet({
                 ? 'Tip: tahan butang atau kekunci Space untuk bercakap'
                 : 'Tip: hold the button or press Space to talk'}
             </p>
+          ) : null}
+
+          {(phase === 'idle' || phase === 'error') && !voice.streamedAnswer && !isUnavailable ? (
+            <div className="live-voice-suggestions" role="group" aria-label={language === 'ms' ? 'Contoh soalan' : 'Example questions'}>
+              <span className="live-voice-suggestions__label">
+                {language === 'ms' ? 'Cuba tanya:' : 'Try asking:'}
+              </span>
+              <div className="live-voice-suggestions__list">
+                {VOICE_SUGGESTIONS[language].map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    className="live-voice-suggestion-chip"
+                    onClick={() => voice.askText(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : null}
         </div>
 
@@ -279,6 +375,87 @@ export default function LiveVoiceSheet({
             </p>
           </article>
         </div>
+
+        {voice.pendingActions.length > 0 ? (
+          <div className="live-voice-actionpanel">
+            <span className="live-voice-actionpanel__title">
+              {language === 'ms' ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
+            </span>
+            <ul className="live-voice-actionpanel__list">
+              {voice.pendingActions.map((action, index) => {
+                const { kind, label } = summarizeAction(action, language);
+                return (
+                  <li key={index} className="live-voice-actionpanel__chip">
+                    <span className="live-voice-actionpanel__kind">{kind}</span>
+                    <span className="live-voice-actionpanel__label">{label}</span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="live-voice-actionpanel__buttons">
+              <button
+                type="button"
+                className="live-voice-actionpanel__apply"
+                onClick={() => {
+                  onApplyActions?.(voice.pendingActions);
+                  voice.clearPendingActions();
+                }}
+              >
+                {voice.pendingActions.length > 1
+                  ? (language === 'ms' ? `Tambah semua (${voice.pendingActions.length})` : `Add all (${voice.pendingActions.length})`)
+                  : (language === 'ms' ? 'Tambah' : 'Add')}
+              </button>
+              <button
+                type="button"
+                className="live-voice-actionpanel__dismiss"
+                onClick={() => voice.clearPendingActions()}
+              >
+                {language === 'ms' ? 'Abaikan' : 'Dismiss'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {voice.history.length > 0 ? (
+          <div className={`live-voice-history ${historyOpen ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className="live-voice-history__toggle"
+              aria-expanded={historyOpen}
+              onClick={() => setHistoryOpen((v) => !v)}
+            >
+              <span>
+                {language === 'ms'
+                  ? `Sejarah perbualan (${voice.history.length})`
+                  : `Conversation history (${voice.history.length})`}
+              </span>
+              <span className="live-voice-history__chevron" aria-hidden="true">{historyOpen ? '▾' : '▸'}</span>
+            </button>
+            {historyOpen ? (
+              <div className="live-voice-history__list">
+                {[...voice.history].reverse().map((exchange) => (
+                  <div key={exchange.id} className="live-voice-history__item">
+                    <p className="live-voice-history__user">
+                      <span>{language === 'ms' ? 'Anda' : 'You'}</span>
+                      {exchange.user}
+                    </p>
+                    <p className="live-voice-history__assistant">
+                      <span>MajlisMate</span>
+                      {exchange.assistant}
+                    </p>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="live-voice-history__clear"
+                  onClick={() => voice.clearHistory()}
+                >
+                  {language === 'ms' ? 'Kosongkan sejarah' : 'Clear history'}
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="live-voice-actions">
           {isUnavailable ? (
