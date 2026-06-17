@@ -47,12 +47,33 @@ function isUnrelatedCreationRequest(message: string) {
   return CREATION_REQUEST_PATTERN.test(message) && !WEDDING_RELATED_PATTERN.test(message);
 }
 
-function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage) {
+function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voiceMode = false) {
   const isChecklist = /\b(checklist|senarai|task|tugas|todo|to-do)\b/i.test(userMessage);
-  const isVendor = /\b(vendor|photographer|caterer|katering|dewan|venue|andaman|makeup|mua|florist)\b/i.test(userMessage);
-  const isBudget = /\b(budget|bajet|harga|kos|rm|payment|bayar)\b/i.test(userMessage);
+  const isVendor = /\b(vendor|photographer|caterer|catering|katering|dewan|venue|andaman|makeup|mua|florist|flower|floral|bunga|bouquet|pelamin|dekor|decor|hantaran|kompang|kad|invitation|cenderahati|doorgift|gubahan|baju|gown|tailor|jahit|kek|cake|dj|band|kahwin\s+\w+)\b/i.test(userMessage);
+  const isBudget = /\b(budget|bajet|harga|kos|rm|payment|bayar|deposit)\b/i.test(userMessage);
   const isAppointment = /\b(appointment|temujanji|schedule|jadual|booking|book|tempah)\b/i.test(userMessage);
   const isRsvp = /\b(rsvp|guest|tetamu|jemputan|headcount|pax)\b/i.test(userMessage);
+  const isPlanning = /\b(what should i|where do i start|this month|next step|focus|priorit|apa.*(buat|patut)|bulan ini|mula|fokus|seterusnya)\b/i.test(userMessage);
+
+  // Voice mode: short, conversational, no markdown — meant to be spoken aloud.
+  if (voiceMode) {
+    if (language === 'en') {
+      if (isChecklist) return 'Sure, I can help with your checklist. Tell me your wedding date and rough guest count, and I will suggest the key tasks.';
+      if (isVendor) return 'For vendors, check availability and what is included before price. Tell me the vendor type and your state, and I can prepare questions.';
+      if (isBudget) return 'Let us keep the budget simple. Tell me your total budget and guest count, and I will suggest a breakdown.';
+      if (isAppointment) return 'Okay. Give me the vendor, date, and time, and I will help set up the appointment.';
+      if (isRsvp) return 'For RSVP, group your guests first, then track who is confirmed. Want me to start a follow-up plan?';
+      if (isPlanning) return 'This month, focus on your most urgent tasks first. Want me to suggest what to prioritise based on your timeline?';
+      return 'I can help with that. Tell me a bit more, and I will turn it into a clear next step for your wedding.';
+    }
+    if (isChecklist) return 'Boleh, saya boleh bantu checklist. Beritahu tarikh majlis dan anggaran tetamu, nanti saya cadangkan task penting.';
+    if (isVendor) return 'Untuk vendor, semak available dan apa yang termasuk dulu sebelum harga. Bagi jenis vendor dan negeri, saya boleh sediakan soalan.';
+    if (isBudget) return 'Jom kemaskan bajet. Beritahu jumlah bajet dan bilangan tetamu, nanti saya cadangkan pecahan.';
+    if (isAppointment) return 'Okay. Bagi nama vendor, tarikh, dan masa, nanti saya bantu set appointment.';
+    if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut group dulu, lepas tu track siapa dah confirm. Nak saya mulakan pelan follow-up?';
+    if (isPlanning) return 'Bulan ni, fokus pada task paling penting dulu. Nak saya cadangkan keutamaan ikut timeline anda?';
+    return 'Boleh, saya bantu. Cerita sikit lagi, nanti saya tukarkan jadi satu langkah jelas untuk majlis anda.';
+  }
 
   if (language === 'en') {
     if (isChecklist) return 'I can help with that. A clean wedding checklist should be grouped by timing, not just category.\n\nStart with:\n- 12-9 months: date, venue, budget, main vendors\n- 8-6 months: outfits, photographer, catering, guest list\n- 5-3 months: invitation, doorgift, decoration, documents\n- Final month: vendor confirmations, seating, payment balance, day schedule\n\nTell me your wedding date and guest estimate so I can make it more specific.';
@@ -81,7 +102,8 @@ async function forwardAiNonymauzStream(
   controller: ReadableStreamDefaultController<Uint8Array>,
   encoder: TextEncoder,
   messages: ChatMessage[],
-  language: AppLanguage
+  language: AppLanguage,
+  voiceMode = false
 ) {
   const env = {
     baseUrl: process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '') ?? '',
@@ -92,7 +114,7 @@ async function forwardAiNonymauzStream(
 
   if (!env.baseUrl || !env.apiKey || env.apiKey === 'your-secret-api-key') {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-    const demoAnswer = cleanDemoText(buildDemoPlannerAnswer(userMessage, language));
+    const demoAnswer = cleanDemoText(buildDemoPlannerAnswer(userMessage, language, voiceMode));
 
     for (const word of demoAnswer.split(/(\s+)/)) {
       controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: word })));
@@ -195,12 +217,29 @@ function forwardSseEvents(
 function buildSystemPrompt(
   language: AppLanguage,
   plannerContext: ChatRequest['plannerContext'],
-  selectedDocs: KnowledgeDoc[]
+  selectedDocs: KnowledgeDoc[],
+  voiceMode?: boolean
 ) {
   const languageName = language === 'en' ? 'English' : 'Malay/Bahasa Melayu';
   const clientName = getClientName();
   const chatbotName = process.env.CHATBOT_NAME || 'MajlisMate.ai';
   const context = formatContext(selectedDocs);
+  const todayIso = new Date().toISOString().split('T')[0];
+
+  const actionsRule = `\n12. PLANNER ACTIONS: When the user clearly asks you to add or change something concrete in their planner — a checklist task, a budget item, an appointment, or a guest — AND you already have the needed details, propose actions for one-tap confirmation.${voiceMode ? ' In this voice conversation, keep your spoken reply to 1-3 short sentences AND still place the action block at the very end (it is hidden from speech).' : ''} After your normal reply, append exactly one block on its own lines:
+${'<<<MM_ACTIONS'}
+[ {"type":"add_checklist_item","text":"..."} ]
+${'MM_ACTIONS>>>'}
+Supported actions (use only these types and fields):
+- {"type":"add_checklist_item","text":string,"deadline":"YYYY-MM-DD"?,"phase":string?}
+- {"type":"add_budget_item","category":string,"planned":number(RM)?,"note":string?}
+- {"type":"add_appointment","title":string,"date":"YYYY-MM-DD","time":"HH:MM"?,"vendor":string?,"location":string?}
+- {"type":"add_guest","name":string,"pax":number?,"group":string?,"phone":string?}
+- {"type":"update_budget","category":string,"planned":number?,"actual":number?,"paid":number?} (use when the user reports a quote/cost or a payment made; match an existing budget category from the budget snapshot)
+- {"type":"complete_task","text":string} (use when the user says a task is done; text should match an existing checklist item)
+- {"type":"update_appointment","title":string,"date":"YYYY-MM-DD"?,"time":"HH:MM"?,"status":"planned"|"confirmed"|"done"?} (title should match an existing appointment)
+- {"type":"set_profile","majlisDate":"YYYY-MM-DD"?,"negeri":string?,"totalBudget":number?,"guestTarget":number?} (use when the user states their wedding date, state, total budget, or guest count)
+Action rules: Today is ${todayIso}; resolve any relative dates (e.g. "next month", "minggu depan") to absolute YYYY-MM-DD using today and the majlis date. Never invent prices, dates, names, or phone numbers the user did not provide — omit optional fields you are unsure about. Only include actions you are confident the user wants now. Do NOT mention the block, JSON, or "actions" in your visible reply; the app renders confirm buttons automatically. If the user is only asking a question or no concrete change is requested, do not output the block at all.`;
 
   return `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
@@ -214,7 +253,7 @@ Rules:
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
-10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).
+10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).${voiceMode ? '\n11. This is a voice conversation. Answer in 1–3 short spoken sentences only. No markdown, no bullet lists, no numbered lists, no headings, no asterisks. Speak naturally and conversationally as if talking aloud.' : ''}${actionsRule}
 
 Internal knowledge context:
 ${context}
@@ -259,7 +298,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const { messages, language, plannerContext } = parsed.data;
+    const { messages, language, plannerContext, voiceMode } = parsed.data;
     const latestUserMessage = [...messages].reverse().find((message) => message.role === 'user')?.content?.trim();
 
     if (!latestUserMessage || latestUserMessage.length < 2) {
@@ -290,7 +329,7 @@ export async function POST(request: NextRequest) {
     }
 
     const selectedDocs = retrieveContext(latestUserMessage, 3);
-    const systemPrompt = buildSystemPrompt(language, plannerContext, selectedDocs);
+    const systemPrompt = buildSystemPrompt(language, plannerContext, selectedDocs, voiceMode);
     const aiMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
       ...messages.slice(-6).map((message) => ({ role: message.role, content: message.content }))
@@ -308,7 +347,7 @@ export async function POST(request: NextRequest) {
             )
           );
 
-          await forwardAiNonymauzStream(controller, encoder, aiMessages, language);
+          await forwardAiNonymauzStream(controller, encoder, aiMessages, language, voiceMode);
           controller.enqueue(encoder.encode(sseDone()));
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unexpected error';

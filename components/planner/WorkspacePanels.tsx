@@ -1,5 +1,5 @@
 import { useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
-import type { ActivityItem, Appointment, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
+import type { ActivityItem, AppLanguage, Appointment, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
 
 type DashboardPanelProps = {
@@ -355,9 +355,13 @@ export function BudgetPanel({
               const isExpanded = expandedBudgetId === item.id;
               const isOverBudget = item.actual > item.planned && item.planned > 0;
               const itemProgress = item.actual > 0 ? Math.min(100, Math.round((item.paid / item.actual) * 100)) : 0;
+              const depositAmount = Math.round((item.actual || item.planned) * 0.5);
+              const isFullyPaid = item.actual > 0 && item.paid >= item.actual;
+              const hasActual = item.actual > 0;
+              const actualDiffersFromPlanned = item.actual > 0 && item.actual !== item.planned;
 
               return (
-                <article key={item.id} className={`budget-row-card ${isExpanded ? 'expanded' : ''} ${isOverBudget ? 'warning' : ''}`}>
+                <article key={item.id} className={`budget-row-card ${isExpanded ? 'expanded' : ''} ${isOverBudget ? 'warning' : ''} ${isFullyPaid ? 'fully-paid' : ''}`}>
                   <button
                     type="button"
                     className="budget-row-summary"
@@ -367,11 +371,20 @@ export function BudgetPanel({
                     <span className="budget-category-dot" aria-hidden="true" />
                     <span className="budget-row-title">
                       <strong>{item.category}</strong>
-                      <small>{item.note || (remaining > 0 ? `${money(remaining)} left to pay` : 'No note yet')}</small>
+                      <small>{item.note || (remaining > 0 ? `${money(remaining)} lagi belum bayar` : isFullyPaid ? 'Sudah bayar penuh' : 'Belum ada nota')}</small>
                     </span>
                     <span className="budget-row-amount">
-                      <strong>{money(item.actual || item.planned)}</strong>
-                      <small>{itemProgress}% paid</small>
+                      {actualDiffersFromPlanned ? (
+                        <>
+                          <strong>{money(item.actual)}</strong>
+                          <small className="budget-planned-hint">Anggaran {money(item.planned)}</small>
+                        </>
+                      ) : (
+                        <>
+                          <strong>{money(item.actual || item.planned)}</strong>
+                          <small>{itemProgress}% bayar</small>
+                        </>
+                      )}
                     </span>
                     <span className={`budget-status ${item.status}`}>{statusLabel(item.status)}</span>
                   </button>
@@ -379,6 +392,27 @@ export function BudgetPanel({
                   <div className="budget-row-meter">
                     <span style={{ width: `${itemProgress}%` }} />
                   </div>
+
+                  {!isExpanded && !isFullyPaid && (hasActual || item.planned > 0) ? (
+                    <div className="budget-quick-pay">
+                      {item.paid < depositAmount ? (
+                        <button
+                          type="button"
+                          className="budget-pay-deposit"
+                          onClick={(e) => { e.stopPropagation(); updateBudgetItem(item.id, { paid: depositAmount, status: 'in-progress' }); }}
+                        >
+                          Bayar deposit ({money(depositAmount)})
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="budget-pay-full"
+                        onClick={(e) => { e.stopPropagation(); updateBudgetItem(item.id, { paid: item.actual || item.planned, status: 'done' }); }}
+                      >
+                        Bayar penuh
+                      </button>
+                    </div>
+                  ) : null}
 
                   {isExpanded ? (
                     <div className="budget-edit-panel">
@@ -748,6 +782,11 @@ type VendorsPanelProps = {
   askVendorQuestions: (vendor: Vendor) => void;
   askVendorComparison: (vendors: Vendor[]) => void;
   addVendorToBudget: (vendor: Vendor) => void;
+  language?: AppLanguage;
+  defaultNegeri?: string;
+  onSearchNearby?: () => void;
+  searchLoading?: boolean;
+  searchInfo?: string;
 };
 
 export function VendorsPanel({
@@ -761,11 +800,23 @@ export function VendorsPanel({
   askVendorMessage,
   askVendorQuestions,
   askVendorComparison,
-  addVendorToBudget
+  addVendorToBudget,
+  language = 'ms',
+  defaultNegeri = '',
+  onSearchNearby,
+  searchLoading = false,
+  searchInfo = ''
 }: VendorsPanelProps) {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [compareVendorIds, setCompareVendorIds] = useState<string[]>([]);
   const mapQueryBase = (vendor: Vendor) => encodeURIComponent(`${vendor.name} ${vendor.category} ${vendor.negeri} Malaysia`);
+  // Free, no-key way to surface real nearby vendors: open Google Maps search.
+  // Maps centres on the user's location automatically, so results are "nearby".
+  const browseNegeri = vendorFilter.negeri !== 'All' ? vendorFilter.negeri : defaultNegeri;
+  const browseTerm = vendorFilter.category !== 'All' ? vendorFilter.category : (language === 'ms' ? 'vendor kahwin' : 'wedding vendor');
+  const browseMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    `${browseTerm} kahwin ${browseNegeri} Malaysia`.replace(/\s+/g, ' ').trim()
+  )}`;
   const selectedMapVendor = filteredVendors.find((vendor) => savedVendors.includes(vendor.id)) || filteredVendors[0];
   const comparedVendors = compareVendorIds
     .map((id) => filteredVendors.find((vendor) => vendor.id === id))
@@ -807,7 +858,34 @@ export function VendorsPanel({
           </select>
         </label>
         <span className="vendor-result-count">{filteredVendors.length} result{filteredVendors.length === 1 ? '' : 's'}</span>
+        <a
+          className="vendor-search-nearby"
+          href={browseMapsUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {language === 'ms' ? '🗺️ Cari berdekatan di Google Maps' : '🗺️ Find nearby on Google Maps'}
+        </a>
+        {onSearchNearby ? (
+          <button
+            type="button"
+            className="vendor-search-import"
+            onClick={onSearchNearby}
+            disabled={searchLoading}
+            title={language === 'ms' ? 'Import hasil ke dalam app (perlu API key)' : 'Import results into the app (needs API key)'}
+          >
+            {searchLoading
+              ? (language === 'ms' ? 'Mengimport…' : 'Importing…')
+              : (language === 'ms' ? 'Import ke app' : 'Import to app')}
+          </button>
+        ) : null}
       </div>
+      {searchInfo ? <p className="vendor-search-info">{searchInfo}</p> : null}
+      <p className="vendor-search-hint">
+        {language === 'ms'
+          ? 'Butang Google Maps adalah percuma — ia buka carian vendor sebenar berhampiran anda.'
+          : 'The Google Maps button is free — it opens a real nearby vendor search.'}
+      </p>
 
       {selectedMapVendor ? (
         <section className="vendor-map-panel" aria-label="Google Maps vendor preview">
@@ -886,10 +964,28 @@ export function VendorsPanel({
             </div>
             <p>{vendor.note}</p>
             <div className="vendor-meta-row">
-              <span>{money(vendor.minPrice)} - {money(vendor.maxPrice)}</span>
-              <span>{vendor.contact}</span>
+              <span>
+                {vendor.minPrice > 0 || vendor.maxPrice > 0
+                  ? `${money(vendor.minPrice)} - ${money(vendor.maxPrice)}`
+                  : (language === 'ms' ? 'Harga: tanya vendor' : 'Price: ask vendor')}
+              </span>
+              {vendor.contact ? <span>{vendor.contact}</span> : null}
               {vendor.instagram ? <span>{vendor.instagram}</span> : null}
+              {typeof vendor.ratingCount === 'number' && vendor.ratingCount > 0 ? (
+                <span>{vendor.ratingCount} {language === 'ms' ? 'ulasan' : 'reviews'}</span>
+              ) : null}
             </div>
+            {vendor.source === 'google' ? (
+              <div className="vendor-live-links">
+                <span className="vendor-live-badge">{language === 'ms' ? 'Live · Google Maps' : 'Live · Google Maps'}</span>
+                {vendor.mapsUri ? (
+                  <a href={vendor.mapsUri} target="_blank" rel="noreferrer">{language === 'ms' ? 'Lihat di Maps' : 'View on Maps'}</a>
+                ) : null}
+                {vendor.website ? (
+                  <a href={vendor.website} target="_blank" rel="noreferrer">{language === 'ms' ? 'Laman web' : 'Website'}</a>
+                ) : null}
+              </div>
+            ) : null}
             <div className="vendor-actions">
               <button type="button" className={savedVendors.includes(vendor.id) ? 'is-saved' : ''} onClick={() => toggleSavedVendor(vendor.id)}>
                 {savedVendors.includes(vendor.id) ? 'Shortlisted' : 'Shortlist'}

@@ -2,6 +2,7 @@
 
 import { FormEvent, RefObject, useEffect, useRef, useState } from 'react';
 import type { Message } from './planner/types';
+import { summarizeAction, type PlannerAction } from '../lib/planner/chatActions';
 import Composer from './ui/Composer';
 import Markdown from './ui/Markdown';
 
@@ -22,8 +23,78 @@ type ChatWidgetProps = {
   onInputChange: (value: string) => void;
   onCommandSuggestion?: (value: string) => void;
   onVoiceMode?: () => void;
+  onApplyActions?: (messageIndex: number, actions: PlannerAction[]) => void;
+  onDismissActions?: (messageIndex: number) => void;
   onSubmit: (event: FormEvent) => void;
 };
+
+const ACTION_ICON: Record<PlannerAction['type'], string> = {
+  add_checklist_item: '✓',
+  add_budget_item: 'RM',
+  add_appointment: '📅',
+  add_guest: '👤',
+  update_budget: 'RM',
+  complete_task: '✓',
+  update_appointment: '📅',
+  set_profile: '💍'
+};
+
+type ActionPanelProps = {
+  messageIndex: number;
+  actions: PlannerAction[];
+  state?: Message['actionsState'];
+  language: 'ms' | 'en';
+  onApply?: (messageIndex: number, actions: PlannerAction[]) => void;
+  onDismiss?: (messageIndex: number) => void;
+};
+
+function ActionPanel({ messageIndex, actions, state, language, onApply, onDismiss }: ActionPanelProps) {
+  const isMs = language === 'ms';
+  if (state === 'dismissed') return null;
+  const applied = state === 'applied';
+
+  return (
+    <div className={`chat-actions${applied ? ' is-applied' : ''}`}>
+      <span className="chat-actions__title">
+        {applied
+          ? isMs ? 'Ditambah ke planner' : 'Added to your planner'
+          : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
+      </span>
+      <ul className="chat-actions__list">
+        {actions.map((action, i) => {
+          const { kind, label } = summarizeAction(action, language);
+          return (
+            <li key={i} className={`chat-action-chip type-${action.type}`}>
+              <span className="chat-action-chip__icon" aria-hidden="true">{ACTION_ICON[action.type]}</span>
+              <span className="chat-action-chip__kind">{kind}</span>
+              <span className="chat-action-chip__label">{label}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {!applied ? (
+        <div className="chat-actions__buttons">
+          <button
+            type="button"
+            className="chat-actions__apply"
+            onClick={() => onApply?.(messageIndex, actions)}
+          >
+            {actions.length > 1
+              ? isMs ? `Tambah semua (${actions.length})` : `Add all (${actions.length})`
+              : isMs ? 'Tambah' : 'Add'}
+          </button>
+          <button
+            type="button"
+            className="chat-actions__dismiss"
+            onClick={() => onDismiss?.(messageIndex)}
+          >
+            {isMs ? 'Abaikan' : 'Dismiss'}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function AssistantAvatar() {
   return (
@@ -127,6 +198,8 @@ export default function ChatWidget({
   onInputChange,
   onCommandSuggestion,
   onVoiceMode,
+  onApplyActions,
+  onDismissActions,
   onSubmit
 }: ChatWidgetProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -156,12 +229,24 @@ export default function ChatWidget({
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
               {message.role === 'assistant' && <AssistantAvatar />}
               {message.role === 'assistant' ? (
-                <MessageBubble
-                  message={message}
-                  isStreaming={isStreaming}
-                  sourcesLabel={sourcesLabel}
-                  emptyTypingLabel={emptyTypingLabel}
-                />
+                <div className="assistant-stack">
+                  <MessageBubble
+                    message={message}
+                    isStreaming={isStreaming}
+                    sourcesLabel={sourcesLabel}
+                    emptyTypingLabel={emptyTypingLabel}
+                  />
+                  {message.actions && message.actions.length > 0 && !isStreaming ? (
+                    <ActionPanel
+                      messageIndex={index}
+                      actions={message.actions}
+                      state={message.actionsState}
+                      language={language}
+                      onApply={onApplyActions}
+                      onDismiss={onDismissActions}
+                    />
+                  ) : null}
+                </div>
               ) : (
                 <div className="bubble">
                   {message.content.split('\n').map((line, li) => (

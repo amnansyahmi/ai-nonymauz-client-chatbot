@@ -60,14 +60,20 @@ export function scoreVoices(voices: SpeechSynthesisVoice[], language: AppLanguag
         score += language === 'ms' ? 80 : 30;
         reasons.push('primary-lang');
       } else if (secondary.some((tag) => lang === tag || lang.startsWith(`${tag}-`))) {
-        score += language === 'ms' ? 24 : 12;
+        score += language === 'ms' ? 60 : 12;
         reasons.push('secondary-lang');
       } else if (fallback.some((tag) => lang === tag || lang.startsWith(`${tag}-`))) {
-        score += language === 'ms' ? 4 : 8;
+        // For a Malay UI, an Indonesian voice (id-*) reads Malay text far more
+        // naturally than any English voice, so it must strongly beat English.
+        score += language === 'ms' ? 45 : 8;
         reasons.push('fallback-lang');
       } else if (lang.startsWith(tags.primary.slice(0, 2))) {
         score += 6;
         reasons.push('family-lang');
+      } else if (language === 'ms' && lang.startsWith('en')) {
+        // Last resort only: an English voice butchers Malay pronunciation.
+        score -= 40;
+        reasons.push('en-penalty');
       }
 
       for (const hint of HIGH_QUALITY_VOICE_HINTS) {

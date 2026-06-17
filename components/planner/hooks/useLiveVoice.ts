@@ -21,6 +21,7 @@ import {
 } from '../../../lib/voice/storage';
 import { listVoicesForLanguage, pickBestVoice, type ScoredVoice } from '../../../lib/voice/voices';
 import { humanize, isQuestionSentence, sentenceProsody } from '../../../lib/voice/prosody';
+import { parseChatActions, stripActionBlock, MM_ACTIONS_OPEN, type PlannerAction } from '../../../lib/planner/chatActions';
 
 const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
   en: [
@@ -35,15 +36,23 @@ const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
     'Baik, jap saya tengok.',
     'Hmm, sekejap.',
     'Ok, saya semak dulu ya.',
-    'Alright, tunggu sekejap.',
+    'Ha, jap eh.',
+    'Ok, tunggu jap.',
+    'Satu saat ya.',
   ],
+};
+
+export type VoiceExchange = {
+  id: string;
+  user: string;
+  assistant: string;
 };
 
 export type VoicePhase = 'idle' | 'requesting-mic' | 'listening' | 'thinking' | 'speaking' | 'error';
 
 export type VoiceMode = 'continuous' | 'push-to-talk';
 
-export type AskStream = (question: string) => Promise<{
+export type AskStream = (question: string, opts?: { voiceMode?: boolean }) => Promise<{
   deltas: AsyncIterable<string>;
   cancel: () => void;
 }>;
@@ -74,6 +83,10 @@ export type UseLiveVoiceResult = {
   preferences: VoicePreferences;
   availableVoices: ScoredVoice[];
   selectedVoice: ScoredVoice | null;
+  history: VoiceExchange[];
+  hasMalayVoice: boolean;
+  pendingActions: PlannerAction[];
+  clearPendingActions: () => void;
   rms: number;
   silenceMs: number;
   isSpeaking: boolean;
@@ -91,6 +104,9 @@ export type UseLiveVoiceResult = {
   pushToTalk: () => Promise<void>;
   beginPushToTalk: () => void;
   endPushToTalk: () => void;
+  refreshVoices: () => void;
+  askText: (text: string) => void;
+  clearHistory: () => void;
 };
 
 export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOptions): UseLiveVoiceResult {
@@ -108,6 +124,8 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [sentenceCount, setSentenceCount] = useState(0);
   const [ttsSentence, setTtsSentence] = useState(0);
+  const [history, setHistory] = useState<VoiceExchange[]>([]);
+  const [pendingActions, setPendingActions] = useState<PlannerAction[]>([]);
 
   const capabilitiesRef = useRef<VoiceCapabilities | null>(null);
   const ttsRef = useRef<TtsController | null>(null);
@@ -134,6 +152,22 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
   useEffect(() => {
     currentSentenceIndexRef.current = currentSentenceIndex;
   }, [currentSentenceIndex]);
+
+  // Synthetic RMS: animate the waveform while TTS is speaking
+  useEffect(() => {
+    if (phase !== 'speaking') return;
+    let tick = 0;
+    const id = window.setInterval(() => {
+      tick += 1;
+      const base = 0.35 + 0.25 * Math.sin(tick * 0.45);
+      const jitter = 0.1 * Math.sin(tick * 1.3);
+      setRms(Math.min(1, Math.max(0, base + jitter)));
+    }, 80);
+    return () => {
+      window.clearInterval(id);
+      setRms(0);
+    };
+  }, [phase]);
 
   const capabilities = useMemo(() => {
     if (typeof window === 'undefined') return null;
@@ -166,10 +200,17 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
         return { voice: null, lang: fallback, detection: { language: 'unknown', confidence: 0, malayScore: 0, englishScore: 0, tokenCount: 0 } };
       }
       const detection = detectLanguage(text);
-      // Only switch voice when the detection is confident; otherwise stick with the
-      // user's UI language voice so we don't accidentally flip on a single word.
+      // Malay-first system: when the UI language is Malay, always speak with the
+      // Malay voice. Malay sentences borrow many English loanwords (vendor, budget,
+      // appointment, deposit) which would otherwise trip per-sentence detection into
+      // an English voice mid-answer. English is secondary — only honour detection
+      // when the user has explicitly switched the UI to English.
       const effective: AppLanguage =
-        isConfident(detection) && detection.language !== 'unknown' ? detection.language : baseLanguage;
+        baseLanguage === 'ms'
+          ? 'ms'
+          : isConfident(detection) && detection.language !== 'unknown'
+            ? detection.language
+            : baseLanguage;
       const scored = listVoicesForLanguage(voices, effective);
       const saved = preferences.voiceURI ? findSavedVoice(scored, preferences.voiceURI) : null;
       if (effective === 'ms' && saved && !saved.voice.lang.toLowerCase().startsWith('ms')) {
@@ -280,8 +321,10 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     if (bargeInActiveRef.current) return;
     if (!preferences.bargeIn) return;
     if (!capabilitiesRef.current?.hasGetUserMedia || !capabilitiesRef.current?.hasAudioContext) return;
+    // Higher threshold + longer hold so the TTS audio leaking into the mic does
+    // not self-trigger barge-in. Only clearly louder, sustained speech cuts in.
     const vad = createVad(
-      { threshold: 0.035, speechHoldMs: 250, silenceHoldMs: 600 },
+      { threshold: 0.09, speechHoldMs: 450, silenceHoldMs: 600 },
       {
         onSpeechStart: () => {
           if (phaseRef.current === 'speaking') {
@@ -403,15 +446,17 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       detectedLangRef.current = detection;
 
       try {
-        const streamHandle = await ask(trimmed);
+        const streamHandle = await ask(trimmed, { voiceMode: true });
         currentAskStreamRef.current = streamHandle;
 
         setStreamedAnswer('');
+        setPendingActions([]);
         const streaming = createStreamingTts({
           voice: answerVoice?.voice ?? null,
           lang: answerLang,
           rate: preferences.rate,
           pitch: preferences.pitch,
+          pauseBetweenMs: 220,
           humanize: (text) => humanize(text, language, answerVoice?.voice.lang),
           prosodyForSentence: (sentence, index, isLast) =>
             sentenceProsody(index, isQuestionSentence(sentence), preferences.rate, preferences.pitch, isLast),
@@ -433,6 +478,13 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
           onComplete: (full) => {
             clearThinkingAck();
             setSpokenAnswer(full);
+            const answer = full.trim();
+            if (answer) {
+              setHistory((current) => [
+                ...current,
+                { id: `${Date.now()}-${current.length}`, user: trimmed, assistant: answer }
+              ].slice(-12));
+            }
             setCurrentSentence(null);
             if (phaseRef.current === 'speaking') setPhase('idle');
             stopBargeInMonitor();
@@ -453,13 +505,24 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
         streamingTtsRef.current = streaming;
 
         try {
+          // Accumulate the raw answer but only ever speak / caption the text
+          // BEFORE the action block, so the TTS never reads JSON aloud.
+          let raw = '';
+          let pushedLen = 0;
           for await (const delta of streamHandle.deltas) {
-            if (delta) {
-              setStreamedAnswer((current) => current + delta);
-              streaming.push(delta);
+            if (!delta) continue;
+            raw += delta;
+            const openIndex = raw.indexOf(MM_ACTIONS_OPEN);
+            const clean = openIndex === -1 ? raw : raw.slice(0, openIndex);
+            setStreamedAnswer(clean);
+            if (clean.length > pushedLen) {
+              streaming.push(clean.slice(pushedLen));
+              pushedLen = clean.length;
             }
           }
           await streaming.finish();
+          const voiceActions = parseChatActions(raw);
+          if (voiceActions.length > 0) setPendingActions(voiceActions);
         } catch (err) {
           streaming.cancel();
           if (phaseRef.current === 'speaking' || phaseRef.current === 'thinking') {
@@ -520,7 +583,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     tts.speak({
       text: greeting,
       voice: selectedVoice?.voice ?? null,
-      lang: capabilitiesRef.current?.speechSynthesisLang ?? 'en-US',
+      lang: capabilitiesRef.current?.speechSynthesisLang ?? (language === 'ms' ? 'ms-MY' : 'en-US'),
       rate: preferences.rate,
       pitch: preferences.pitch,
       onEnd: () => {
@@ -703,6 +766,24 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     return listVoicesForLanguage(voices, language);
   }, [voices, language]);
 
+  const hasMalayVoice = useMemo<boolean>(
+    () => voices.some((v) => v.lang.toLowerCase().startsWith('ms')),
+    [voices]
+  );
+
+  const askText = useCallback(
+    (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      if (phaseRef.current === 'thinking' || phaseRef.current === 'speaking') return;
+      void handleFinalTranscript(trimmed);
+    },
+    [handleFinalTranscript]
+  );
+
+  const clearHistory = useCallback(() => setHistory([]), []);
+  const clearPendingActions = useCallback(() => setPendingActions([]), []);
+
   return {
     phase,
     mode,
@@ -721,6 +802,10 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     preferences,
     availableVoices,
     selectedVoice,
+    history,
+    hasMalayVoice,
+    pendingActions,
+    clearPendingActions,
     rms,
     silenceMs,
     isSpeaking: phase === 'speaking',
@@ -737,6 +822,13 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     pickVoiceForText,
     pushToTalk,
     beginPushToTalk,
-    endPushToTalk
+    endPushToTalk,
+    refreshVoices: () => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        setVoices(window.speechSynthesis.getVoices());
+      }
+    },
+    askText,
+    clearHistory
   };
 }

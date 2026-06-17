@@ -15,7 +15,109 @@ export type VoiceSettingsProps = {
   onChange: (patch: Partial<VoicePreferences>) => void;
   onModeChange: (mode: VoiceMode) => void;
   onClose: () => void;
+  onRefreshVoices?: () => void;
 };
+
+function detectOS(): 'android' | 'ios' | 'windows' | 'mac' | 'other' {
+  if (typeof navigator === 'undefined') return 'other';
+  const ua = navigator.userAgent;
+  if (/Android/i.test(ua)) return 'android';
+  if (/iPhone|iPad|iPod/i.test(ua)) return 'ios';
+  if (/Windows/i.test(ua)) return 'windows';
+  if (/Mac/i.test(ua)) return 'mac';
+  return 'other';
+}
+
+type MalayVoiceTip = {
+  title: string;
+  steps: string[];
+  note?: string;
+};
+
+function getMalayVoiceTip(os: ReturnType<typeof detectOS>, language: AppLanguage): MalayVoiceTip {
+  if (language === 'ms') {
+    if (os === 'android') return {
+      title: 'Pasang suara Melayu percuma',
+      steps: [
+        'Buka Tetapan telefon',
+        'Cari "Text-to-Speech" atau "Teks-ke-Ucapan"',
+        'Pilih Google Text-to-Speech sebagai enjin',
+        'Ketuk ⚙ → Muat turun data bahasa',
+        'Cari "Bahasa Melayu" → Muat turun',
+        'Kembali ke sini & ketuk Refresh'
+      ]
+    };
+    if (os === 'ios') return {
+      title: 'Tiada suara Melayu dalam iOS',
+      steps: [
+        'Apple tidak menyediakan suara Melayu secara percuma',
+        'Suara Indonesia (Damayanti) digunakan sebagai gantian — ia hampir sama dengan Melayu',
+        'Buka Tetapan → Accessibility → Spoken Content → Voices → Indonesian untuk memuat turun Damayanti'
+      ],
+      note: 'iOS: pilih Indonesian → Damayanti untuk bunyi paling dekat dengan Bahasa Melayu'
+    };
+    if (os === 'windows') return {
+      title: 'Pasang suara Melayu percuma (Windows)',
+      steps: [
+        'Buka Tetapan Windows → Masa & Bahasa → Bahasa & Wilayah',
+        'Klik "Tambah bahasa" → cari "Malay (Malaysia)"',
+        'Pasang & tunggu muat turun selesai',
+        'Mulakan semula pelayar (browser)',
+        'Kembali ke sini & ketuk Refresh'
+      ],
+      note: 'Suara: Microsoft Rizwan atau Microsoft Yasmin'
+    };
+    return {
+      title: 'Dapatkan suara Melayu percuma',
+      steps: [
+        'Guna pelayar Chrome atau Edge untuk pilihan suara Melayu terbaik',
+        'Pada Android: muat turun Google TTS → Bahasa Melayu',
+        'Pada Windows: pasang bahasa Melayu dalam tetapan bahasa'
+      ]
+    };
+  }
+
+  // English copy
+  if (os === 'android') return {
+    title: 'Install free Malay voice',
+    steps: [
+      'Open phone Settings',
+      'Search "Text-to-Speech output"',
+      'Select Google Text-to-Speech as engine',
+      'Tap ⚙ → Install voice data',
+      'Find "Bahasa Melayu (Malaysia)" → Download',
+      'Come back here and tap Refresh'
+    ]
+  };
+  if (os === 'ios') return {
+    title: 'No native Malay voice on iOS',
+    steps: [
+      'Apple does not provide a free Malay voice',
+      'Indonesian (Damayanti) is being used — very similar pronunciation',
+      'Settings → Accessibility → Spoken Content → Voices → Indonesian → download Damayanti'
+    ],
+    note: 'iOS: download Indonesian → Damayanti for closest Malay sound'
+  };
+  if (os === 'windows') return {
+    title: 'Install free Malay voice (Windows)',
+    steps: [
+      'Open Windows Settings → Time & Language → Language & Region',
+      'Click "Add a language" → search "Malay (Malaysia)"',
+      'Install and wait for the download to finish',
+      'Restart your browser',
+      'Come back here and tap Refresh'
+    ],
+    note: 'Voices: Microsoft Rizwan or Microsoft Yasmin'
+  };
+  return {
+    title: 'Get a free Malay voice',
+    steps: [
+      'Use Chrome or Edge for best Malay voice support',
+      'On Android: download Google TTS → Bahasa Melayu',
+      'On Windows: install Malay language in Windows language settings'
+    ]
+  };
+}
 
 export default function VoiceSettings({
   language,
@@ -25,9 +127,18 @@ export default function VoiceSettings({
   mode,
   onChange,
   onModeChange,
-  onClose
+  onClose,
+  onRefreshVoices
 }: VoiceSettingsProps) {
   const [open, setOpen] = useState(false);
+  const [tipOpen, setTipOpen] = useState(false);
+
+  const hasMalayVoice = voices.some(
+    (s) => s.voice.lang.toLowerCase().startsWith('ms') || s.voice.lang.toLowerCase().startsWith('id')
+  );
+  const showMalayTip = language === 'ms' && !hasMalayVoice;
+  const os = detectOS();
+  const tip = getMalayVoiceTip(os, language);
 
   if (!open) {
     return (
@@ -101,6 +212,19 @@ export default function VoiceSettings({
       </label>
 
       <label className="voice-settings__row">
+        <span>{language === 'ms' ? 'Ton suara' : 'Pitch'}</span>
+        <input
+          type="range"
+          min={0.7}
+          max={1.4}
+          step={0.05}
+          value={preferences.pitch}
+          onChange={(event) => onChange({ pitch: Number(event.target.value) })}
+        />
+        <output>{preferences.pitch.toFixed(2)}x</output>
+      </label>
+
+      <label className="voice-settings__row">
         <input
           type="checkbox"
           checked={preferences.bargeIn}
@@ -121,6 +245,44 @@ export default function VoiceSettings({
             : 'Greet me when I open live voice'}
         </span>
       </label>
+
+      {showMalayTip ? (
+        <div className="voice-settings__malay-tip">
+          <button
+            type="button"
+            className="voice-settings__malay-tip-toggle"
+            onClick={() => setTipOpen((v) => !v)}
+          >
+            <span>
+              {language === 'ms'
+                ? '⚠ Suara Melayu tidak dipasang'
+                : '⚠ No Malay voice installed'}
+            </span>
+            <span>{tipOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {tipOpen ? (
+            <div className="voice-settings__malay-tip-body">
+              <strong>{tip.title}</strong>
+              <ol>
+                {tip.steps.map((step, i) => (
+                  <li key={i}>{step}</li>
+                ))}
+              </ol>
+              {tip.note ? <p className="voice-settings__malay-tip-note">{tip.note}</p> : null}
+              {onRefreshVoices ? (
+                <button
+                  type="button"
+                  className="voice-settings__refresh-btn"
+                  onClick={onRefreshVoices}
+                >
+                  {language === 'ms' ? '↻ Refresh senarai suara' : '↻ Refresh voice list'}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

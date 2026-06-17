@@ -99,12 +99,15 @@ export default function Composer({
   const hasInput = input.trim().length >= minSubmitLength;
   const canSubmit = hasInput && !disabled;
 
-  // Auto-resize textarea to fit content, up to max-height
+  // Auto-resize textarea to fit content, capped at 3 visible rows
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    const lineH = parseFloat(getComputedStyle(el).lineHeight) || 24;
+    const paddingV = parseFloat(getComputedStyle(el).paddingTop) + parseFloat(getComputedStyle(el).paddingBottom);
+    const maxH = Math.ceil(lineH * 3 + paddingV);
+    el.style.height = `${Math.min(el.scrollHeight, maxH)}px`;
   }, [input]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {

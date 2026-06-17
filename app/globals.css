@@ -4817,6 +4817,7 @@ body {
 
 .message.user .bubble {
   background: var(--mm-user) !important;
+  color: var(--mm-user-text, #ffffff) !important;
   border-radius: 18px !important;
   padding: 10px 14px !important;
 }
@@ -5378,34 +5379,37 @@ body {
     gap: 3px;
     border: 1px solid var(--mm-border);
     border-radius: 22px;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(250, 247, 244, 0.96);
     padding: 5px;
-    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
-    backdrop-filter: blur(14px);
+    box-shadow: 0 12px 36px rgba(36, 28, 24, 0.16);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .mobile-bottom-nav button {
     display: grid;
     justify-items: center;
-    gap: 2px;
-    min-height: 48px;
+    gap: 3px;
+    min-height: 52px;
     border: 0;
     border-radius: 17px;
     background: transparent;
-    color: var(--mm-muted);
-    font-size: 0.68rem;
+    color: var(--mm-text-muted);
+    font-size: 0.7rem;
     font-weight: 650;
     cursor: pointer;
+    transition: background 140ms ease, color 140ms ease;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-bottom-nav button.active {
-    background: var(--mm-panel);
+    background: var(--mm-surface-muted);
     color: var(--mm-text);
   }
 
   .mobile-bottom-nav svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-linecap: round;
@@ -7018,6 +7022,73 @@ button,
   gap: 10px;
 }
 
+/* Status-grouped "All" view */
+.checklist-status-groups {
+  display: grid;
+  gap: 20px;
+}
+
+.checklist-status-group {
+  display: grid;
+  gap: 8px;
+}
+
+.checklist-status-group summary.checklist-status-header {
+  cursor: pointer;
+  list-style: none;
+}
+
+.checklist-status-group summary.checklist-status-header::-webkit-details-marker {
+  display: none;
+}
+
+.checklist-status-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 4px;
+  border-bottom: 1px solid var(--mm-border);
+  margin-bottom: 4px;
+}
+
+.checklist-status-header h4 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex: 1;
+}
+
+.checklist-status-header em {
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mm-text-muted);
+  background: var(--mm-surface-muted);
+  border-radius: var(--mm-radius-pill);
+  padding: 1px 8px;
+}
+
+.checklist-status-header .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-overdue .checklist-status-header h4 { color: #b42318; }
+.status-overdue .status-dot { background: #b42318; }
+
+.status-in-progress .checklist-status-header h4 { color: var(--mm-brand-strong); }
+.status-in-progress .status-dot { background: var(--mm-brand); }
+
+.status-not-started .checklist-status-header h4 { color: var(--mm-text-muted); }
+.status-not-started .status-dot { background: var(--mm-border-strong); }
+
+.status-done .checklist-status-header h4 { color: var(--mm-success); }
+.status-done .status-dot { background: var(--mm-success); }
+
 .checklist-phase-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 130px;
@@ -7561,21 +7632,26 @@ button,
   align-content: start;
   gap: 8px;
   min-height: 118px;
-  border: 1px solid #e8e8e8;
+  border: 1px solid var(--mm-border);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--mm-surface);
   padding: 16px;
+  transition: border-color 160ms ease;
+}
+
+.budget-focus-grid article:hover {
+  border-color: var(--mm-border-strong);
 }
 
 .budget-focus-grid span,
 .budget-insight-card span {
-  color: #6b7280;
+  color: var(--mm-text-muted);
   font-size: 0.82rem;
   font-weight: 550;
 }
 
 .budget-focus-grid strong {
-  color: #171717;
+  color: var(--mm-text);
   font-size: clamp(1.45rem, 2.4vw, 2rem);
   line-height: 1;
 }
@@ -7584,7 +7660,7 @@ button,
 .budget-focus-grid small,
 .budget-insight-card p {
   margin: 0;
-  color: #737373;
+  color: var(--mm-text-soft);
   font-size: 0.9rem;
 }
 
@@ -7729,6 +7805,63 @@ button,
 .budget-row-meter {
   height: 5px;
   border-radius: 0;
+}
+
+/* Planned hint when actual differs */
+.budget-planned-hint {
+  color: var(--mm-text-muted);
+  font-size: 0.75rem;
+}
+
+/* Quick-pay buttons */
+.budget-quick-pay {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px 10px;
+  flex-wrap: wrap;
+}
+
+.budget-pay-deposit,
+.budget-pay-full {
+  min-height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: var(--mm-radius-pill) !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  border: 1px solid var(--mm-border) !important;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.budget-pay-deposit {
+  background: var(--mm-warning-soft) !important;
+  color: #a15c14 !important;
+  border-color: #f5d6a0 !important;
+}
+
+.budget-pay-deposit:hover {
+  background: #fef3c7 !important;
+  border-color: #f5c842 !important;
+}
+
+.budget-pay-full {
+  background: var(--mm-success-soft) !important;
+  color: var(--mm-success) !important;
+  border-color: #a7f3d0 !important;
+}
+
+.budget-pay-full:hover {
+  background: #d1fae5 !important;
+  border-color: var(--mm-success) !important;
+}
+
+/* Fully-paid row styling */
+.budget-row-card.fully-paid .budget-category-dot {
+  background: var(--mm-success) !important;
+}
+
+.budget-row-card.fully-paid .budget-row-meter span {
+  background: var(--mm-success) !important;
 }
 
 .budget-edit-panel {
@@ -8708,10 +8841,11 @@ button,
     display: grid !important;
     grid-template-columns: 44px minmax(0, 1fr) auto !important;
     min-height: 56px !important;
-    border-bottom: 1px solid #ececec !important;
-    background: rgba(255, 255, 255, 0.96) !important;
+    border-bottom: 1px solid var(--mm-border) !important;
+    background: rgba(250, 247, 244, 0.97) !important;
     padding: 8px 12px !important;
-    backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
   }
 
   .workspace-menu-button {
@@ -8764,6 +8898,13 @@ button,
     height: 34px !important;
     min-height: 34px !important;
     font-size: 0.76rem !important;
+  }
+
+  /* Mobile titlebar is tight — the live voice orb here pushes the profile
+     button off-screen. Live voice stays reachable from the chat composer
+     mic and the dashboard, so hide it in the titlebar on small screens. */
+  .workspace-live-button {
+    display: none !important;
   }
 
   .planner-sidebar {
@@ -8867,10 +9008,10 @@ button,
 
   .mobile-agenda-header button,
   .mobile-agenda-card {
-    border: 1px solid #e8e8e8 !important;
+    border: 1px solid var(--mm-border) !important;
     border-radius: 16px !important;
-    background: #ffffff !important;
-    color: #171717 !important;
+    background: var(--mm-surface) !important;
+    color: var(--mm-text) !important;
     box-shadow: none !important;
   }
 
@@ -9333,6 +9474,7 @@ button,
     width: auto !important;
     max-width: none !important;
     min-height: 56px !important;
+    align-items: center !important;
     border-radius: 28px !important;
     padding: 7px 7px 7px 16px !important;
     box-shadow: 0 10px 36px rgba(0, 0, 0, 0.12) !important;
@@ -9513,36 +9655,63 @@ button,
   }
 }
 
-/* MajlisMate product polish: unified visual system */
+/* MajlisMate product polish: unified warm visual system */
 :root {
-  --mm-bg: #ffffff;
+  /* Surfaces — warm near-whites that match the brand palette */
+  --mm-bg: #faf7f4;
   --mm-surface: #ffffff;
-  --mm-surface-subtle: #f7f7f6;
-  --mm-surface-muted: #f2f2f1;
-  --mm-border: #e7e5e2;
-  --mm-border-strong: #d6d3ce;
-  --mm-text: #171717;
-  --mm-text-muted: #5f6368;
-  --mm-text-soft: #8a8a8a;
+  --mm-surface-subtle: #f5f0eb;
+  --mm-surface-muted: #ede7df;
+  /* Borders — warm toned */
+  --mm-border: #e5dfd8;
+  --mm-border-strong: #cfc6bc;
+  /* Text — warm ink, not cold neutral */
+  --mm-text: #241c18;
+  --mm-ink: #241c18;
+  --mm-text-muted: #6f625b;
+  --mm-muted: #6f625b;
+  --mm-text-soft: #9a8c84;
+  /* Brand — terracotta primary */
+  --mm-brand: #c27a63;
+  --mm-brand-strong: #8f4f3d;
+  /* Wedding accent — plum, used for the majlis date & calendar chips */
   --mm-accent: #7a4056;
-  --mm-accent-soft: #f7edf1;
-  --mm-accent-border: #e7cbd6;
+  --mm-accent-soft: #fff7fb;
+  --mm-accent-border: #e6ccd6;
+  /* Semantic */
   --mm-success: #047857;
   --mm-success-soft: #ecfdf5;
   --mm-warning: #a15c14;
   --mm-warning-soft: #fff7ed;
   --mm-danger: #b42318;
   --mm-danger-soft: #fef2f2;
+  /* Radii — three canonical sizes + aliases */
   --mm-radius-xs: 8px;
   --mm-radius-sm: 10px;
   --mm-radius-md: 14px;
+  --mm-radius-card: 14px;
+  --mm-radius-control: 10px;
   --mm-radius-lg: 18px;
   --mm-radius-pill: 999px;
-  --mm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --mm-shadow-md: 0 12px 38px rgba(0, 0, 0, 0.08);
-  --mm-focus: 0 0 0 3px rgba(23, 23, 23, 0.1);
+  /* Shadows — warm undertone */
+  --mm-shadow-sm: 0 1px 3px rgba(36, 28, 24, 0.06);
+  --mm-shadow-md: 0 8px 32px rgba(36, 28, 24, 0.10);
+  --mm-shadow-soft: 0 4px 16px rgba(36, 28, 24, 0.06);
+  /* Interaction */
+  --mm-focus: 0 0 0 3px rgba(194, 122, 99, 0.22);
+  --mm-hover: rgba(36, 28, 24, 0.045);
+  --mm-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Controls */
   --mm-control-h: 42px;
   --mm-control-h-lg: 46px;
+  --mm-control-height: 42px;
+  --mm-control-pad-x: 14px;
+  /* Message bubbles */
+  --mm-user: #c27a63;
+  --mm-user-text: #ffffff;
+  --mm-assistant: #ffffff;
+  /* Panel */
+  --mm-panel: #f0ece6;
 }
 
 .planner-workspace,
@@ -9971,7 +10140,9 @@ textarea:focus {
 
 .workspace-titlebar {
   border-bottom: 1px solid var(--mm-border) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
+  background: rgba(250, 247, 244, 0.97) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .workspace-ai-button,
@@ -10787,20 +10958,20 @@ textarea:focus {
 
   .main-chat-panel.empty-chat .starter-grid {
     display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: flex-start;
+    flex-wrap: wrap !important;
+    justify-content: center;
+    align-content: center;
+    gap: 8px !important;
     width: 100%;
-    overflow-x: auto;
+    overflow: visible;
     padding-bottom: 2px !important;
-    scrollbar-width: none;
-  }
-
-  .main-chat-panel.empty-chat .starter-grid::-webkit-scrollbar {
-    display: none;
   }
 
   .main-chat-panel.empty-chat .starter-grid button {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+    font-size: 0.86rem !important;
   }
 }
 
@@ -12157,13 +12328,13 @@ textarea:focus {
   }
 
   .mobile-bottom-nav button.active {
-    background: #f1f1f1 !important;
-    color: #171717 !important;
+    background: var(--mm-surface-muted) !important;
+    color: var(--mm-text) !important;
   }
 
   .mobile-bottom-nav svg {
-    width: 19px !important;
-    height: 19px !important;
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .budget-add-card,
@@ -13302,6 +13473,11 @@ textarea:focus {
 .message:hover .bubble-actions {
   opacity: 1;
 }
+@media (hover: none) {
+  .bubble-actions {
+    opacity: 1;
+  }
+}
 
 .bubble-copy-btn {
   display: inline-grid;
@@ -13341,7 +13517,7 @@ textarea:focus {
   display: block;
   width: 100%;
   min-height: 38px;
-  max-height: 160px;
+  max-height: calc(1.5em * 3 + 16px);
   border: 0;
   background: transparent;
   color: var(--ink);
@@ -13777,7 +13953,7 @@ textarea:focus {
 }
 
 .checklist-task-row:not(.done) .checklist-task-text:hover {
-  background: rgba(124, 58, 237, 0.06);
+  background: rgba(194, 122, 99, 0.08);
 }
 
 .checklist-inline-edit {
@@ -13786,7 +13962,7 @@ textarea:focus {
   font-size: inherit;
   font-weight: 600;
   border: 0 !important;
-  border-bottom: 1.5px solid #7c3aed !important;
+  border-bottom: 1.5px solid var(--mm-brand) !important;
   border-radius: 0 !important;
   background: transparent !important;
   padding: 0 2px !important;
@@ -13809,7 +13985,7 @@ textarea:focus {
 }
 
 .checklist-date-trigger:hover {
-  color: #7c3aed;
+  color: var(--mm-brand);
 }
 
 .checklist-date-input {
@@ -13826,18 +14002,30 @@ textarea:focus {
 
 /* ── Checklist: AI suggest deadline ───────────────── */
 .checklist-suggest-btn {
-  border: 0;
-  background: transparent;
-  padding: 0 0 0 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(194, 122, 99, 0.32);
+  background: rgba(194, 122, 99, 0.08);
+  padding: 2px 8px 2px 6px;
+  margin-left: 6px;
+  border-radius: 999px;
   font: inherit;
   font-size: 0.7rem;
-  color: #7c3aed;
+  color: var(--mm-brand-strong);
   cursor: pointer;
   font-weight: 600;
+  vertical-align: middle;
+}
+
+.checklist-suggest-btn svg {
+  width: 13px;
+  height: 13px;
 }
 
 .checklist-suggest-btn:hover {
-  text-decoration: underline;
+  background: rgba(194, 122, 99, 0.16);
+  border-color: var(--mm-brand);
 }
 
 /* ── Checklist: note preview ──────────────────────── */
@@ -13856,19 +14044,32 @@ textarea:focus {
 
 /* ── Checklist: note button ───────────────────────── */
 .checklist-note-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
   background: transparent;
-  padding: 2px 4px;
-  font-size: 0.75rem;
+  padding: 5px;
   cursor: pointer;
-  border-radius: 4px;
-  opacity: 0.5;
-  transition: opacity 140ms ease;
+  border-radius: 7px;
+  color: var(--mm-text-muted);
+  opacity: 0.55;
+  transition: opacity 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.checklist-note-btn:hover {
+  background: var(--mm-hover);
+  color: var(--mm-brand-strong);
 }
 
 .checklist-task-row:hover .checklist-note-btn,
+.checklist-task-row:focus-within .checklist-note-btn,
 .checklist-note-btn.has-note {
   opacity: 1;
+}
+
+.checklist-note-btn.has-note {
+  color: var(--mm-brand);
 }
 
 /* ── Checklist: note expand area ─────────────────── */
@@ -13891,9 +14092,9 @@ textarea:focus {
 }
 
 .checklist-note-input:focus {
-  border-color: #7c3aed !important;
+  border-color: var(--mm-brand) !important;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(194, 122, 99, 0.18) !important;
 }
 
 .checklist-note-actions {
@@ -13903,7 +14104,7 @@ textarea:focus {
 }
 
 .checklist-note-save {
-  background: #7c3aed;
+  background: var(--mm-text);
   color: #fff;
   border: 0;
   border-radius: 6px;
@@ -13911,10 +14112,11 @@ textarea:focus {
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 140ms ease;
 }
 
 .checklist-note-save:hover {
-  background: #6d28d9;
+  background: var(--mm-brand-strong);
 }
 
 .checklist-note-actions button:not(.checklist-note-save) {
@@ -13929,21 +14131,21 @@ textarea:focus {
 
 /* ── Checklist: selection mode ────────────────────── */
 .checklist-select-mode-btn {
-  border: 1px solid #e5e7eb;
-  background: #fff;
+  border: 1px solid var(--mm-border);
+  background: var(--mm-surface);
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  color: #374151;
-  transition: background 120ms, color 120ms;
+  color: var(--mm-text-muted);
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
 }
 
 .checklist-select-mode-btn.active {
-  background: #f3e8ff;
-  border-color: #7c3aed;
-  color: #7c3aed;
+  background: var(--mm-surface-muted);
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
 }
 
 .checklist-select-toggle {
@@ -13963,22 +14165,22 @@ textarea:focus {
   display: block;
   width: 18px;
   height: 18px;
-  border: 2px solid #d1d5db;
+  border: 2px solid var(--mm-border-strong);
   border-radius: 4px;
-  transition: border-color 120ms, background 120ms;
+  transition: border-color 140ms ease, background 140ms ease;
   flex-shrink: 0;
 }
 
 .checklist-task-row.is-selected .checklist-select-box {
-  background: #7c3aed;
-  border-color: #7c3aed;
+  background: var(--mm-text);
+  border-color: var(--mm-text);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
 }
 
 .checklist-task-row.is-selected {
-  background: rgba(124, 58, 237, 0.04);
+  background: var(--mm-surface-subtle);
 }
 
 /* ── Checklist: bulk action bar ───────────────────── */
@@ -13987,10 +14189,10 @@ textarea:focus {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: #1a1a2e;
-  border-radius: 10px;
+  background: var(--mm-text);
+  border-radius: 12px;
   margin-bottom: 8px;
-  color: #e0d7ff;
+  color: rgba(250, 247, 244, 0.9);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -14000,7 +14202,7 @@ textarea:focus {
 }
 
 .checklist-bulk-done {
-  background: #7c3aed;
+  background: var(--mm-brand);
   color: #fff;
   border: 0;
   border-radius: 6px;
@@ -14008,23 +14210,859 @@ textarea:focus {
   font-size: 0.8rem;
   font-weight: 700;
   cursor: pointer;
+  transition: background 140ms ease;
 }
 
 .checklist-bulk-done:hover {
-  background: #6d28d9;
+  background: var(--mm-brand-strong);
 }
 
 .checklist-bulk-delete {
   background: transparent;
-  color: #fca5a5;
-  border: 1px solid rgba(252, 165, 165, 0.3);
+  color: rgba(252, 165, 165, 0.9);
+  border: 1px solid rgba(252, 165, 165, 0.25);
   border-radius: 6px;
   padding: 5px 12px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 140ms ease;
 }
 
 .checklist-bulk-delete:hover {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+/* ── Global UX polish: warmth, transitions, responsive touch ── */
+
+/* Smooth transitions on all interactive surface types */
+button,
+[role="button"],
+input,
+select,
+textarea {
+  transition-property: background, border-color, color, box-shadow, opacity;
+  transition-duration: 140ms;
+  transition-timing-function: ease;
+}
+
+/* Warm focus ring on all focusable elements */
+:focus-visible {
+  outline: 2px solid var(--mm-brand);
+  outline-offset: 2px;
+}
+
+/* Ensure safe-area padding on mobile for fixed bars */
+@supports (padding: max(0px)) {
+  .mobile-bottom-nav {
+    bottom: max(10px, env(safe-area-inset-bottom, 10px));
+    padding-bottom: max(5px, env(safe-area-inset-bottom, 5px));
+  }
+}
+
+/* Tablet breakpoint (761px – 1024px): panel layout adjustments */
+@media (min-width: 761px) and (max-width: 1024px) {
+  .budget-focus-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .calendar-workspace {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Touch device: larger tap targets, remove stuck hover states */
+@media (hover: none) and (pointer: coarse) {
+  .mobile-bottom-nav button {
+    min-height: 54px !important;
+  }
+
+  .checklist-task-row:hover,
+  .budget-row-summary:hover {
+    background: transparent !important;
+    transform: none !important;
+  }
+}
+
+/* Reduce motion: respect OS preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══ Checklist row: refreshed controls (titlebar, status, icons) ══ */
+
+/* Title + inline edit affordance */
+.checklist-task-titlebar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.checklist-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 3px;
+  border-radius: 6px;
+  color: var(--mm-text-soft);
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.checklist-task-row:hover .checklist-edit-btn,
+.checklist-task-row:focus-within .checklist-edit-btn {
+  opacity: 1;
+}
+
+.checklist-edit-btn:hover {
+  background: var(--mm-hover);
+  color: var(--mm-brand-strong);
+}
+
+/* Priority chip is now a button — strip native button styling */
+button.priority-chip {
+  font: inherit;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  border-color: transparent;
+}
+
+button.priority-chip:hover {
+  filter: brightness(0.97);
+  border-color: var(--mm-border-strong);
+}
+
+/* Status select: discoverable dropdown with state dot */
+.checklist-status-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  background: var(--mm-surface);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.checklist-status-select:hover {
+  border-color: var(--mm-border-strong);
+  background: var(--mm-surface-subtle);
+}
+
+.checklist-status-select select {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important;
+  margin: 0;
+  min-height: 0 !important;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--mm-text);
+  cursor: pointer;
+}
+
+.checklist-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--mm-text-soft);
+}
+
+.checklist-status-select.status-not-started .checklist-status-dot {
+  background: var(--mm-text-soft);
+}
+
+.checklist-status-select.status-in-progress .checklist-status-dot {
+  background: var(--mm-brand);
+}
+
+.checklist-status-select.status-done .checklist-status-dot {
+  background: #4caf7d;
+}
+
+/* Schedule + remove icon buttons */
+.checklist-schedule-btn {
+  border: 1px solid var(--mm-border);
+  background: var(--mm-surface);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--mm-text-muted);
+  cursor: pointer;
+}
+
+.checklist-schedule-btn:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.checklist-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  padding: 5px;
+  border-radius: 7px;
+  color: var(--mm-text-soft);
+  cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.checklist-task-row:hover .checklist-remove-btn,
+.checklist-task-row:focus-within .checklist-remove-btn {
+  opacity: 1;
+}
+
+.checklist-remove-btn:hover {
+  background: rgba(184, 60, 50, 0.1);
+  color: #b83c32;
+}
+
+/* Touch devices: keep edit/note/remove affordances always visible */
+@media (hover: none) and (pointer: coarse) {
+  .checklist-edit-btn,
+  .checklist-note-btn,
+  .checklist-remove-btn {
+    opacity: 1;
+  }
+
+  .checklist-task-row {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .checklist-status-select,
+  .checklist-schedule-btn {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+/* ══ Weekly briefing card (dashboard) ══ */
+.weekly-briefing {
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card, 14px);
+  background: linear-gradient(135deg, var(--mm-surface) 0%, var(--mm-surface-subtle) 100%);
+  box-shadow: var(--mm-shadow-soft, 0 4px 16px rgba(36, 28, 24, 0.06));
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+.weekly-briefing__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.weekly-briefing__intro {
+  min-width: 0;
+  flex: 1 1 260px;
+}
+
+.weekly-briefing__eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mm-brand-strong);
+}
+
+.weekly-briefing__greeting {
+  margin: 4px 0 2px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+.weekly-briefing__headline {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--mm-text-muted);
+  line-height: 1.45;
+}
+
+.weekly-briefing__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.weekly-briefing__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--mm-border-strong);
+  background: var(--mm-surface);
+  color: var(--mm-text);
+  padding: 8px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.weekly-briefing__btn:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.weekly-briefing__btn--primary {
+  background: var(--mm-brand);
+  border-color: var(--mm-brand);
+  color: #fff;
+}
+
+.weekly-briefing__btn--primary:hover {
+  background: var(--mm-brand-strong);
+  border-color: var(--mm-brand-strong);
+  color: #fff;
+}
+
+.weekly-briefing__btn.is-speaking {
+  position: relative;
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.weekly-briefing__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mm-brand);
+  animation: mm-briefing-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mm-briefing-pulse {
+  0%, 100% { transform: scale(0.7); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.weekly-briefing__list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.weekly-briefing__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--mm-text);
+}
+
+.weekly-briefing__item-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.weekly-briefing__item.tone-urgent {
+  border-color: rgba(184, 60, 50, 0.28);
+  background: rgba(184, 60, 50, 0.05);
+}
+
+.weekly-briefing__item.tone-urgent .weekly-briefing__item-icon {
+  color: #b83c32;
+}
+
+.weekly-briefing__item.tone-good {
+  border-color: rgba(76, 175, 125, 0.3);
+  background: rgba(76, 175, 125, 0.06);
+}
+
+.weekly-briefing__item.tone-good .weekly-briefing__item-icon {
+  color: #3d8c63;
+}
+
+.weekly-briefing__item.tone-info .weekly-briefing__item-icon {
+  color: var(--mm-brand);
+}
+
+@media (max-width: 600px) {
+  .weekly-briefing__actions {
+    width: 100%;
+  }
+
+  .weekly-briefing__btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ══ AI actions from chat (confirm chips) ══ */
+.assistant-stack {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-actions {
+  margin-top: 8px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card, 14px);
+  background: var(--mm-surface-subtle);
+  padding: 12px 14px;
+}
+
+.chat-actions.is-applied {
+  border-color: rgba(76, 175, 125, 0.35);
+  background: rgba(76, 175, 125, 0.07);
+}
+
+.chat-actions__title {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mm-brand-strong);
+  margin-bottom: 8px;
+}
+
+.chat-actions.is-applied .chat-actions__title {
+  color: #3d8c63;
+}
+
+.chat-actions__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chat-action-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  font-size: 0.84rem;
+  color: var(--mm-text);
+}
+
+.chat-action-chip__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: rgba(194, 122, 99, 0.12);
+  color: var(--mm-brand-strong);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.chat-action-chip__kind {
+  flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mm-text-soft);
+}
+
+.chat-action-chip__label {
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-actions__buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chat-actions__apply {
+  border: 0;
+  background: var(--mm-brand);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-actions__apply:hover {
+  background: var(--mm-brand-strong);
+}
+
+.chat-actions__dismiss {
+  border: 1px solid var(--mm-border-strong);
+  background: transparent;
+  color: var(--mm-text-muted);
+  padding: 8px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chat-actions__dismiss:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+/* ══ Vendor message generator sheet ══ */
+.vendor-msg-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(36, 28, 24, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+.vendor-msg-sheet {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card, 16px);
+  box-shadow: 0 20px 60px rgba(36, 28, 24, 0.25);
+  padding: 18px 20px 20px;
+}
+
+.vendor-msg-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.vendor-msg-eyebrow {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--mm-brand-strong);
+}
+
+.vendor-msg-head h3 {
+  margin: 3px 0 2px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+.vendor-msg-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--mm-text-muted);
+}
+
+.vendor-msg-close {
+  border: 0;
+  background: var(--mm-surface-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--mm-text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.vendor-msg-close:hover {
+  background: var(--mm-border);
+  color: var(--mm-text);
+}
+
+.vendor-msg-intents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.vendor-msg-intent {
+  border: 1px solid var(--mm-border);
+  background: var(--mm-surface);
+  color: var(--mm-text-muted);
+  padding: 7px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vendor-msg-intent:hover {
+  border-color: var(--mm-border-strong);
+}
+
+.vendor-msg-intent.is-active {
+  background: var(--mm-brand);
+  border-color: var(--mm-brand);
+  color: #fff;
+}
+
+.vendor-msg-text {
+  width: 100%;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  font: inherit !important;
+  font-size: 0.88rem !important;
+  line-height: 1.55 !important;
+  color: var(--mm-text) !important;
+  background: var(--mm-surface-subtle) !important;
+  resize: vertical;
+  box-shadow: none !important;
+  white-space: pre-wrap;
+}
+
+.vendor-msg-text:focus {
+  outline: none;
+  border-color: var(--mm-brand) !important;
+  box-shadow: var(--mm-focus) !important;
+}
+
+.vendor-msg-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.vendor-msg-copy {
+  border: 1px solid var(--mm-border-strong);
+  background: var(--mm-surface);
+  color: var(--mm-text);
+  padding: 10px 18px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vendor-msg-copy:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.vendor-msg-wa {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #25d366;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.vendor-msg-wa:hover {
+  background: #1fb855;
+}
+
+.vendor-msg-hint {
+  margin: 10px 0 0;
+  font-size: 0.74rem;
+  color: var(--mm-text-soft);
+  line-height: 1.4;
+}
+
+/* ══ Proactive notification toggle (dashboard) ══ */
+.notify-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-control, 12px);
+  background: var(--mm-surface);
+}
+
+.notify-toggle.is-on {
+  border-color: rgba(76, 175, 125, 0.4);
+  background: rgba(76, 175, 125, 0.06);
+}
+
+.notify-toggle__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--mm-text-muted);
+}
+
+.notify-toggle.is-on .notify-toggle__icon {
+  color: #3d8c63;
+}
+
+.notify-toggle__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--mm-text-muted);
+}
+
+.notify-toggle__btn {
+  flex-shrink: 0;
+  border: 1px solid var(--mm-border-strong);
+  background: var(--mm-surface);
+  color: var(--mm-text);
+  padding: 7px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notify-toggle__btn:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.notify-toggle.is-on .notify-toggle__btn {
+  border-color: rgba(76, 175, 125, 0.5);
+  color: #3d8c63;
+}
+
+/* ══ Live vendor search (Google Maps) ══ */
+.vendor-search-nearby {
+  border: 1px solid var(--mm-brand);
+  background: var(--mm-brand);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+a.vendor-search-nearby {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.vendor-search-nearby:hover:not(:disabled) {
+  background: var(--mm-brand-strong);
+  border-color: var(--mm-brand-strong);
+}
+
+.vendor-search-nearby:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.vendor-search-import {
+  border: 1px solid var(--mm-border-strong);
+  background: var(--mm-surface);
+  color: var(--mm-text-muted);
+  padding: 8px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.vendor-search-import:hover:not(:disabled) {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+}
+
+.vendor-search-import:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.vendor-search-info {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--mm-text-muted);
+}
+
+.vendor-search-hint {
+  margin: 4px 0 0;
+  font-size: 0.74rem;
+  color: var(--mm-text-soft);
+}
+
+.vendor-live-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.vendor-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #3d8c63;
+  background: rgba(76, 175, 125, 0.12);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.vendor-live-links a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mm-brand-strong);
+  text-decoration: none;
+}
+
+.vendor-live-links a:hover {
+  text-decoration: underline;
 }
