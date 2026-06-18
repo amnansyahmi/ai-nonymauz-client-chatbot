@@ -1,0 +1,374 @@
+/* Mobile-first responsive overrides and touch ergonomics. */
+
+/* ──────────────────────────────────────────────────────────────
+ *  Safe area insets (iPhone notch / home indicator)
+ * ────────────────────────────────────────────────────────────── */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+html,
+body {
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+  /* Allow scroll bounce only at the document root (iOS) */
+  overscroll-behavior-y: contain;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Tap highlight + selection
+ * ────────────────────────────────────────────────────────────── */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role='button'] {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Allow text selection in inputs and readable regions */
+input,
+textarea,
+[contenteditable='true'],
+.allow-select,
+.allow-select * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Prevent iOS zoom-on-focus: inputs/textareas must be ≥16px
+ * ────────────────────────────────────────────────────────────── */
+input,
+textarea,
+select,
+.composer-input {
+  font-size: max(16px, 1rem);
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Touch targets: ensure ≥44×44 CSS pixels (WCAG 2.5.5)
+ * ────────────────────────────────────────────────────────────── */
+button,
+[role='button'],
+a.icon-only,
+.composer-icon-button,
+.composer-send-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+button.icon-only,
+a.icon-only {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  width: 44px;
+  height: 44px;
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Sticky composer: pins to bottom of the visual viewport on
+ *  mobile, accounting for the iOS keyboard via `interactiveWidget`.
+ * ────────────────────────────────────────────────────────────── */
+.chat-form,
+.menu-assistant-form {
+  position: sticky;
+  bottom: 0;
+  background: var(--card);
+  padding: 12px 16px calc(12px + var(--sab));
+  border-top: 1px solid var(--border);
+  z-index: 20;
+  backdrop-filter: saturate(140%) blur(8px);
+}
+
+@supports (-webkit-touch-callout: none) {
+  .chat-form,
+  .menu-assistant-form {
+    /* iOS Safari does not honour `interactiveWidget` reliably; add an
+       extra buffer when the on-screen keyboard is open. */
+    padding-bottom: max(12px, calc(12px + var(--sab)));
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Responsive typography
+ * ────────────────────────────────────────────────────────────── */
+:root {
+  --type-scale: 1;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --type-scale: 0.95;
+  }
+
+  body {
+    font-size: calc(16px * var(--type-scale));
+    line-height: 1.55;
+  }
+
+  h1 {
+    font-size: calc(24px * var(--type-scale));
+  }
+
+  h2 {
+    font-size: calc(20px * var(--type-scale));
+  }
+
+  h3 {
+    font-size: calc(17px * var(--type-scale));
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Layout adjustments for small screens
+ * ────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .planner-content,
+  .planner-workspace,
+  .dashboard-panel,
+  .planner-panel {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .planner-sidebar {
+    /* On mobile, the sidebar becomes a full-screen overlay (handled by
+       component state); just make sure it has a sensible default. */
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .vendor-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-list-modern,
+  .budget-list-modern {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-focus-grid,
+  .guest-focus-grid,
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .budget-focus-grid,
+  .guest-focus-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  PWA / iOS stand-alone tweaks
+ * ────────────────────────────────────────────────────────────── */
+@media (display-mode: standalone) {
+  /* Hide Safari's URL bar compensation when running as installed PWA. */
+  body {
+    padding-top: var(--sat);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Bottom nav (mobile tab bar)
+ * ────────────────────────────────────────────────────────────── */
+.mobile-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: none;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  padding: 8px 4px calc(8px + var(--sab));
+  justify-content: space-around;
+  box-shadow: 0 -10px 30px rgba(36, 28, 24, 0.06);
+}
+
+.mobile-bottom-nav__item {
+  flex: 1;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 4px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.mobile-bottom-nav__item.is-active {
+  color: var(--accent-dark);
+  background: var(--surface-warm);
+}
+
+.mobile-bottom-nav__item:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  /* Reserve space at the bottom of the page so content is not hidden. */
+  body {
+    padding-bottom: calc(72px + var(--sab));
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  Pull-to-refresh indicator
+ * ────────────────────────────────────────────────────────────── */
+.pull-to-refresh {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.pull-to-refresh__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 56px;
+  transform: translateY(-100%);
+  transition: transform 0.18s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.pull-to-refresh__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  animation: pull-to-refresh-spin 0.9s linear infinite;
+}
+
+.pull-to-refresh.is-pulling .pull-to-refresh__indicator {
+  transform: translateY(0);
+}
+
+.pull-to-refresh.is-refreshing .pull-to-refresh__indicator {
+  transform: translateY(0);
+}
+
+@keyframes pull-to-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pull-to-refresh__spinner {
+    animation: none;
+    border-top-color: var(--accent);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────
+ *  PWA install banner
+ * ────────────────────────────────────────────────────────────── */
+.pwa-install-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + var(--sab));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  z-index: 40;
+  animation: pwa-install-banner-in 0.25s ease both;
+}
+
+.pwa-install-banner__copy {
+  flex: 1;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.pwa-install-banner__copy strong {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.pwa-install-banner__btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pwa-install-banner__btn:hover {
+  background: var(--accent-dark);
+}
+
+.pwa-install-banner__close {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+@keyframes pwa-install-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 769px) {
+  /* On desktop the OS-level install prompt is enough. */
+  .pwa-install-banner {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    max-width: 360px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-install-banner {
+    animation: none;
+  }
+}

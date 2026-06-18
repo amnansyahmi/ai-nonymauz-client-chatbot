@@ -1,0 +1,472 @@
+import { defaultChecklistTemplate, type LocalizedText } from './data';
+import type { Appointment, BudgetItem, CalendarDay, ChecklistItem, Guest, PlannerProfile, StreamEvent } from './types';
+
+export function parseSseEvents(buffer: string) {
+  const events: StreamEvent[] = [];
+  const blocks = buffer.split('\n\n');
+  const remaining = blocks.pop() || '';
+
+  for (const block of blocks) {
+    const dataLines = block
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.replace(/^data:\s*/, ''));
+
+    if (dataLines.length === 0) continue;
+
+    const payload = dataLines.join('\n').trim();
+    if (!payload || payload === '[DONE]') continue;
+
+    try {
+      events.push(JSON.parse(payload));
+    } catch {
+      events.push({ type: 'delta', text: payload });
+    }
+  }
+
+  return { events, remaining };
+}
+
+export function wantsChecklist(text: string) {
+  return /\b(checklist|check list|todo|to-do|task list|senarai semak)\b/i.test(text);
+}
+
+export function wantsAppointment(text: string) {
+  const hasAction = /\b(add|create|make|set|schedule|book)\b/i.test(text);
+  const hasCalendarTarget = /\b(appointment|meeting|calendar|janji temu|temujanji)\b/i.test(text);
+
+  return hasAction && (hasCalendarTarget || Boolean(parseAppointmentDate(text)));
+}
+
+export function wantsPlannerSetup(text: string) {
+  return /\b(set ?up|setup|profile|majlis|wedding|kahwin|bride|groom|pengantin|negeri|budget|bajet|guest|tetamu|pax)\b/i.test(text);
+}
+
+export function wantsBudgetSuggestion(text: string) {
+  return /\b(suggest|cadang|recommend|allocation|split|pecahan|agih|budget|bajet)\b/i.test(text) && /\b(budget|bajet|rm|allocation|split|pecahan)\b/i.test(text);
+}
+
+export function wantsGuestPlanning(text: string) {
+  return /\b(guest|tetamu|rsvp|jemputan|headcount|pax)\b/i.test(text) && /\b(add|create|import|organize|susun|group|confirm|confirmed|pending|declined|tidak hadir|hadir)\b/i.test(text);
+}
+
+export function wantsVendorMessage(text: string) {
+  return /\b(draft|write|create|buat|karang)\b/i.test(text) && /\b(message|mesej|whatsapp|vendor|katerer|photographer|andaman|mua|dewan)\b/i.test(text);
+}
+
+function cleanChecklistLine(line: string) {
+  return line
+    .replace(/^\s*(?:[-*]|\d+[.)]|\[[ xX]\])\s*/, '')
+    .replace(/\*\*/g, '')
+    .replace(/^#+\s*/, '')
+    .trim();
+}
+
+const CONVERSATIONAL_PREFIXES = /^(boleh|ok|ya|baik|tentu|sure|saya|ini|berikut|here|here's|of course|certainly|noted|no problem|sebenarnya|actually|great|bagus|alright|dengan pleasure|dengan senang)/i;
+
+export function checklistFromAnswer(answer: string) {
+  const items = answer
+    .split('\n')
+    .map(cleanChecklistLine)
+    .filter((line) => line.length > 4)
+    .filter((line) => !CONVERSATIONAL_PREFIXES.test(line))
+    .filter((line) => !line.endsWith(':'))
+    .filter((line) => line.length < 120)
+    .filter((line) => !/^demo mode aktif/i.test(line))
+    .filter((line) => !/^sources?:/i.test(line))
+    .slice(0, 12);
+
+  return items.map((text, index) => ({
+    id: `${Date.now()}-${index}`,
+    text,
+    completed: false
+  }));
+}
+
+export function fallbackChecklist(prompt: string): ChecklistItem[] {
+  const lowerPrompt = prompt.toLowerCase();
+  const vendorItems = [
+    'Confirm wedding date, venue, guest count, and planning priority',
+    'Shortlist the vendor, venue, or service to review',
+    'Prepare budget range and package questions',
+    'Choose preferred appointment date and time',
+    'Collect notes, photos, moodboard, or references if needed',
+    'Confirm deposit, package inclusions, and next deadline',
+    'Save the meeting or follow-up in the calendar'
+  ];
+  const supportItems = [
+    'Confirm the wedding date and event type',
+    'List the planning decisions still pending',
+    'Prepare guest count, budget, and family requirements',
+    'Confirm the next action and expected timeline',
+    'Save any important appointment or deadline'
+  ];
+  const genericItems = [
+    'Define the goal',
+    'Gather required information',
+    'List the main steps',
+    'Assign an owner or next action',
+    'Review for missing details',
+    'Mark completed items as done'
+  ];
+  const sourceItems = /venue|dewan|catering|photographer|makeup|vendor|booking|book|food tasting/.test(lowerPrompt)
+    ? vendorItems
+    : /wedding|kahwin|majlis|nikah|sanding|reception|event|planner/.test(lowerPrompt)
+      ? supportItems
+      : genericItems;
+
+  return sourceItems.map((text, index) => ({
+    id: `${Date.now()}-${index}`,
+    text,
+    completed: false
+  }));
+}
+
+export function dateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function monthLabel(date: Date) {
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+export function safeJsonParse<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export function downloadTextFile(filename: string, content: string, type = 'text/plain') {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export function formatChecklistText(title: string, items: ChecklistItem[]) {
+  const lines = items.map((item) => {
+    const phase = item.phase ? ` (${item.phase})` : '';
+    const deadline = item.deadline ? ` - due ${item.deadline}` : '';
+    return `${item.completed ? '[x]' : '[ ]'} ${item.text}${phase}${deadline}`;
+  });
+  return `${title}\n\n${lines.join('\n')}`;
+}
+
+export function generateDefaultChecklist(majlisDate?: string): ChecklistItem[] {
+  const weddingDate = majlisDate ? new Date(`${majlisDate}T00:00:00`) : null;
+
+  return defaultChecklistTemplate.flatMap((group, groupIndex) =>
+    group.items.map((item, itemIndex) => {
+      const phase = group.phase;
+      // daysOffset > 0 = days BEFORE wedding; daysOffset < 0 = days AFTER wedding
+      const offset = (group as { daysOffset?: number }).daysOffset ?? 0;
+      const dueDate = weddingDate
+        ? new Date(weddingDate.getFullYear(), weddingDate.getMonth(), weddingDate.getDate() - offset)
+        : null;
+
+      return {
+        id: `default-${groupIndex}-${itemIndex}-${Date.now()}`,
+        text: item.ms,
+        textMs: item.ms,
+        textEn: item.en,
+        completed: false,
+        phase: phase.ms,
+        phaseMs: phase.ms,
+        phaseEn: phase.en,
+        status: 'not-started' as const,
+        deadline: dueDate ? dateKey(dueDate) : undefined
+      };
+    })
+  );
+}
+
+export function localizedValue(value: LocalizedText | string | undefined, language: 'ms' | 'en') {
+  if (!value) return '';
+  return typeof value === 'string' ? value : value[language];
+}
+
+export function statusLabel(status: ChecklistItem['status'] | BudgetItem['status'] | undefined) {
+  if (status === 'done') return 'Selesai';
+  if (status === 'in-progress') return 'Sedang Diurus';
+  return 'Belum Mula';
+}
+
+export function rsvpLabel(status: Guest['status']) {
+  if (status === 'confirmed') return 'Confirm Hadir';
+  if (status === 'declined') return 'Tidak Hadir';
+  return 'Belum Reply';
+}
+
+export function daysUntil(dateString: string) {
+  if (!dateString) return null;
+  const target = new Date(`${dateString}T00:00:00`).getTime();
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  return Math.ceil((target - start) / 86400000);
+}
+
+export function money(value: number) {
+  return `RM${Number.isFinite(value) ? value.toLocaleString('en-MY') : '0'}`;
+}
+
+export function parseMoneyAmount(text: string) {
+  const explicitMatch = text.match(/\b(?:rm|myr)\s*(\d{1,3}(?:[,\s]?\d{3})+|\d{4,7})(?:\.\d{1,2})?\b/i);
+  const looseMatches = Array.from(text.matchAll(/\b(\d{1,3}(?:[,\s]?\d{3})+|\d{5,7})(?:\.\d{1,2})?\b/gi));
+  const looseMatch = looseMatches.find((candidate) => {
+    const before = text[candidate.index ? candidate.index - 1 : -1] || '';
+    const after = text[(candidate.index || 0) + candidate[0].length] || '';
+    return before !== '/' && before !== '-' && after !== '/' && after !== '-';
+  });
+  const match = explicitMatch || looseMatch;
+  if (!match) return null;
+  const value = Number(match[1].replace(/[,\s]/g, ''));
+  return Number.isFinite(value) ? value : null;
+}
+
+export function parsePlannerSetup(text: string, states: string[]): Partial<PlannerProfile> {
+  const patch: Partial<PlannerProfile> = {};
+  const date = parseAppointmentDate(text);
+  const budget = parseMoneyAmount(text);
+  const guestMatch = text.match(/\b(\d{1,5})\s*(?:pax|guest|guests|tetamu|orang)\b/i);
+  const coupleMatch =
+    text.match(/\b(?:couple|pasangan|pengantin)\s*(?:name|nama)?\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'&-]+?)\s*(?:,|\.|$)/i) ||
+    text.match(/\b([a-z][a-z\s.'&-]+?)\s*(?:&|and|dan)\s*([a-z][a-z\s.'&-]+?)\s*(?:wedding|majlis|kahwin)\b/i);
+  const groomMatch = text.match(/\b(?:groom|lelaki|pengantin lelaki)\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|\.|$)/i);
+  const brideMatch = text.match(/\b(?:bride|perempuan|pengantin perempuan)\s*(?:is|ialah|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|\.|$)/i);
+  const state = states.find((candidate) => new RegExp(`\\b${candidate.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text));
+
+  if (date) patch.majlisDate = dateKey(date);
+  if (budget && budget >= 1000) patch.totalBudget = budget;
+  if (guestMatch) patch.guestTarget = Number(guestMatch[1]);
+  if (state) patch.negeri = state;
+  if (groomMatch) patch.groomName = titleCase(groomMatch[1].trim());
+  if (brideMatch) patch.brideName = titleCase(brideMatch[1].trim());
+  if (coupleMatch) {
+    if (coupleMatch[2]) {
+      patch.groomName = patch.groomName || titleCase(coupleMatch[1].trim());
+      patch.brideName = patch.brideName || titleCase(coupleMatch[2].trim());
+      patch.coupleName = `${patch.groomName} & ${patch.brideName}`;
+    } else {
+      patch.coupleName = titleCase(coupleMatch[1].trim());
+    }
+  }
+
+  return patch;
+}
+
+function titleCase(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' ')
+    .map((part) => (part ? `${part[0].toUpperCase()}${part.slice(1).toLowerCase()}` : part))
+    .join(' ');
+}
+
+export function parseGuestList(text: string): Guest[] {
+  const lines = text
+    .split(/\n|;/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const sourceLines = lines.length > 1 ? lines : [text.trim()];
+
+  return sourceLines
+    .map((line, index) => {
+      const cleaned = line
+        .replace(/\b(add|create|guest|guests|tetamu|rsvp|jemputan)\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const nameMatch =
+        cleaned.match(/\b(?:name|nama)\s*(?:is|=|:)?\s*([a-z][a-z\s.'-]+?)(?:,|$)/i) ||
+        cleaned.match(/^([a-z][a-z\s.'-]+?)(?:\s+\d+\s*(?:pax|orang)|,|$)/i);
+      const name = nameMatch?.[1]?.trim();
+      if (!name || name.length < 2 || /\b(pax|orang|confirmed|pending|declined)\b/i.test(name)) return null;
+
+      const paxMatch = cleaned.match(/\b(\d{1,3})\s*(?:pax|orang)\b/i);
+      const groupMatch = cleaned.match(/\b(?:group|kumpulan|side|family|sebelah)\s*(?:is|=|:)?\s*([a-z][a-z\s-]+?)(?:,|$)/i);
+      const phoneMatch = cleaned.match(/\b(?:\+?6?01\d[-\s]?\d{3,4}[-\s]?\d{4}|\d{3}[-\s]?\d{3,4}[-\s]?\d{4})\b/);
+      const status: Guest['status'] = /\b(declined|tak hadir|tidak hadir)\b/i.test(cleaned)
+        ? 'declined'
+        : /\b(confirm|confirmed|hadir)\b/i.test(cleaned)
+          ? 'confirmed'
+          : 'pending';
+
+      return {
+        id: `${Date.now()}-${index}`,
+        name: titleCase(name),
+        phone: phoneMatch?.[0] || '',
+        group: groupMatch?.[1] ? titleCase(groupMatch[1].trim()) : 'Kawan-kawan',
+        pax: paxMatch ? Number(paxMatch[1]) || 1 : 1,
+        status
+      };
+    })
+    .filter((guest): guest is Guest => Boolean(guest));
+}
+
+export function formatAppointmentsText(appointments: Appointment[]) {
+  if (appointments.length === 0) return 'No appointments yet.';
+
+  return appointments
+    .map((appointment) => {
+      const time = appointment.time ? ` at ${appointment.time}` : '';
+      const location = appointment.location ? `\nLocation: ${appointment.location}` : '';
+      const vendor = appointment.vendor ? `\nVendor: ${appointment.vendor}` : '';
+      const status = appointment.status ? `\nStatus: ${appointment.status}` : '';
+      const note = appointment.note ? `\nNotes: ${appointment.note}` : '';
+      return `${appointment.date}${time} - ${appointment.title}${location}${vendor}${status}${note}`;
+    })
+    .join('\n\n');
+}
+
+export function sortAppointments(first: Appointment, second: Appointment) {
+  const dateCompare = first.date.localeCompare(second.date);
+  if (dateCompare !== 0) return dateCompare;
+  return (first.time || '99:99').localeCompare(second.time || '99:99');
+}
+
+export function parseAppointmentDate(text: string, baseDate = new Date()) {
+  const lowerText = text.toLowerCase();
+
+  if (/\btoday\b/i.test(text)) {
+    return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate());
+  }
+
+  if (/\btomorrow\b/i.test(text)) {
+    return new Date(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate() + 1);
+  }
+
+  const isoMatch = text.match(/\b(20\d{2})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])\b/);
+  if (isoMatch) {
+    return new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
+  }
+
+  const slashMatch = text.match(/\b(0?[1-9]|[12]\d|3[01])\/(0?[1-9]|1[0-2])(?:\/(20\d{2}))?\b/);
+  if (slashMatch) {
+    return new Date(
+      slashMatch[3] ? Number(slashMatch[3]) : baseDate.getFullYear(),
+      Number(slashMatch[2]) - 1,
+      Number(slashMatch[1])
+    );
+  }
+
+  const months = [
+    'january',
+    'february',
+    'march',
+    'april',
+    'may',
+    'june',
+    'july',
+    'august',
+    'september',
+    'october',
+    'november',
+    'december'
+  ];
+  const monthPattern = months.join('|');
+  const dayMonthMatch = lowerText.match(new RegExp(`\\b(0?[1-9]|[12]\\d|3[01])\\s+(${monthPattern})(?:\\s+(20\\d{2}))?\\b`));
+  const monthDayMatch = lowerText.match(new RegExp(`\\b(${monthPattern})\\s+(0?[1-9]|[12]\\d|3[01])(?:,?\\s+(20\\d{2}))?\\b`));
+
+  if (dayMonthMatch) {
+    return new Date(
+      dayMonthMatch[3] ? Number(dayMonthMatch[3]) : baseDate.getFullYear(),
+      months.indexOf(dayMonthMatch[2]),
+      Number(dayMonthMatch[1])
+    );
+  }
+
+  if (monthDayMatch) {
+    return new Date(
+      monthDayMatch[3] ? Number(monthDayMatch[3]) : baseDate.getFullYear(),
+      months.indexOf(monthDayMatch[1]),
+      Number(monthDayMatch[2])
+    );
+  }
+
+  return null;
+}
+
+function parseAppointmentTime(text: string) {
+  const timeMatch = text.match(/\b(?:at\s*)?([01]?\d|2[0-3]):([0-5]\d)\s*(am|pm)?\b/i) || text.match(/\bat\s+([01]?\d|2[0-3])\s*(am|pm)\b/i);
+  if (!timeMatch) return undefined;
+
+  const hour = timeMatch[1];
+  const minutes = timeMatch[2] && !/am|pm/i.test(timeMatch[2]) ? timeMatch[2] : '00';
+  const meridiemSource = /am|pm/i.test(timeMatch[2] || '') ? timeMatch[2] : timeMatch[3];
+  const meridiem = meridiemSource ? ` ${meridiemSource.toUpperCase()}` : '';
+  return `${hour}:${minutes}${meridiem}`;
+}
+
+function parseAppointmentLocation(text: string) {
+  const match = text.match(/\b(?:at|in|location)\s+(.+?)(?:\s+(?:with|for|on)\b|$)/i);
+  return match?.[1]?.trim();
+}
+
+function parseAppointmentVendor(text: string) {
+  const match = text.match(/\b(?:with|vendor)\s+(.+?)(?:\s+(?:at|on|for)\b|$)/i);
+  return match?.[1]?.trim();
+}
+
+function parseAppointmentStatus(text: string): Appointment['status'] {
+  if (/\b(confirm|confirmed)\b/i.test(text)) return 'confirmed';
+  if (/\b(done|completed|complete)\b/i.test(text)) return 'done';
+  return 'planned';
+}
+
+export function parseAppointment(text: string) {
+  const date = parseAppointmentDate(text);
+  if (!date) return null;
+
+  const titleMatch = text.match(/\b(?:for|about|title|called)\s+(.+?)(?:\s+(?:on|at)\b|$)/i);
+  const cleanedTitle = text
+    .replace(/\b(create|add|make|set|schedule|book|appointment|meeting|calendar|for|on|at|today|tomorrow)\b/gi, ' ')
+    .replace(/\b20\d{2}-\d{1,2}-\d{1,2}\b/g, ' ')
+    .replace(/\b\d{1,2}\/\d{1,2}(?:\/20\d{2})?\b/g, ' ')
+    .replace(/\b\d{1,2}:\d{2}\s*(?:am|pm)?\b/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const title = titleMatch?.[1]?.trim() || cleanedTitle || 'Appointment';
+
+  return {
+    id: `${Date.now()}`,
+    title: title.length > 60 ? `${title.slice(0, 57)}...` : title,
+    date: dateKey(date),
+    time: parseAppointmentTime(text),
+    location: parseAppointmentLocation(text),
+    vendor: parseAppointmentVendor(text),
+    status: parseAppointmentStatus(text),
+    note: text
+  };
+}
+
+export function getCalendarDays(monthDate: Date) {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const startDate = new Date(year, month, 1 - firstDay.getDay());
+  const todayKey = dateKey(new Date());
+
+  return Array.from({ length: 42 }, (_, index): CalendarDay => {
+    const date = new Date(startDate);
+    date.setDate(startDate.getDate() + index);
+    const key = dateKey(date);
+
+    return {
+      date,
+      key,
+      isCurrentMonth: date.getMonth() === month,
+      isToday: key === todayKey
+    };
+  });
+}

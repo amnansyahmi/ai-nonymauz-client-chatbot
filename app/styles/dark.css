@@ -1,0 +1,54 @@
+/* Dark mode palette. Activated when <html data-theme="dark"> is set. */
+:root[data-theme='dark'] {
+  --bg: #1b1410;
+  --bg-2: #251a14;
+  --ink: #f4ebe3;
+  --muted: #a89589;
+  --accent: #e2967a;
+  --accent-dark: #c27a63;
+  --card: #2a1f1a;
+  --border: #3a2c25;
+  --success: #34d399;
+  --info: #60a5fa;
+  --warning: #fbbf24;
+  --warning-bg: #2d1f10;
+  --success-bg: #0f2a23;
+  --info-bg: #102036;
+  --surface-warm: #261c17;
+  --shadow: 0 28px 70px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .app-loading,
+:root[data-theme='dark'] .app-error,
+:root[data-theme='dark'] .app-not-found,
+:root[data-theme='dark'] .chat-loading {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .skeleton-bar {
+  background: linear-gradient(90deg, var(--bg-2) 0%, var(--card) 50%, var(--bg-2) 100%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme='dark'] .skeleton-message {
+  background: linear-gradient(90deg, var(--bg-2) 0%, var(--card) 50%, var(--bg-2) 100%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme='dark'] .skeleton-message--user {
+  background: linear-gradient(
+    90deg,
+    var(--accent-dark) 0%,
+    var(--accent) 50%,
+    var(--accent-dark) 100%
+  );
+  background-size: 200% 100%;
+  opacity: 0.6;
+}
