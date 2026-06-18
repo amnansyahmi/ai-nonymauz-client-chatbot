@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   budgetSuggestions,
   defaultAssistantMessage,
@@ -70,7 +71,6 @@ import {
   fallbackChecklist,
   formatChecklistText,
   getCalendarDays,
-  localizedValue,
   money,
   monthLabel,
   parseAppointment,
@@ -2566,7 +2566,6 @@ export default function PlannerWorkspace() {
     const generated = generatePersonalizedChecklist(checklistSurveyAnswers).items;
     const have = new Set(checklistItems.map((item) => checklistKey(item.text)));
     return generated.filter((item) => !have.has(checklistKey(item.text))).slice(0, 6);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     checklistProfileReady,
     checklistSurveyAnswers.weddingDate,
@@ -2881,7 +2880,7 @@ export default function PlannerWorkspace() {
               Menu
             </button>
             <div className="workspace-title-center">
-              <img src="/logo-mark.svg" className="sidebar-logo-mark" alt="" aria-hidden="true" />
+              <Image src="/logo-mark.svg" width={40} height={40} className="sidebar-logo-mark" alt="" aria-hidden="true" />
               <strong>MajlisMate</strong>
             </div>
             <div className="workspace-title-actions">

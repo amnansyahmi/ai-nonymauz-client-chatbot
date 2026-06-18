@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { PLANS, formatRinggit } from '../../../lib/payments/plans';
 
@@ -12,7 +13,7 @@ export default function PricingPage() {
     <main id="main" className="pricing-page">
       <header className="pricing-page__nav">
         <Link href="/" className="landing__brand" aria-label="MajlisMate.ai home">
-          <img src="/logo-mark.svg" className="landing__brand-logo" alt="" aria-hidden="true" />
+          <Image src="/logo-mark.svg" width={40} height={40} className="landing__brand-logo" alt="" aria-hidden="true" />
           <strong>MajlisMate.ai</strong>
         </Link>
         <nav aria-label="Primary">
