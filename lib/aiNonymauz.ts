@@ -1,74 +1,32 @@
+import { extractAnswerFromJson, parseSseEvents, type StreamEvent } from './stream/sse';
+
 type ChatMessage = {
   role: 'system' | 'user' | 'assistant';
   content: string;
 };
 
-type AIResponse = {
+export type AIResponse = {
   answer: string;
   provider: 'ai-nonymauz' | 'demo-fallback';
 };
 
-function extractAnswerFromJson(data: any): string | null {
-  const answer =
-    data?.choices?.[0]?.message?.content ||
-    data?.choices?.[0]?.delta?.content ||
-    data?.answer ||
-    data?.response ||
-    data?.content ||
-    data?.message;
-
-  return typeof answer === 'string' && answer.trim() ? answer : null;
+export function readEnv() {
+  return {
+    baseUrl: process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '') ?? '',
+    apiKey: process.env.AI_NONYMAUZ_API_KEY ?? '',
+    model: process.env.AI_NONYMAUZ_MODEL || 'ai-nonymauz-support',
+    maxTokens: Number(process.env.AI_NONYMAUZ_MAX_TOKENS || 900)
+  };
 }
 
-function extractAnswerFromSse(rawText: string): string | null {
-  const chunks: string[] = [];
-
-  for (const line of rawText.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed.startsWith('data:')) continue;
-
-    const payload = trimmed.replace(/^data:\s*/, '').trim();
-    if (!payload || payload === '[DONE]') continue;
-
-    try {
-      const parsed = JSON.parse(payload);
-      const text = extractAnswerFromJson(parsed);
-      if (text) chunks.push(text);
-    } catch {
-      // Ignore non-JSON SSE keepalive lines.
-    }
-  }
-
-  const answer = chunks.join('').trim();
-  return answer || null;
-}
-
-function extractAnswer(rawText: string): string | null {
-  const trimmed = rawText.trim();
-
-  if (!trimmed) return null;
-
-  try {
-    const data = JSON.parse(trimmed);
-    const answer = extractAnswerFromJson(data);
-    if (answer) return answer;
-  } catch {
-    // Not plain JSON. It may be SSE: data: {...}\n\n
-  }
-
-  if (trimmed.startsWith('data:') || trimmed.includes('\ndata:')) {
-    return extractAnswerFromSse(trimmed);
-  }
-
-  return trimmed;
+export function isDemoMode(env: { baseUrl: string; apiKey: string }): boolean {
+  return !env.baseUrl || !env.apiKey || env.apiKey === 'your-secret-api-key';
 }
 
 export async function askAiNonymauz(messages: ChatMessage[]): Promise<AIResponse> {
-  const baseUrl = process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '');
-  const apiKey = process.env.AI_NONYMAUZ_API_KEY;
-  const model = process.env.AI_NONYMAUZ_MODEL || 'ai-nonymauz-support';
+  const env = readEnv();
 
-  if (!baseUrl || !apiKey || apiKey === 'your-secret-api-key') {
+  if (isDemoMode(env)) {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
     return {
       provider: 'demo-fallback',
@@ -78,33 +36,61 @@ export async function askAiNonymauz(messages: ChatMessage[]): Promise<AIResponse
     };
   }
 
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const response = await fetch(`${env.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json, text/event-stream',
-      Authorization: `Bearer ${apiKey}`
+      Authorization: `Bearer ${env.apiKey}`
     },
     body: JSON.stringify({
-      model,
+      model: env.model,
       messages,
       temperature: 0.2,
-      max_tokens: 900,
+      max_tokens: env.maxTokens,
       stream: false
     })
   });
 
   const rawText = await response.text();
-
   if (!response.ok) {
     throw new Error(`AI-nonymauz error ${response.status}: ${rawText}`);
   }
 
   const answer = extractAnswer(rawText);
-
   if (!answer) {
     throw new Error('AI-nonymauz returned an empty or unsupported response format.');
   }
 
   return { answer, provider: 'ai-nonymauz' };
+}
+
+function extractAnswer(rawText: string): string | null {
+  const trimmed = rawText.trim();
+  if (!trimmed) return null;
+
+  try {
+    const data: unknown = JSON.parse(trimmed);
+    const answer = extractAnswerFromJson(data);
+    if (answer) return answer;
+  } catch {
+    // Not plain JSON; may be SSE: data: {...}\n\n
+  }
+
+  if (trimmed.startsWith('data:') || trimmed.includes('\ndata:')) {
+    const { events } = parseSseEvents(trimmed);
+    return collectDeltaText(events);
+  }
+
+  return trimmed;
+}
+
+function collectDeltaText(events: StreamEvent[]): string | null {
+  let combined = '';
+  for (const event of events) {
+    if (event.type === 'delta' && event.text) {
+      combined += event.text;
+    }
+  }
+  return combined.trim() || null;
 }

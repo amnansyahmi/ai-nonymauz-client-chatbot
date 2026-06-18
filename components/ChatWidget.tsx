@@ -1,213 +1,375 @@
 'use client';
 
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, RefObject, useEffect, useRef, useState } from 'react';
+import type { Message } from './planner/types';
+import { summarizeAction, type PlannerAction } from '../lib/planner/chatActions';
+import Composer from './ui/Composer';
+import Markdown from './ui/Markdown';
+import StopGeneratingButton from './ai/StopGeneratingButton';
+import HighlightToAsk from './ai/HighlightToAsk';
+import InlineCitations from './ai/InlineCitations';
+import type { AttachedImage } from '../lib/ai/imageUpload';
 
-type Source = { id: string; title: string; category: string };
-
-type Message = {
-  role: 'user' | 'assistant';
-  content: string;
-  sources?: Source[];
+type ChatWidgetProps = {
+  messages: Message[];
+  input: string;
+  loading?: boolean;
+  placeholder: string;
+  submitLabel?: string;
+  emptyTypingLabel?: string;
+  inputAriaLabel?: string;
+  language?: 'ms' | 'en';
+  dictateLabel?: string;
+  voiceLabel?: string;
+  commandSuggestions?: string[];
+  messagesEndRef?: RefObject<HTMLDivElement | null>;
+  showImageUpload?: boolean;
+  attachedImage?: AttachedImage | null;
+  onInputChange: (value: string) => void;
+  onCommandSuggestion?: (value: string) => void;
+  onVoiceMode?: () => void;
+  onApplyActions?: (messageIndex: number, actions: PlannerAction[]) => void;
+  onDismissActions?: (messageIndex: number) => void;
+  onClarifyReply?: (messageIndex: number, reply: string) => void;
+  onAttachImage?: (image: AttachedImage) => void;
+  onClearImage?: () => void;
+  onImageError?: (message: string) => void;
+  onStopGenerating?: () => void;
+  onHighlightAsk?: (prompt: string) => void;
+  onSubmit: (event: FormEvent) => void;
 };
 
-type StreamEvent = {
-  type?: 'sources' | 'delta' | 'error' | 'done';
-  text?: string;
-  error?: string;
-  sources?: Source[];
+type ActionPanelProps = {
+  messageIndex: number;
+  actions: PlannerAction[];
+  state?: Message['actionsState'];
+  language: 'ms' | 'en';
+  preview?: boolean;
+  onApply?: (messageIndex: number, actions: PlannerAction[]) => void;
+  onDismiss?: (messageIndex: number) => void;
 };
 
-const starterQuestions = [
-  'What is your warranty policy?',
-  'Macam mana nak book installation?',
-  'Can I return an item after delivery?',
-  'I need a custom quotation. What should I provide?'
-];
-
-function parseSseEvents(buffer: string) {
-  const events: StreamEvent[] = [];
-  const blocks = buffer.split('\n\n');
-  const remaining = blocks.pop() || '';
-
-  for (const block of blocks) {
-    const dataLines = block
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.startsWith('data:'))
-      .map((line) => line.replace(/^data:\s*/, ''));
-
-    if (dataLines.length === 0) continue;
-
-    const payload = dataLines.join('\n').trim();
-    if (!payload || payload === '[DONE]') continue;
-
-    try {
-      events.push(JSON.parse(payload));
-    } catch {
-      events.push({ type: 'delta', text: payload });
-    }
+function getActionIcon(type: PlannerAction['type']): string {
+  switch (type) {
+    case 'add_budget_item':
+    case 'update_budget':
+      return 'RM';
+    case 'add_appointment':
+    case 'update_appointment':
+      return 'Cal';
+    case 'add_guest':
+      return 'Pax';
+    case 'set_profile':
+      return 'Set';
+    case 'add_checklist_item':
+    case 'complete_task':
+    default:
+      return 'OK';
   }
-
-  return { events, remaining };
 }
 
-export default function ChatWidget() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'assistant',
-      content: 'Hi! Saya AI support assistant. Tanya saya tentang warranty, refund, installation booking, support escalation, atau company FAQ.'
-    }
-  ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+function ActionPanel({ messageIndex, actions, state, language, preview, onApply, onDismiss }: ActionPanelProps) {
+  const isMs = language === 'ms';
+  if (state === 'dismissed') return null;
+  const applied = state === 'applied';
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages, loading]);
+  return (
+    <div className={`chat-actions${applied ? ' is-applied' : ''}${preview ? ' is-preview' : ''}`}>
+      <span className="chat-actions__title">
+        {applied
+          ? isMs ? 'Ditambah ke planner' : 'Added to your planner'
+          : preview
+            ? isMs ? 'MajlisMate sedang sediakan…' : 'MajlisMate is preparing…'
+            : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
+      </span>
+      <ul className="chat-actions__list">
+        {actions.map((action, i) => {
+          const { kind, label } = summarizeAction(action, language);
+          return (
+            <li key={i} className={`chat-action-chip type-${action.type}`}>
+              <span className="chat-action-chip__icon" aria-hidden="true">{getActionIcon(action.type)}</span>
+              <span className="chat-action-chip__kind">{kind}</span>
+              <span className="chat-action-chip__label">{label}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {!applied ? (
+        <div className="chat-actions__buttons">
+          <button
+            type="button"
+            className="chat-actions__apply"
+            disabled={preview}
+            onClick={() => onApply?.(messageIndex, actions)}
+          >
+            {actions.length > 1
+              ? isMs ? `Tambah semua (${actions.length})` : `Add all (${actions.length})`
+              : isMs ? 'Tambah' : 'Add'}
+          </button>
+          <button
+            type="button"
+            className="chat-actions__dismiss"
+            disabled={preview}
+            onClick={() => onDismiss?.(messageIndex)}
+          >
+            {isMs ? 'Abaikan' : 'Dismiss'}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
-  async function ask(question: string) {
-    const trimmed = question.trim();
-    if (!trimmed || loading) return;
+type ClarifyChipsProps = {
+  messageIndex: number;
+  options: string[];
+  answered?: boolean;
+  language: 'ms' | 'en';
+  disabled?: boolean;
+  onReply?: (messageIndex: number, reply: string) => void;
+};
 
-    const nextMessages: Message[] = [...messages, { role: 'user', content: trimmed }];
-    const assistantIndex = nextMessages.length;
+function ClarifyChips({ messageIndex, options, answered, language, disabled, onReply }: ClarifyChipsProps) {
+  if (answered) return null;
+  const isMs = language === 'ms';
+  return (
+    <div className="chat-clarify" role="group" aria-label={isMs ? 'Pilihan jawapan pantas' : 'Quick reply options'}>
+      {options.map((option, i) => (
+        <button
+          key={i}
+          type="button"
+          className="chat-clarify__chip"
+          disabled={disabled}
+          onClick={() => onReply?.(messageIndex, option)}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-    setMessages([...nextMessages, { role: 'assistant', content: '' }]);
-    setInput('');
-    setLoading(true);
+function AssistantAvatar() {
+  return (
+    <div className="msg-avatar" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 4V2M8 4h8a4 4 0 0 1 4 4v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8a4 4 0 0 1 4-4Z" />
+        <path d="M8 12h.01M16 12h.01M9 16h6" />
+      </svg>
+    </div>
+  );
+}
 
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+type MessageBubbleProps = {
+  message: Message;
+  isStreaming: boolean;
+  emptyTypingLabel: string;
+  language?: 'ms' | 'en';
+};
+
+function MessageBubble({ message, isStreaming, emptyTypingLabel, language = 'ms' }: MessageBubbleProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages.map(({ role, content }) => ({ role, content })) })
-      });
-
-      if (!response.body) {
-        throw new Error('No response body received from /api/chat');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let fullAnswer = '';
-      let currentSources: Source[] = [];
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const parsed = parseSseEvents(buffer);
-        buffer = parsed.remaining;
-
-        for (const event of parsed.events) {
-          if (event.type === 'sources') {
-            currentSources = event.sources || [];
-            setMessages((current) =>
-              current.map((message, index) =>
-                index === assistantIndex ? { ...message, sources: currentSources } : message
-              )
-            );
-          }
-
-          if (event.type === 'delta' && event.text) {
-            fullAnswer += event.text;
-            setMessages((current) =>
-              current.map((message, index) =>
-                index === assistantIndex ? { ...message, content: fullAnswer, sources: currentSources } : message
-              )
-            );
-          }
-
-          if (event.type === 'error') {
-            throw new Error(event.error || 'Failed to get response');
-          }
-        }
-      }
-
-      const tail = parseSseEvents(buffer + '\n\n');
-      for (const event of tail.events) {
-        if (event.type === 'delta' && event.text) {
-          fullAnswer += event.text;
-        }
-      }
-
-      if (!fullAnswer.trim()) {
-        setMessages((current) =>
-          current.map((message, index) =>
-            index === assistantIndex
-              ? { ...message, content: 'Sorry, saya tak dapat jawapan daripada AI-nonymauz untuk request ini.' }
-              : message
-          )
-        );
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unexpected error';
-      setMessages([...nextMessages, { role: 'assistant', content: `Sorry, ada error: ${message}` }]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function onSubmit(event: FormEvent) {
-    event.preventDefault();
-    ask(input);
+      await navigator.clipboard.writeText(message.content);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {}
   }
 
   return (
-    <section className="chat-shell" aria-label="AI-nonymauz client chatbot demo">
-      <div className="chat-header">
-        <div>
-          <p className="eyebrow">AI-nonymauz Client System</p>
-          <h2>Company Knowledge + Website Support Chatbot</h2>
+    <div className="bubble">
+      {message.content ? (
+        <Markdown content={message.content} streaming={isStreaming} />
+      ) : (
+        <div className="typing-indicator" role="status" aria-label={emptyTypingLabel}>
+          <span className="typing-dot" />
+          <span className="typing-dot" />
+          <span className="typing-dot" />
         </div>
-        <span className="status-dot">Live demo</span>
-      </div>
-
-      <div className="starter-grid">
-        {starterQuestions.map((question) => (
-          <button key={question} type="button" onClick={() => ask(question)} disabled={loading}>
-            {question}
+      )}
+      {message.sources && message.sources.length > 0 ? (
+        <InlineCitations sources={message.sources} language={language} />
+      ) : null}
+      {message.content && !isStreaming ? (
+        <div className="bubble-actions">
+          <button
+            type="button"
+            className={`bubble-copy-btn${copied ? ' copied' : ''}`}
+            aria-label={copied ? 'Copied' : 'Copy message'}
+            onClick={handleCopy}
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
           </button>
-        ))}
-      </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
-      <div className="messages">
-        {messages.map((message, index) => (
-          <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-            <div className="bubble">
-              {message.content ? (
-                message.content.split('\n').map((line, lineIndex) => <p key={lineIndex}>{line || '\u00a0'}</p>)
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+export default function ChatWidget({
+  messages,
+  input,
+  loading = false,
+  placeholder,
+  submitLabel = 'Send',
+  emptyTypingLabel = 'AI is typing...',
+  inputAriaLabel = 'Question',
+  language = 'ms',
+  dictateLabel = 'Dictate',
+  voiceLabel = 'Voice',
+  commandSuggestions = [],
+  messagesEndRef,
+  showImageUpload = false,
+  attachedImage = null,
+  onInputChange,
+  onCommandSuggestion,
+  onVoiceMode,
+  onApplyActions,
+  onDismissActions,
+  onClarifyReply,
+  onAttachImage,
+  onClearImage,
+  onImageError,
+  onStopGenerating,
+  onHighlightAsk,
+  onSubmit
+}: ChatWidgetProps) {
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const handle = () => {
+      setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 120);
+    };
+    el.addEventListener('scroll', handle, { passive: true });
+    handle();
+    return () => el.removeEventListener('scroll', handle);
+  }, [messages]);
+
+  function scrollToBottom() {
+    messagesEndRef?.current?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  return (
+    <>
+      <div className="messages" ref={messagesContainerRef}>
+        {messages.map((message, index) => {
+          const isStreaming = loading && message.role === 'assistant' && index === messages.length - 1;
+          return (
+            <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
+              {message.role === 'assistant' && <AssistantAvatar />}
+              {message.role === 'assistant' ? (
+                <div className="assistant-stack">
+                  <MessageBubble
+                    message={message}
+                    isStreaming={isStreaming}
+                    emptyTypingLabel={emptyTypingLabel}
+                    language={language}
+                  />
+                  {message.actions && message.actions.length > 0 ? (
+                    <ActionPanel
+                      messageIndex={index}
+                      actions={message.actions}
+                      state={message.actionsState}
+                      language={language}
+                      preview={isStreaming}
+                      onApply={onApplyActions}
+                      onDismiss={onDismissActions}
+                    />
+                  ) : null}
+                  {message.clarify && message.clarify.length > 0 && !isStreaming ? (
+                    <ClarifyChips
+                      messageIndex={index}
+                      options={message.clarify}
+                      answered={message.clarifyAnswered}
+                      language={language}
+                      disabled={loading}
+                      onReply={onClarifyReply}
+                    />
+                  ) : null}
+                </div>
               ) : (
-                <p className="typing">AI is typing...</p>
-              )}
-              {message.sources && message.sources.length > 0 ? (
-                <div className="sources">
-                  <strong>Sources:</strong>
-                  {message.sources.map((source) => (
-                    <span key={source.id}>{source.title}</span>
+                <div className="bubble">
+                  {message.content.split('\n').map((line, li) => (
+                    <p key={li}>{line || ' '}</p>
                   ))}
                 </div>
-              ) : null}
-            </div>
-          </article>
-        ))}
-        <div ref={messagesEndRef} />
+              )}
+            </article>
+          );
+        })}
+        {messagesEndRef ? <div ref={messagesEndRef} /> : null}
+        {showScrollBtn ? (
+          <button
+            type="button"
+            className="scroll-to-bottom-btn"
+            aria-label={language === 'ms' ? 'Tatal ke bawah' : 'Scroll to bottom'}
+            onClick={scrollToBottom}
+          >
+            <ChevronDownIcon />
+          </button>
+        ) : null}
       </div>
 
-      <form className="chat-form" onSubmit={onSubmit}>
-        <input
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Ask about SOP, FAQ, warranty, refund, booking..."
-          aria-label="Question"
-        />
-        <button type="submit" disabled={loading || input.trim().length < 2}>
-          {loading ? 'Sending...' : 'Send'}
-        </button>
-      </form>
-    </section>
+      {loading && onStopGenerating ? (
+        <div className="chat-stop-wrapper">
+          <StopGeneratingButton visible language={language} onStop={onStopGenerating} />
+        </div>
+      ) : null}
+
+      {onHighlightAsk ? (
+        <HighlightToAsk containerRef={messagesContainerRef} language={language} onAsk={onHighlightAsk} disabled={loading} />
+      ) : null}
+
+      <Composer
+        input={input}
+        placeholder={placeholder}
+        inputAriaLabel={inputAriaLabel}
+        submitLabel={submitLabel}
+        dictateLabel={dictateLabel}
+        voiceLabel={voiceLabel}
+        language={language}
+        disabled={loading}
+        commandSuggestions={commandSuggestions}
+        showImageUpload={showImageUpload}
+        attachedImage={attachedImage}
+        onCommandSuggestion={onCommandSuggestion}
+        onInputChange={onInputChange}
+        onVoiceMode={onVoiceMode}
+        onAttachImage={onAttachImage}
+        onClearImage={onClearImage}
+        onImageError={onImageError}
+        onSubmit={onSubmit}
+      />
+    </>
   );
 }

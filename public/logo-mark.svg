@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 108" role="img" aria-label="MajlisMate">
+  <defs>
+    <linearGradient id="gold" x1="10" y1="0" x2="90" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#D4A840"/>
+      <stop offset="45%" stop-color="#C49030"/>
+      <stop offset="100%" stop-color="#9E7020"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer heart — the outer silhouette of the two interlocked figures -->
+  <path d="M50 98 C20 78, 2 56, 2 33 C2 16, 14 5, 28 5 C38 5, 46 11, 50 19 C54 11, 62 5, 72 5 C86 5, 98 16, 98 33 C98 56, 80 78, 50 98Z"
+    fill="none" stroke="url(#gold)" stroke-width="4.5" stroke-linejoin="round"/>
+
+  <!-- Left figure head -->
+  <circle cx="29" cy="24" r="8" fill="url(#gold)"/>
+  <!-- Right figure head -->
+  <circle cx="71" cy="24" r="8" fill="url(#gold)"/>
+
+  <!-- Inner M arch — bodies of the two figures curving inward to meet at centre -->
+  <path d="M29 32 Q29 56, 50 64 Q71 56, 71 32"
+    fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Left figure inner leg (vertical, aligned with left arch) -->
+  <path d="M29 32 L29 94"
+    fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Right figure inner leg -->
+  <path d="M71 32 L71 94"
+    fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+</svg>

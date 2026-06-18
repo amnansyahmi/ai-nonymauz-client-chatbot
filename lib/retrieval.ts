@@ -1,15 +1,23 @@
 import knowledge from '../data/knowledge.json';
 
-type KnowledgeDoc = {
+export type KnowledgeDoc = {
   id: string;
   title: string;
   category: string;
   content: string;
 };
 
+type KnowledgeBundle = {
+  clientName?: string;
+  lastUpdated?: string;
+  documents: KnowledgeDoc[];
+};
+
 const STOPWORDS = new Set([
   'the', 'and', 'for', 'with', 'this', 'that', 'you', 'your', 'apa', 'yang', 'dan', 'untuk', 'saya', 'kami', 'awak', 'boleh', 'atau', 'dengan', 'how', 'what', 'when', 'where', 'why', 'can', 'do', 'does', 'is', 'are'
 ]);
+
+const bundle = knowledge as KnowledgeBundle;
 
 function tokenize(text: string): string[] {
   return text
@@ -20,12 +28,16 @@ function tokenize(text: string): string[] {
 }
 
 export function getClientName(): string {
-  return process.env.CLIENT_NAME || knowledge.clientName || 'Client Company';
+  return process.env.CLIENT_NAME || bundle.clientName || 'Client Company';
+}
+
+export function getKnowledgeBundle(): KnowledgeBundle {
+  return bundle;
 }
 
 export function retrieveContext(question: string, maxDocs = 4): KnowledgeDoc[] {
   const queryTerms = tokenize(question);
-  const docs = knowledge.documents as KnowledgeDoc[];
+  const docs = bundle.documents;
 
   if (queryTerms.length === 0) {
     return docs.slice(0, maxDocs);
@@ -61,8 +73,6 @@ export function formatContext(docs: KnowledgeDoc[]): string {
   }
 
   return docs
-    .map((doc, index) => {
-      return `[Source ${index + 1}: ${doc.title} | ${doc.category}]\n${doc.content}`;
-    })
+    .map((doc, index) => `[Source ${index + 1}: ${doc.title} | ${doc.category}]\n${doc.content}`)
     .join('\n\n');
 }

@@ -1,15 +1,35 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'AI-nonymauz Client Chatbot',
-  description: 'Company knowledge bot and website support chatbot powered by AI-nonymauz.'
+  title: {
+    default: 'MajlisMate.ai',
+    template: '%s — MajlisMate.ai'
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL ?? 'https://majlismate.ai'),
+  description:
+    'MajlisMate.ai ialah pembantu AI untuk merancang majlis kahwin. Senarai semak pintar, bajet, vendor dan voice mode dalam satu aplikasi.',
+  applicationName: 'MajlisMate.ai',
+  keywords: ['wedding planner', 'majlis kahwin', 'AI assistant', 'ToyyibPay', 'Malaysia']
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#241c18' },
+    { media: '(prefers-color-scheme: dark)', color: '#1b1410' }
+  ],
+  colorScheme: 'light dark'
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="ms" suppressHydrationWarning>
+      <body>
+        {children}
+      </body>
     </html>
   );
 }

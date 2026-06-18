@@ -2,7 +2,7 @@
   var script = document.currentScript;
   var chatbotUrl = script && script.getAttribute('data-chatbot-url');
   if (!chatbotUrl) {
-    console.warn('AI-nonymauz widget: data-chatbot-url is required.');
+    console.warn('MajlisMate.ai widget: data-chatbot-url is required.');
     return;
   }
 
@@ -23,7 +23,7 @@
 
   var frame = document.createElement('iframe');
   frame.src = chatbotUrl;
-  frame.title = 'AI-nonymauz Chatbot';
+  frame.title = 'MajlisMate.ai Chatbot';
   frame.style.position = 'fixed';
   frame.style.right = '20px';
   frame.style.bottom = '76px';
