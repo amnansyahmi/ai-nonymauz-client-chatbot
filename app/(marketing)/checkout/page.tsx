@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import { findPlan, formatRinggit, priceForInterval, type PlanInterval } from '../../../lib/payments/plans';
@@ -43,7 +44,7 @@ function CheckoutInner() {
       <main id="main" className="checkout-page">
         <header className="pricing-page__nav">
           <Link href="/" className="landing__brand">
-            <img src="/logo-mark.svg" className="landing__brand-logo" alt="" aria-hidden="true" />
+            <Image src="/logo-mark.svg" width={40} height={40} className="landing__brand-logo" alt="" aria-hidden="true" />
             <strong>MajlisMate.ai</strong>
           </Link>
         </header>

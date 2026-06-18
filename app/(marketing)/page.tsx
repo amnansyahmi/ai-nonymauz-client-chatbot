@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { PLANS } from '../../lib/payments/plans';
 
@@ -73,7 +74,7 @@ export default function LandingPage() {
     <main id="main" className="landing">
       <header className="landing__nav">
         <Link href="/" className="landing__brand" aria-label="MajlisMate.ai home">
-          <img src="/logo-mark.svg" className="landing__brand-logo" alt="" aria-hidden="true" />
+          <Image src="/logo-mark.svg" width={40} height={40} className="landing__brand-logo" alt="" aria-hidden="true" />
           <strong>MajlisMate.ai</strong>
         </Link>
         <nav className="landing__nav-links" aria-label="Primary">
