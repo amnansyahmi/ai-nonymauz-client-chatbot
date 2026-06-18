@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
+import ImageUploadButton from '../ai/ImageUploadButton';
+import type { AttachedImage } from '../../lib/ai/imageUpload';
 
 type SpeechRecognitionConstructor = new () => {
   continuous: boolean;
@@ -39,9 +41,14 @@ type ComposerProps = {
   commandSuggestions?: string[];
   showDictate?: boolean;
   showVoiceWhenEmpty?: boolean;
+  showImageUpload?: boolean;
+  attachedImage?: AttachedImage | null;
   onInputChange: (value: string) => void;
   onCommandSuggestion?: (value: string) => void;
   onVoiceMode?: () => void;
+  onAttachImage?: (image: AttachedImage) => void;
+  onClearImage?: () => void;
+  onImageError?: (message: string) => void;
   onSubmit: (event: FormEvent) => void;
 };
 
@@ -85,9 +92,14 @@ export default function Composer({
   commandSuggestions = [],
   showDictate = true,
   showVoiceWhenEmpty = true,
+  showImageUpload = false,
+  attachedImage = null,
   onInputChange,
   onCommandSuggestion,
   onVoiceMode,
+  onAttachImage,
+  onClearImage,
+  onImageError,
   onSubmit
 }: ComposerProps) {
   const [isDictating, setIsDictating] = useState(false);
@@ -182,6 +194,13 @@ export default function Composer({
           ))}
         </div>
       ) : null}
+      {showImageUpload && onAttachImage ? (
+        <ImageUploadButton
+          onAttach={onAttachImage}
+          onError={onImageError}
+          language={language}
+        />
+      ) : null}
       <textarea
         ref={textareaRef}
         className="composer-input"
@@ -194,6 +213,19 @@ export default function Composer({
         onChange={(event) => onInputChange(event.target.value)}
         onKeyDown={handleKeyDown}
       />
+      {attachedImage && onClearImage ? (
+        <button
+          type="button"
+          className="composer-clear-image"
+          onClick={onClearImage}
+          aria-label={language === 'ms' ? 'Buang gambar' : 'Remove image'}
+          data-event="composer_clear_image"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={attachedImage.dataUrl} alt={attachedImage.name} />
+          <span aria-hidden="true">×</span>
+        </button>
+      ) : null}
       {showDictate ? (
         <button
           type="button"

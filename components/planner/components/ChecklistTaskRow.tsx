@@ -156,7 +156,7 @@ export default function ChecklistTaskRow({
   const status = getStatus(item);
 
   const dueLabel = item.deadline
-    ? `Due ${item.deadline}`
+    ? `${language === 'ms' ? 'Tarikh akhir: ' : 'Due '}${item.deadline}`
     : copyLabels.noDate;
 
   function startEdit() {
@@ -294,7 +294,6 @@ export default function ChecklistTaskRow({
                 setDatePickerOpen(false);
               }}
               onBlur={() => setDatePickerOpen(false)}
-              autoFocus
             />
           ) : null}
           {item.note ? (

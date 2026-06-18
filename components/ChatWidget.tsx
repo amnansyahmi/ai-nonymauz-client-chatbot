@@ -5,6 +5,10 @@ import type { Message } from './planner/types';
 import { summarizeAction, type PlannerAction } from '../lib/planner/chatActions';
 import Composer from './ui/Composer';
 import Markdown from './ui/Markdown';
+import StopGeneratingButton from './ai/StopGeneratingButton';
+import HighlightToAsk from './ai/HighlightToAsk';
+import InlineCitations from './ai/InlineCitations';
+import type { AttachedImage } from '../lib/ai/imageUpload';
 
 type ChatWidgetProps = {
   messages: Message[];
@@ -13,18 +17,24 @@ type ChatWidgetProps = {
   placeholder: string;
   submitLabel?: string;
   emptyTypingLabel?: string;
-  sourcesLabel?: string;
   inputAriaLabel?: string;
   language?: 'ms' | 'en';
   dictateLabel?: string;
   voiceLabel?: string;
   commandSuggestions?: string[];
   messagesEndRef?: RefObject<HTMLDivElement | null>;
+  showImageUpload?: boolean;
+  attachedImage?: AttachedImage | null;
   onInputChange: (value: string) => void;
   onCommandSuggestion?: (value: string) => void;
   onVoiceMode?: () => void;
   onApplyActions?: (messageIndex: number, actions: PlannerAction[]) => void;
   onDismissActions?: (messageIndex: number) => void;
+  onAttachImage?: (image: AttachedImage) => void;
+  onClearImage?: () => void;
+  onImageError?: (message: string) => void;
+  onStopGenerating?: () => void;
+  onHighlightAsk?: (prompt: string) => void;
   onSubmit: (event: FormEvent) => void;
 };
 
@@ -127,11 +137,11 @@ function CheckIcon() {
 type MessageBubbleProps = {
   message: Message;
   isStreaming: boolean;
-  sourcesLabel: string;
   emptyTypingLabel: string;
+  language?: 'ms' | 'en';
 };
 
-function MessageBubble({ message, isStreaming, sourcesLabel, emptyTypingLabel }: MessageBubbleProps) {
+function MessageBubble({ message, isStreaming, emptyTypingLabel, language = 'ms' }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -150,12 +160,7 @@ function MessageBubble({ message, isStreaming, sourcesLabel, emptyTypingLabel }:
         <p className="typing">{emptyTypingLabel}</p>
       )}
       {message.sources && message.sources.length > 0 ? (
-        <div className="sources">
-          <strong>{sourcesLabel}</strong>
-          {message.sources.map((source) => (
-            <span key={source.id}>{source.title}</span>
-          ))}
-        </div>
+        <InlineCitations sources={message.sources} language={language} />
       ) : null}
       {message.content && !isStreaming ? (
         <div className="bubble-actions">
@@ -188,18 +193,24 @@ export default function ChatWidget({
   placeholder,
   submitLabel = 'Send',
   emptyTypingLabel = 'AI is typing...',
-  sourcesLabel = 'Sources:',
   inputAriaLabel = 'Question',
   language = 'ms',
   dictateLabel = 'Dictate',
   voiceLabel = 'Voice',
   commandSuggestions = [],
   messagesEndRef,
+  showImageUpload = false,
+  attachedImage = null,
   onInputChange,
   onCommandSuggestion,
   onVoiceMode,
   onApplyActions,
   onDismissActions,
+  onAttachImage,
+  onClearImage,
+  onImageError,
+  onStopGenerating,
+  onHighlightAsk,
   onSubmit
 }: ChatWidgetProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -233,8 +244,8 @@ export default function ChatWidget({
                   <MessageBubble
                     message={message}
                     isStreaming={isStreaming}
-                    sourcesLabel={sourcesLabel}
                     emptyTypingLabel={emptyTypingLabel}
+                    language={language}
                   />
                   {message.actions && message.actions.length > 0 && !isStreaming ? (
                     <ActionPanel
@@ -270,6 +281,16 @@ export default function ChatWidget({
         ) : null}
       </div>
 
+      {loading && onStopGenerating ? (
+        <div className="chat-stop-wrapper">
+          <StopGeneratingButton visible language={language} onStop={onStopGenerating} />
+        </div>
+      ) : null}
+
+      {onHighlightAsk ? (
+        <HighlightToAsk containerRef={messagesContainerRef} language={language} onAsk={onHighlightAsk} disabled={loading} />
+      ) : null}
+
       <Composer
         input={input}
         placeholder={placeholder}
@@ -280,9 +301,14 @@ export default function ChatWidget({
         language={language}
         disabled={loading}
         commandSuggestions={commandSuggestions}
+        showImageUpload={showImageUpload}
+        attachedImage={attachedImage}
         onCommandSuggestion={onCommandSuggestion}
         onInputChange={onInputChange}
         onVoiceMode={onVoiceMode}
+        onAttachImage={onAttachImage}
+        onClearImage={onClearImage}
+        onImageError={onImageError}
         onSubmit={onSubmit}
       />
     </>

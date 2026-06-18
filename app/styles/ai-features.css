@@ -1,0 +1,305 @@
+
+/* ─── Setup wizard modal (auto-shows on /chat) ─────────────────── */
+.setup-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.setup-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--mm-text) 45%, transparent);
+  backdrop-filter: blur(2px);
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.setup-modal__panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--mm-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-modal__close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 110;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--mm-radius-pill);
+  background: color-mix(in srgb, var(--mm-text) 8%, transparent);
+  color: var(--mm-text);
+  border: 0;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.setup-modal__close:hover {
+  background: color-mix(in srgb, var(--mm-text) 16%, transparent);
+}
+
+.setup-modal__close:focus-visible {
+  outline: none;
+  box-shadow: var(--mm-focus);
+}
+
+@media (min-width: 720px) {
+  .setup-modal {
+    align-items: center;
+    padding: 32px;
+  }
+  .setup-modal__panel {
+    width: min(560px, 100%);
+    height: auto;
+    max-height: calc(100dvh - 64px);
+    border-radius: var(--mm-radius-lg);
+    box-shadow: 0 30px 80px rgba(36, 28, 24, 0.28);
+  }
+}
+
+@media (max-width: 719px) {
+  .setup-modal { padding: 0; }
+  .setup-modal__panel { border-radius: 0; }
+  .setup-modal__close { top: 10px; right: 10px; }
+}
+
+/* ─── Setup wizard body (used on /setup page and inside modal) ──── */
+.setup-wizard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  flex: 1;
+  background: var(--mm-bg);
+  color: var(--mm-text);
+}
+
+.setup-wizard__bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--mm-border);
+  background: var(--mm-surface);
+}
+
+.setup-wizard__bar strong {
+  grid-column: 2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mm-text);
+  white-space: nowrap;
+}
+
+.setup-wizard__bar .utility-action {
+  justify-self: start;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border-radius: var(--mm-radius-pill);
+  border: 1px solid var(--mm-border) !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text-muted) !important;
+  text-decoration: none;
+}
+
+.setup-wizard__bar .utility-action:hover {
+  background: var(--mm-surface-subtle) !important;
+  color: var(--mm-text) !important;
+}
+
+/* Progress segments */
+.setup-wizard__progress {
+  display: flex;
+  gap: 6px;
+  padding: 18px 20px 4px;
+}
+
+.setup-wizard__dot {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--mm-radius-pill);
+  background: var(--mm-surface-muted);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.setup-wizard__dot.is-done {
+  background: var(--mm-brand);
+}
+
+.setup-wizard__dot.is-current {
+  background: var(--mm-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mm-brand) 22%, transparent);
+}
+
+/* Panel */
+.setup-wizard__panel {
+  flex: 1;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 22px 20px 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-wizard__panel .eyebrow {
+  margin: 6px 0 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mm-brand-strong);
+  font-weight: 600;
+}
+
+.setup-wizard__panel h2 {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--mm-text);
+}
+
+/* Fields */
+.setup-wizard__field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.setup-wizard__field > span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--mm-text);
+}
+
+.setup-wizard__field small {
+  color: var(--mm-text-muted);
+  font-size: 0.8rem;
+}
+
+.setup-wizard__field input[type="date"],
+.setup-wizard__field input[type="number"],
+.setup-wizard__field select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  color: var(--mm-text);
+  background: var(--mm-surface);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  appearance: none;
+}
+
+.setup-wizard__field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236f625b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.setup-wizard__field input:focus-visible,
+.setup-wizard__field select:focus-visible {
+  outline: none;
+  border-color: var(--mm-brand);
+  box-shadow: var(--mm-focus);
+}
+
+/* Checkbox option cards */
+.setup-wizard__field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-md);
+  background: var(--mm-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.setup-wizard__field--checkbox:hover {
+  border-color: var(--mm-border-strong);
+  background: var(--mm-surface-subtle);
+}
+
+.setup-wizard__field--checkbox:has(input:checked) {
+  border-color: var(--mm-brand);
+  background: color-mix(in srgb, var(--mm-brand) 7%, var(--mm-surface));
+}
+
+.setup-wizard__field--checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  accent-color: var(--mm-brand);
+  cursor: pointer;
+}
+
+.setup-wizard__field--checkbox > span {
+  font-size: 0.95rem;
+  color: var(--mm-text);
+}
+
+.setup-wizard__error {
+  margin: 4px 0 8px;
+  padding: 10px 14px;
+  border-radius: var(--mm-radius-md);
+  background: #fbe9e4;
+  color: #c0492f;
+  font-size: 0.88rem;
+}
+
+/* Actions */
+.setup-wizard__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.setup-wizard__actions > span {
+  flex: 0 0 auto;
+}
+
+.setup-wizard__actions .primary-action,
+.setup-wizard__actions .utility-action {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  border-radius: var(--mm-radius-pill);
+}
+
+.setup-wizard__actions .primary-action {
+  margin-left: auto;
+}
+
+.setup-wizard__actions .primary-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-modal__close,
+  .setup-wizard__dot,
+  .setup-wizard__field input,
+  .setup-wizard__field select,
+  .setup-wizard__field--checkbox {
+    transition: none;
+  }
+}

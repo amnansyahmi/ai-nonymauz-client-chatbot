@@ -1,4 +1,4 @@
-import PlannerWorkspace from '../../components/PlannerWorkspace';
+import PlannerWorkspace from '../../../components/PlannerWorkspace';
 
 export const metadata = {
   title: 'Chat | MajlisMate.ai'

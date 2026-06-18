@@ -1,9 +1,8 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   budgetSuggestions,
-  checklistTemplates,
   defaultAssistantMessage,
   defaultBudgetItems,
   defaultPlannerProfile,
@@ -46,6 +45,22 @@ import type {
   Source,
   Vendor
 } from './planner/types';
+
+import WeddingCountdown from './ai/WeddingCountdown';
+import ProactiveSuggestionCard from './ai/ProactiveSuggestionCard';
+import MobileBottomNav, { type MobileTab } from './mobile/MobileBottomNav';
+import {
+  generateSuggestions as generateProactiveSuggestions,
+  type ProactiveSuggestion
+} from '../lib/ai/proactiveSuggestions';
+import Link from 'next/link';
+import SetupWizardModal from './ai/SetupWizardModal';
+import type { SetupCompletePayload } from './ai/SetupWizard';
+import {
+  generatePersonalizedChecklist,
+  profileReadyForChecklist,
+  type SurveyAnswers
+} from '../lib/planner/checklistGenerator';
 import {
   checklistFromAnswer,
   dateKey,
@@ -53,7 +68,6 @@ import {
   downloadTextFile,
   fallbackChecklist,
   formatChecklistText,
-  generateDefaultChecklist,
   getCalendarDays,
   localizedValue,
   money,
@@ -74,6 +88,20 @@ import {
   wantsPlannerSetup,
   wantsVendorMessage
 } from './planner/utils';
+
+function toSurveyAnswers(profile: PlannerProfile): SurveyAnswers {
+  return {
+    weddingDate: profile.majlisDate,
+    venueState: profile.negeri,
+    brideOriginState: profile.brideOriginState ?? '',
+    groomOriginState: profile.groomOriginState ?? '',
+    hasNikah: profile.hasNikah ?? true,
+    hasSanding: profile.hasSanding ?? true,
+    estimatedGuests: profile.estimatedGuests ?? 0
+  };
+}
+
+const checklistKey = (text: string): string => text.toLowerCase().replace(/\s+/g, ' ').trim();
 
 function MenuIcon({ name }: { name: 'dashboard' | 'chat' | 'checklist' | 'calendar' | 'budget' | 'guests' | 'vendors' }) {
   const common = { 'aria-hidden': true, viewBox: '0 0 24 24' } as const;
@@ -208,8 +236,8 @@ export default function PlannerWorkspace() {
   const [plannerProfile, setPlannerProfile] = useState<PlannerProfile>(defaultPlannerProfile);
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
-  const [checklistFilter, setChecklistFilter] = useState('all');
-  const [checklistView, setChecklistView] = useState<'all' | 'next' | 'timeline' | 'category' | 'completed'>('all');
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('timeline');
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
@@ -493,8 +521,15 @@ export default function PlannerWorkspace() {
     const completedProfile = { ...plannerProfile, coupleName, completed: true };
     setPlannerProfile(completedProfile);
     if (checklistItems.length === 0) {
-      setChecklistTitle('Majlis planning checklist');
-      setChecklistItems(generateDefaultChecklist(completedProfile.majlisDate));
+      // Seed from the personalized generator when the profile has enough info;
+      // otherwise leave empty so the setup wizard prompts for the rest.
+      const answers = toSurveyAnswers(completedProfile);
+      if (profileReadyForChecklist(answers).ready) {
+        setChecklistTitle(language === 'ms' ? 'Checklist Majlis Saya' : 'My Wedding Checklist');
+        setChecklistItems(
+          generatePersonalizedChecklist(answers).items.map((item) => ({ ...item, status: 'not-started' as const }))
+        );
+      }
     }
     if (budgetItems.every((item) => item.planned === 0 && item.actual === 0 && item.paid === 0)) {
       const starterBudget = completedProfile.totalBudget > 0 ? Math.round(completedProfile.totalBudget / defaultBudgetItems.length) : 0;
@@ -504,12 +539,38 @@ export default function PlannerWorkspace() {
     setStatusMessage('Planner setup saved.');
   }
 
+  // Opens the setup wizard, which generates a personalized checklist from the
+  // couple's date, states, format, and guest count.
   function createDefaultChecklist() {
-    setChecklistTitle(copy.defaultTemplate);
-    setChecklistItems(generateDefaultChecklist(plannerProfile.majlisDate));
     setActiveTab('checklist');
-    addActivity('Default checklist generated.');
-    setStatusMessage(`${copy.defaultTemplate} loaded.`);
+    setSetupOpen(true);
+  }
+
+  function handleSetupComplete({ items, title, profileUpdate }: SetupCompletePayload) {
+    setChecklistItems(items.map((item) => ({ ...item, status: item.status || (item.completed ? 'done' : 'not-started') })));
+    setChecklistTitle(title);
+    setPlannerProfile((current) => ({ ...current, ...profileUpdate, completed: true }));
+    setActiveTab('checklist');
+    setSetupOpen(false);
+    addActivity('Personalized checklist generated from setup wizard.');
+    setStatusMessage(language === 'ms' ? 'Checklist peribadi dijana.' : 'Personalized checklist generated.');
+  }
+
+  function addRecommendedItem(item: ChecklistItem) {
+    setChecklistItems((current) => {
+      const have = new Set(current.map((existing) => checklistKey(existing.text)));
+      if (have.has(checklistKey(item.text))) return current;
+      return [
+        ...current,
+        {
+          ...item,
+          id: `rec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          completed: false,
+          status: 'not-started' as const
+        }
+      ];
+    });
+    setStatusMessage(language === 'ms' ? 'Cadangan ditambah ke checklist.' : 'Suggestion added to checklist.');
   }
 
   function applyPlannerSetupFromText(text: string) {
@@ -536,8 +597,13 @@ export default function PlannerWorkspace() {
       setCalendarMonth(new Date(`${setupPatch.majlisDate}T00:00:00`));
       setSelectedDate(setupPatch.majlisDate);
       if (checklistItems.length === 0) {
-        setChecklistTitle(copy.defaultTemplate);
-        setChecklistItems(generateDefaultChecklist(setupPatch.majlisDate));
+        const answers = toSurveyAnswers({ ...plannerProfile, ...setupPatch } as PlannerProfile);
+        if (profileReadyForChecklist(answers).ready) {
+          setChecklistTitle(language === 'ms' ? 'Checklist Majlis Saya' : 'My Wedding Checklist');
+          setChecklistItems(
+            generatePersonalizedChecklist(answers).items.map((item) => ({ ...item, status: 'not-started' as const }))
+          );
+        }
       }
     }
 
@@ -1011,7 +1077,7 @@ export default function PlannerWorkspace() {
           : item
       )
     );
-    repairChecklistScroll(checklistView === 'next' || checklistView === 'all' ? 'focus-list' : 'clamp');
+    repairChecklistScroll('clamp');
     addActivity('Checklist item updated.');
   }
 
@@ -1205,27 +1271,6 @@ export default function PlannerWorkspace() {
       status: 'planned',
       note: ''
     });
-  }
-
-  function applyChecklistTemplate(template: (typeof checklistTemplates)[number]) {
-    const title = localizedValue(template.title, language);
-    setChecklistTitle(title);
-    setChecklistItems(
-      template.items.map((item, index) => ({
-        id: `${Date.now()}-${index}`,
-        text: item.ms,
-        textMs: item.ms,
-        textEn: item.en,
-        completed: false,
-        status: 'not-started' as const,
-        phase: localizedValue(item.phase, language) || undefined,
-        phaseMs: item.phase?.ms,
-        phaseEn: item.phase?.en
-      }))
-    );
-    setActiveTab('checklist');
-    setStatusMessage(`${title} loaded.`);
-    addActivity(`${title} loaded.`);
   }
 
   function addBudgetItem(event: FormEvent) {
@@ -1904,6 +1949,26 @@ export default function PlannerWorkspace() {
   const declinedGuests = guests.filter((guest) => guest.status === 'declined').reduce((sum, guest) => sum + guest.pax, 0);
   const pendingGuests = guests.filter((guest) => guest.status === 'pending').reduce((sum, guest) => sum + guest.pax, 0);
   const riskAlerts = detectRisks({ plannerProfile, checklistItems, budgetItems, appointments, guests, pendingGuests, totalPlanned, totalPaid });
+
+  const proactiveSuggestions = generateProactiveSuggestions({
+    daysToWedding: daysLeft,
+    weddingDateSet: Boolean(plannerProfile.majlisDate),
+    venueBooked: budgetItems.some((b) => b.category === 'Dewan' || b.category === 'Venue'),
+    photographerBooked: budgetItems.some((b) => b.category === 'Jurugambar' || b.category === 'Photographer'),
+    cateringBooked: budgetItems.some((b) => b.category === 'Katering' || b.category === 'Catering'),
+    hasBudget: (plannerProfile.totalBudget ?? 0) > 0,
+    hasChecklist: checklistItems.length > 0,
+    guestCount: guests.reduce((s, g) => s + g.pax, 0),
+    pendingGuests,
+    hantaranItems: 0, // TODO: filter hantaran when ChecklistItem has a category
+    transportBooked: budgetItems.some((b) => b.category === 'Transport'),
+    invitationsSent: guests.filter((g) => g.status !== 'pending').length > 0
+  }, 3);
+
+  function handleProactivePick(suggestion: ProactiveSuggestion) {
+    setActiveTab('chat');
+    setInput(suggestion.promptMs);
+  }
   const urgentChecklist = checklistItems
     .filter((item) => !item.completed)
     .filter((item) => {
@@ -2078,6 +2143,7 @@ export default function PlannerWorkspace() {
         }))
       };
 
+      // Conversation memory is captured by <MemoryIndicator> and persisted.
       return askStream({
         messages: recentMessages as Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
         language,
@@ -2099,8 +2165,8 @@ export default function PlannerWorkspace() {
     : checklistTitle;
   const getItemText = (item: ChecklistItem, selectedLanguage: AppLanguage = language): string =>
     (selectedLanguage === 'ms' ? item.textMs || item.text : item.textEn || item.text) ?? '';
-  const getItemPhase = (item: ChecklistItem, selectedLanguage: AppLanguage = language): string =>
-    (selectedLanguage === 'ms' ? item.phaseMs || item.phase : item.phaseEn || item.phase) ?? '';
+  const getItemPhase = (item: ChecklistItem | undefined, selectedLanguage: AppLanguage = language): string =>
+    (item ? (selectedLanguage === 'ms' ? item.phaseMs || item.phase : item.phaseEn || item.phase) : '') ?? '';
   const getChecklistPriority = (item: ChecklistItem) => {
     if (item.completed || item.status === 'done') return { className: 'done', label: language === 'ms' ? 'Selesai' : 'Done' };
     if (!item.deadline) return { className: 'later', label: language === 'ms' ? 'Later' : 'Later' };
@@ -2167,21 +2233,6 @@ export default function PlannerWorkspace() {
     }
   ].filter((group) => group.items.length > 0);
   const completedChecklistItems = checklistItems.filter((item) => getChecklistStatus(item) === 'done');
-  const overdueChecklistItems = openChecklistItems
-    .filter((item) => { const d = item.deadline ? daysUntil(item.deadline) : null; return d !== null && d < 0; })
-    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
-  const inProgressChecklistItems = openChecklistItems
-    .filter((item) => {
-      const d = item.deadline ? daysUntil(item.deadline) : null;
-      return !(d !== null && d < 0) && getChecklistStatus(item) === 'in-progress';
-    })
-    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
-  const notStartedChecklistItems = openChecklistItems
-    .filter((item) => {
-      const d = item.deadline ? daysUntil(item.deadline) : null;
-      return !(d !== null && d < 0) && getChecklistStatus(item) === 'not-started';
-    })
-    .sort((a, b) => scoreChecklistItem(a) - scoreChecklistItem(b));
   const checklistPhaseGroups = checklistPhases.map((phase) => ({
     phase,
     items: checklistItems.filter((item) => item.phase === phase)
@@ -2189,11 +2240,51 @@ export default function PlannerWorkspace() {
   const checklistCategoryGroups = checklistPhaseGroups.length > 0
     ? checklistPhaseGroups
     : [{ phase: copy.custom, items: checklistItems }];
+  const firstOpenPhaseIndex = checklistCategoryGroups.findIndex((group) =>
+    group.items.some((item) => getChecklistStatus(item) !== 'done')
+  );
+  const checklistTimeline = checklistCategoryGroups.map((group, index) => {
+    const total = group.items.length;
+    const done = group.items.filter((item) => getChecklistStatus(item) === 'done').length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const overdueCount = group.items.filter((item) => {
+      if (getChecklistStatus(item) === 'done') return false;
+      const d = item.deadline ? daysUntil(item.deadline) : null;
+      return d !== null && d < 0;
+    }).length;
+    const allDone = total > 0 && done === total;
+    const isActive = index === firstOpenPhaseIndex;
+    const state: 'done' | 'overdue' | 'active' | 'upcoming' =
+      allDone ? 'done' : overdueCount > 0 ? 'overdue' : isActive ? 'active' : 'upcoming';
+    const deadlines = group.items
+      .map((item) => item.deadline)
+      .filter((d): d is string => Boolean(d))
+      .sort();
+    const deadline = deadlines.length ? deadlines[deadlines.length - 1] : undefined;
+    const dateLabel = deadline
+      ? new Date(`${deadline}T00:00:00`).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        })
+      : '';
+    return {
+      key: group.phase,
+      label: getItemPhase(group.items[0]) || group.phase,
+      items: group.items,
+      total,
+      done,
+      pct,
+      overdueCount,
+      state,
+      isActive,
+      dateLabel,
+      defaultOpen: !allDone && (isActive || overdueCount > 0)
+    };
+  });
   const checklistViewOptions = [
-    { value: 'all' as const, label: language === 'ms' ? 'Semua' : 'All', count: checklistItems.length },
-    { value: 'next' as const, label: language === 'ms' ? 'Seterusnya' : 'Next', count: nextChecklistItems.length },
-    { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistPhaseGroups.length || checklistItems.length },
-    { value: 'category' as const, label: language === 'ms' ? 'Kategori' : 'Category', count: checklistCategoryGroups.length },
+    { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistCategoryGroups.length },
+    { value: 'next' as const, label: language === 'ms' ? 'Fokus' : 'Focus', count: nextChecklistItems.length },
     { value: 'completed' as const, label: language === 'ms' ? 'Selesai' : 'Completed', count: completedChecklistItems.length }
   ];
   const checklistEmptyActionText = language === 'ms' ? 'Bina checklist sekarang' : 'Create checklist now';
@@ -2453,8 +2544,27 @@ export default function PlannerWorkspace() {
     rsvp: language === 'ms' ? 'Tetamu' : 'Guests',
     vendors: copy.vendors
   };
-  const visibleChecklistTemplates = checklistTemplates.slice(0, 4);
-  const hiddenChecklistTemplates = checklistTemplates.slice(4);
+  const checklistSurveyAnswers = toSurveyAnswers(plannerProfile);
+  const checklistProfileReady = profileReadyForChecklist(checklistSurveyAnswers).ready;
+  // Deterministic "what to add" suggestions: items the generator would create for
+  // this couple that aren't on their list yet. Free, instant, no AI call.
+  const recommendedMissingItems = useMemo<ChecklistItem[]>(() => {
+    if (!checklistProfileReady) return [];
+    const generated = generatePersonalizedChecklist(checklistSurveyAnswers).items;
+    const have = new Set(checklistItems.map((item) => checklistKey(item.text)));
+    return generated.filter((item) => !have.has(checklistKey(item.text))).slice(0, 6);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    checklistProfileReady,
+    checklistSurveyAnswers.weddingDate,
+    checklistSurveyAnswers.venueState,
+    checklistSurveyAnswers.brideOriginState,
+    checklistSurveyAnswers.groomOriginState,
+    checklistSurveyAnswers.hasNikah,
+    checklistSurveyAnswers.hasSanding,
+    checklistSurveyAnswers.estimatedGuests,
+    checklistItems
+  ]);
   const commandItems = [
     {
       label: language === 'ms' ? 'Tanya MajlisMate' : 'Ask MajlisMate',
@@ -2758,7 +2868,7 @@ export default function PlannerWorkspace() {
               Menu
             </button>
             <div className="workspace-title-center">
-              <span className="sidebar-mark small" aria-hidden="true">M</span>
+              <img src="/logo-mark.svg" className="sidebar-logo-mark" alt="" aria-hidden="true" />
               <strong>MajlisMate</strong>
             </div>
             <div className="workspace-title-actions">
@@ -2818,6 +2928,21 @@ export default function PlannerWorkspace() {
           </div>
           {activeTab === 'dashboard' ? (
         <>
+        {(() => {
+          const readiness = profileReadyForChecklist(plannerProfile);
+          if (!readiness.ready) {
+            return (
+              <div className="personalize-banner" role="region" aria-label="Personalize checklist">
+                <div>
+                  <strong>{language === 'ms' ? 'Peribadikan checklist anda' : 'Personalize your checklist'}</strong>
+                  <p>{language === 'ms' ? 'Jawab 5 soalan ringkas untuk dapat checklist ikut negeri, format, dan bajet anda.' : 'Answer 5 quick questions to get a checklist tailored to your state, format, and budget.'}</p>
+                </div>
+                <Link href="/setup" className="primary-action" data-event="personalize_cta_dashboard">{language === 'ms' ? 'Mula' : 'Start'}</Link>
+              </div>
+            );
+          }
+          return null;
+        })()}
         <NotificationToggle
           language={language}
           enabled={notificationsEnabled}
@@ -2864,6 +2989,16 @@ export default function PlannerWorkspace() {
             setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');
           }}
         />
+        <WeddingCountdown weddingDate={plannerProfile.majlisDate} language={language} />
+        {proactiveSuggestions.length > 0 ? (
+          <ProactiveSuggestionCard
+            suggestions={proactiveSuggestions}
+            language={language}
+            onPick={handleProactivePick}
+            onDismiss={function noop() {}}
+          />
+        ) : null}
+
         </>
       ) : activeTab === 'chat' ? (
         <div className={`main-chat-panel ${messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? 'empty-chat' : 'active-chat'}`}>
@@ -2890,7 +3025,8 @@ export default function PlannerWorkspace() {
             placeholder={copy.placeholder}
             submitLabel={copy.send}
             emptyTypingLabel={copy.typing}
-            sourcesLabel={copy.sources}
+            onStopGenerating={function handleStop() { setLoading(false); }}
+            onHighlightAsk={function handleHighlight(p) { setInput(p); }}
             inputAriaLabel={copy.questionLabel}
             language={language}
             dictateLabel={copy.dictate}
@@ -2943,11 +3079,16 @@ export default function PlannerWorkspace() {
               )}
               <p>
                 {language === 'ms'
-                  ? 'Fokus pada task yang paling penting dulu, kemudian semak timeline bila perlukan gambaran penuh.'
-                  : 'Focus on the most important tasks first, then review the full timeline when you need the bigger picture.'}
+                  ? 'Ikut timeline ikut fasa — dari 6 bulan sebelum sampai hari nikah. Selesaikan setiap fasa satu per satu.'
+                  : 'Follow the phase-by-phase timeline — from 6 months out to the wedding day. Clear each phase one at a time.'}
               </p>
             </div>
             <div className="checklist-hero-progress">
+              {daysLeft !== null && daysLeft >= 0 ? (
+                <span className="checklist-hero-countdown">
+                  {daysLeft} {language === 'ms' ? 'hari lagi' : 'days to go'}
+                </span>
+              ) : null}
               <strong>{planningProgress}%</strong>
               <span>{completedCount}/{checklistItems.length} {copy.done}</span>
               <div className="checklist-progress-line" aria-label={`${completedCount} of ${checklistItems.length} checklist items done`}>
@@ -3000,19 +3141,32 @@ export default function PlannerWorkspace() {
                 <button
                   type="button"
                   className={`checklist-select-mode-btn${checklistSelectMode ? ' active' : ''}`}
+                  aria-pressed={checklistSelectMode}
                   onClick={() => {
                     setChecklistSelectMode((v) => !v);
                     setSelectedChecklistIds(new Set());
                   }}
                 >
+                  <svg className="checklist-select-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
+                    <path d="M8 12.5l2.5 2.5L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                   {checklistSelectMode
-                    ? (language === 'ms' ? 'Batal pilih' : 'Cancel')
-                    : (language === 'ms' ? 'Pilih' : 'Select')}
+                    ? (language === 'ms' ? 'Selesai pilih' : 'Done')
+                    : (language === 'ms' ? 'Pilih item' : 'Select')}
                 </button>
               ) : null}
-              <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>Copy</button>
-              <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>TXT</button>
-              <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>Print</button>
+              <details className="checklist-export-menu">
+                <summary aria-label={language === 'ms' ? 'Eksport checklist' : 'Export checklist'}>
+                  {language === 'ms' ? 'Eksport' : 'Export'}
+                </summary>
+                <div>
+                  <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
+                  <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
+                  <button type="button" onClick={() => exportChecklist('json')} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
+                  <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -3030,37 +3184,14 @@ export default function PlannerWorkspace() {
             </div>
           ) : null}
 
-          <div className="checklist-template-row" aria-label="Wedding checklist templates">
-            <span>{language === 'ms' ? 'Template' : 'Templates'}</span>
-            <div className="checklist-template-desktop">
-              {visibleChecklistTemplates.map((template) => (
-                <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
-                  {localizedValue(template.title, language)}
-                </button>
-              ))}
-              {hiddenChecklistTemplates.length > 0 ? (
-                <details className="checklist-template-more">
-                  <summary>{language === 'ms' ? `Lagi ${hiddenChecklistTemplates.length}` : `${hiddenChecklistTemplates.length} more`}</summary>
-                  <div>
-                    {hiddenChecklistTemplates.map((template) => (
-                      <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
-                        {localizedValue(template.title, language)}
-                      </button>
-                    ))}
-                  </div>
-                </details>
-              ) : null}
-            </div>
-            <details className="checklist-template-mobile">
-              <summary>{language === 'ms' ? 'Pilih template' : 'Choose template'}</summary>
-              <div>
-                {checklistTemplates.map((template) => (
-                  <button key={template.title.en} type="button" onClick={() => applyChecklistTemplate(template)}>
-                    {localizedValue(template.title, language)}
-                  </button>
-                ))}
-              </div>
-            </details>
+          <div className="checklist-template-row" aria-label="Checklist generator">
+            <span>{language === 'ms' ? 'Checklist peribadi' : 'Personalized checklist'}</span>
+            <button type="button" className="checklist-generate-btn" onClick={() => setSetupOpen(true)}>
+              <span aria-hidden="true">✨</span>
+              {checklistItems.length > 0
+                ? (language === 'ms' ? 'Jana semula ikut majlis' : 'Regenerate from setup')
+                : (language === 'ms' ? 'Jana checklist ikut majlis anda' : 'Generate from your wedding')}
+            </button>
           </div>
 
           {loading && checklistItems.length === 0 ? <p className="typing">{copy.creating}</p> : null}
@@ -3068,65 +3199,6 @@ export default function PlannerWorkspace() {
           {checklistItems.length > 0 ? (
             <div className="checklist-workspace-grid">
               <section className="checklist-main-list">
-                {checklistView === 'all' ? (
-                  <div className="checklist-status-groups">
-                    {overdueChecklistItems.length > 0 ? (
-                      <section className="checklist-status-group status-overdue">
-                        <div className="checklist-status-header">
-                          <span className="status-dot" />
-                          <h4>{language === 'ms' ? 'Overdue' : 'Overdue'}</h4>
-                          <em>{overdueChecklistItems.length}</em>
-                        </div>
-                        <ul className="checklist-task-list">
-                          {overdueChecklistItems.map((item) => renderChecklistTask(item))}
-                        </ul>
-                      </section>
-                    ) : null}
-                    {inProgressChecklistItems.length > 0 ? (
-                      <section className="checklist-status-group status-in-progress">
-                        <div className="checklist-status-header">
-                          <span className="status-dot" />
-                          <h4>{language === 'ms' ? 'Sedang diurus' : 'In progress'}</h4>
-                          <em>{inProgressChecklistItems.length}</em>
-                        </div>
-                        <ul className="checklist-task-list">
-                          {inProgressChecklistItems.map((item) => renderChecklistTask(item))}
-                        </ul>
-                      </section>
-                    ) : null}
-                    {notStartedChecklistItems.length > 0 ? (
-                      <section className="checklist-status-group status-not-started">
-                        <div className="checklist-status-header">
-                          <span className="status-dot" />
-                          <h4>{language === 'ms' ? 'Belum mula' : 'Not started'}</h4>
-                          <em>{notStartedChecklistItems.length}</em>
-                        </div>
-                        <ul className="checklist-task-list">
-                          {notStartedChecklistItems.map((item) => renderChecklistTask(item))}
-                        </ul>
-                      </section>
-                    ) : null}
-                    {completedChecklistItems.length > 0 ? (
-                      <details className="checklist-status-group status-done">
-                        <summary className="checklist-status-header">
-                          <span className="status-dot" />
-                          <h4>{language === 'ms' ? 'Selesai' : 'Done'}</h4>
-                          <em>{completedChecklistItems.length}</em>
-                        </summary>
-                        <ul className="checklist-task-list">
-                          {completedChecklistItems.map((item) => renderChecklistTask(item, { compact: true }))}
-                        </ul>
-                      </details>
-                    ) : null}
-                    {checklistItems.length === 0 ? (
-                      <div className="empty-state action-empty">
-                        <strong>{language === 'ms' ? 'Checklist kosong.' : 'No checklist items yet.'}</strong>
-                        <span>{language === 'ms' ? 'Tambah task atau pilih template di atas.' : 'Add a task or pick a template above.'}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-
                 {checklistView === 'next' ? (
                   <>
                     <div className="checklist-section-heading">
@@ -3158,7 +3230,7 @@ export default function PlannerWorkspace() {
                             <ul className="checklist-task-list">
                               {group.items.map((item) => renderChecklistTask(item))}
                             </ul>
-                          </section>
+    </section>
                         ))}
                       </div>
                     ) : (
@@ -3170,43 +3242,56 @@ export default function PlannerWorkspace() {
                 ) : null}
 
                 {checklistView === 'timeline' ? (
-                  <div className="checklist-timeline-list">
-                    {checklistCategoryGroups.map((group) => {
-                      const groupCompleted = group.items.filter((item) => getChecklistStatus(item) === 'done').length;
-                      return (
-                        <section key={group.phase} className="checklist-phase-group">
-                          <div className="checklist-phase-header">
-                            <div>
-                              <h4>{getItemPhase(group.items[0]) || group.phase}</h4>
-                              <p>{groupCompleted}/{group.items.length} {copy.done}</p>
-                            </div>
-                            <div className="mini-progress"><span style={{ width: `${group.items.length > 0 ? (groupCompleted / group.items.length) * 100 : 0}%` }} /></div>
-                          </div>
-                          <ul className="checklist-task-list">
-                            {group.items.map((item) => renderChecklistTask(item, { compact: true }))}
-                          </ul>
-                        </section>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {checklistView === 'category' ? (
-                  <div className="checklist-category-list">
-                    {checklistCategoryGroups.map((group) => (
-                      <section key={group.phase} className="checklist-category-group">
-                        <button
-                          type="button"
-                          className={checklistFilter === group.phase ? 'active' : ''}
-                          onClick={() => setChecklistFilter(group.phase)}
-                        >
-                          <span>{getItemPhase(group.items[0]) || group.phase}</span>
-                          <strong>{group.items.length}</strong>
-                        </button>
+                  <div className="mm-timeline">
+                    {checklistTimeline.map((phase, index) => (
+                      <details
+                        key={phase.key}
+                        className={`mm-timeline-phase is-${phase.state}`}
+                        open={phase.defaultOpen}
+                      >
+                        <summary className="mm-timeline-summary">
+                          <span
+                            className="mm-timeline-node"
+                            style={{ ['--pct' as string]: phase.pct }}
+                            aria-hidden="true"
+                          >
+                            <span className="mm-timeline-node-inner">
+                              {phase.state === 'done' ? '✓' : index + 1}
+                            </span>
+                          </span>
+                          <span className="mm-timeline-headtext">
+                            <span className="mm-timeline-phase-name">{phase.label}</span>
+                            <span className="mm-timeline-meta">
+                              {phase.dateLabel ? (
+                                <span className="mm-timeline-date">
+                                  {language === 'ms' ? 'Sasaran' : 'Target'}: {phase.dateLabel}
+                                </span>
+                              ) : null}
+                              <span className="mm-timeline-count">
+                                {phase.done}/{phase.total} {copy.done}
+                              </span>
+                              {phase.state === 'overdue' ? (
+                                <span className="mm-timeline-flag overdue">
+                                  {phase.overdueCount} {language === 'ms' ? 'lewat' : 'overdue'}
+                                </span>
+                              ) : phase.state === 'active' ? (
+                                <span className="mm-timeline-flag active">
+                                  {language === 'ms' ? 'Fokus sekarang' : 'Focus now'}
+                                </span>
+                              ) : phase.state === 'done' ? (
+                                <span className="mm-timeline-flag done">
+                                  {language === 'ms' ? 'Selesai' : 'Done'}
+                                </span>
+                              ) : null}
+                            </span>
+                          </span>
+                          <span className="mm-timeline-pct" aria-hidden="true">{phase.pct}%</span>
+                          <span className="mm-timeline-caret" aria-hidden="true" />
+                        </summary>
                         <ul className="checklist-task-list">
-                          {group.items.map((item) => renderChecklistTask(item, { compact: true }))}
+                          {phase.items.map((item) => renderChecklistTask(item, { compact: true }))}
                         </ul>
-                      </section>
+                      </details>
                     ))}
                   </div>
                 ) : null}
@@ -3240,7 +3325,7 @@ export default function PlannerWorkspace() {
                   <p>
                     {nextChecklistItems[0]
                       ? (language === 'ms' ? 'Task ini paling sesuai dibuat sekarang berdasarkan deadline dan status.' : 'This is the best next task based on deadline and status.')
-                      : (language === 'ms' ? 'Mulakan dengan template MajlisMate atau minta AI bina checklist ikut tarikh majlis.' : 'Start with the MajlisMate template or ask AI to generate a checklist from your wedding date.')}
+                      : (language === 'ms' ? 'Jana checklist peribadi melalui wizard, atau minta AI bina ikut tarikh majlis.' : 'Generate a personalized checklist with the wizard, or ask AI to build one from your wedding date.')}
                   </p>
                   <button
                     type="button"
@@ -3249,9 +3334,52 @@ export default function PlannerWorkspace() {
                       setInput(checklistNextPrompt);
                     }}
                   >
-                    {copy.askAi}
+                    {language === 'ms' ? 'Bantu task ini' : 'Help with this task'}
                   </button>
                 </div>
+
+                {recommendedMissingItems.length > 0 ? (
+                  <div className="checklist-recommend-card">
+                    <span>{language === 'ms' ? 'Cadangan untuk ditambah' : 'Recommended to add'}</span>
+                    <p>
+                      {language === 'ms'
+                        ? 'Berdasarkan majlis anda, task ini biasa diperlukan tapi belum ada dalam checklist.'
+                        : 'Based on your wedding, these are commonly needed but not yet on your checklist.'}
+                    </p>
+                    <ul>
+                      {recommendedMissingItems.map((item) => (
+                        <li key={item.id}>
+                          <div className="checklist-recommend-text">
+                            <strong>{getItemText(item)}</strong>
+                            {item.phase ? <small>{getItemPhase(item)}</small> : null}
+                          </div>
+                          <button
+                            type="button"
+                            className="checklist-recommend-add"
+                            onClick={() => addRecommendedItem(item)}
+                            aria-label={language === 'ms' ? `Tambah ${getItemText(item)}` : `Add ${getItemText(item)}`}
+                          >
+                            +
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      className="checklist-recommend-ai"
+                      onClick={() => {
+                        setActiveTab('chat');
+                        setInput(
+                          language === 'ms'
+                            ? 'Bagi lagi idea task checklist yang saya mungkin terlepas untuk majlis saya'
+                            : 'Suggest more checklist tasks I might have missed for my wedding'
+                        );
+                      }}
+                    >
+                      {language === 'ms' ? 'Tanya AI untuk lebih idea' : 'Ask AI for more ideas'}
+                    </button>
+                  </div>
+                ) : null}
 
                 <form className="checklist-form checklist-quick-add" onSubmit={addChecklistItem}>
                   <label>
@@ -3267,14 +3395,6 @@ export default function PlannerWorkspace() {
                     {copy.add}
                   </button>
                 </form>
-
-                <div className="checklist-side-card subtle">
-                  <span>{language === 'ms' ? 'Export' : 'Export'}</span>
-                  <div className="checklist-side-actions">
-                    <button type="button" onClick={() => exportChecklist('json')} disabled={checklistItems.length === 0}>JSON</button>
-                    <button type="button" onClick={createDefaultChecklist}>{copy.defaultTemplate}</button>
-                  </div>
-                </div>
               </aside>
             </div>
           ) : !loading ? (
@@ -3283,8 +3403,8 @@ export default function PlannerWorkspace() {
               <strong>{copy.emptyChecklist}</strong>
               <p>
                 {language === 'ms'
-                  ? 'Gunakan template MajlisMate atau minta MajlisMate susun checklist ikut tarikh, bajet, dan jumlah tetamu.'
-                  : 'Use the MajlisMate template or ask MajlisMate to build a checklist from your date, budget, and guest count.'}
+                  ? 'Jawab beberapa soalan ringkas dan MajlisMate akan jana checklist peribadi ikut tarikh, negeri, format, dan jumlah tetamu majlis anda.'
+                  : 'Answer a few quick questions and MajlisMate will generate a personalized checklist from your date, state, format, and guest count.'}
               </p>
               <div>
                 <button type="button" onClick={createDefaultChecklist}>{checklistEmptyActionText}</button>
@@ -4158,6 +4278,20 @@ export default function PlannerWorkspace() {
         </nav>
       </div>
 
+
+      <MobileBottomNav
+        activeTab={activeTab as MobileTab}
+        onChange={function handleMobileNavChange(tab) { setActiveTab(tab); }}
+        language={language}
+      />
+      <SetupWizardModal
+        isReady={checklistProfileReady}
+        language={language}
+        forceOpen={setupOpen}
+        onClose={() => setSetupOpen(false)}
+        onComplete={handleSetupComplete}
+        initialProfile={plannerProfile}
+      />
     </section>
   );
 }

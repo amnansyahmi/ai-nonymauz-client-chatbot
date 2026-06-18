@@ -33,7 +33,7 @@ function daysUntilDate(dateStr: string): number {
 const CRITICAL_CATEGORIES = /caterer|katering|photographer|fotografi|venue|dewan|hall|pelamin|bunga|baju|attire/i;
 
 export function detectRisks(input: RiskInput): RiskAlert[] {
-  const { plannerProfile, checklistItems, budgetItems, appointments, guests, pendingGuests, totalPlanned, totalPaid } = input;
+  const { plannerProfile, checklistItems, budgetItems, appointments, pendingGuests, totalPlanned, totalPaid } = input;
   const alerts: RiskAlert[] = [];
 
   // ── No wedding date set ────────────────────────────

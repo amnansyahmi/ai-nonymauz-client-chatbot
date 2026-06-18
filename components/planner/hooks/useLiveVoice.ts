@@ -21,7 +21,7 @@ import {
 } from '../../../lib/voice/storage';
 import { listVoicesForLanguage, pickBestVoice, type ScoredVoice } from '../../../lib/voice/voices';
 import { humanize, isQuestionSentence, sentenceProsody } from '../../../lib/voice/prosody';
-import { parseChatActions, stripActionBlock, MM_ACTIONS_OPEN, type PlannerAction } from '../../../lib/planner/chatActions';
+import { parseChatActions, MM_ACTIONS_OPEN, type PlannerAction } from '../../../lib/planner/chatActions';
 
 const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
   en: [
@@ -131,6 +131,8 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
   const ttsRef = useRef<TtsController | null>(null);
   const sttRef = useRef<SttController | null>(null);
   const vadRef = useRef<VadController | null>(null);
+  // Holds the latest startListening to break the circular dep with handleFinalTranscript.
+  const startListeningRef = useRef<() => void>(() => {});
   const streamingTtsRef = useRef<StreamingTtsHandle | null>(null);
   const bargeInActiveRef = useRef(false);
   const phaseRef = useRef<VoicePhase>('idle');
@@ -491,7 +493,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
             if (mode === 'continuous' && phaseRef.current !== 'error') {
               window.setTimeout(() => {
                 if (phaseRef.current === 'idle') {
-                  startListening();
+                  startListeningRef.current();
                 }
               }, 250);
             }
@@ -691,6 +693,9 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     startVadMonitor();
     stt.start();
   }, [handleFinalTranscript, mode, startVadMonitor, scheduleTranscriptIdleSubmit]);
+  // Keep ref in sync so handleFinalTranscript can call the latest version
+  // without creating a circular useCallback dependency.
+  startListeningRef.current = startListening;
 
   const start = useCallback(async () => {
     if (!enabled) return;
@@ -760,6 +765,13 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
     },
     [updatePreferences]
   );
+
+  // When mode changes, discard the cached STT controller so startListening
+  // creates a fresh one whose callbacks close over the correct mode value.
+  useEffect(() => {
+    sttRef.current?.abort();
+    sttRef.current = null;
+  }, [mode]);
 
   const availableVoices = useMemo<ScoredVoice[]>(() => {
     if (voices.length === 0) return [];

@@ -26,6 +26,9 @@ export type ChecklistItem = {
   phaseEn?: string;
   status?: 'not-started' | 'in-progress' | 'done';
   deadline?: string;
+  monthBucket?: string;
+  monthBucketMs?: string;
+  monthBucketEn?: string;
   note?: string;
 };
 
@@ -37,6 +40,12 @@ export type PlannerProfile = {
   brideName: string;
   majlisDate: string;
   negeri: string;
+  brideOriginState?: string;
+  groomOriginState?: string;
+  hasNikah?: boolean;
+  hasSanding?: boolean;
+  estimatedGuests?: number;
+  checklistGeneratedAt?: string;
   totalBudget: number;
   guestTarget: number;
   weddingStyle: string;
@@ -68,6 +77,7 @@ export type Vendor = {
   name: string;
   category: string;
   negeri: string;
+
   minPrice: number;
   maxPrice: number;
   contact: string;
@@ -122,3 +132,4 @@ export type CalendarDay = {
 };
 
 export type ActiveTab = 'dashboard' | 'chat' | 'checklist' | 'calendar' | 'budget' | 'rsvp' | 'vendors';
+

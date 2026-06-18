@@ -64,31 +64,31 @@ function applyMalayPhonetics(text: string): string {
 }
 
 const CONTRACTIONS_EN: Array<[RegExp, string]> = [
-  [/\bI am\b/g, "I'm"],
-  [/\bdo not\b/g, "don't"],
-  [/\bwill not\b/g, "won't"],
-  [/\bcannot\b/g, "can't"],
-  [/\bcan not\b/g, "can't"],
-  [/\bit is\b/g, "it's"],
-  [/\bthat is\b/g, "that's"],
-  [/\bwe are\b/g, "we're"],
-  [/\bthey are\b/g, "they're"],
-  [/\byou are\b/g, "you're"],
-  [/\bwhat is\b/g, "what's"],
-  [/\bwhere is\b/g, "where's"],
-  [/\bwho is\b/g, "who's"],
-  [/\bhow is\b/g, "how's"],
-  [/\blet us\b/g, "let's"],
-  [/\bI will\b/g, "I'll"],
-  [/\bI would\b/g, "I'd"],
-  [/\bI have\b/g, "I've"],
-  [/\bwould not\b/g, "wouldn't"],
-  [/\bshould not\b/g, "shouldn't"],
-  [/\bcould not\b/g, "couldn't"],
-  [/\bI had\b/g, "I'd"],
-  [/\bhe is\b/g, "he's"],
-  [/\bshe is\b/g, "she's"],
-  [/\bthere is\b/g, "there's"]
+  [/\bI am\b/gi, "I'm"],
+  [/\bdo not\b/gi, "don't"],
+  [/\bwill not\b/gi, "won't"],
+  [/\bcannot\b/gi, "can't"],
+  [/\bcan not\b/gi, "can't"],
+  [/\bit is\b/gi, "it's"],
+  [/\bthat is\b/gi, "that's"],
+  [/\bwe are\b/gi, "we're"],
+  [/\bthey are\b/gi, "they're"],
+  [/\byou are\b/gi, "you're"],
+  [/\bwhat is\b/gi, "what's"],
+  [/\bwhere is\b/gi, "where's"],
+  [/\bwho is\b/gi, "who's"],
+  [/\bhow is\b/gi, "how's"],
+  [/\blet us\b/gi, "let's"],
+  [/\bI will\b/gi, "I'll"],
+  [/\bI would\b/gi, "I'd"],
+  [/\bI have\b/gi, "I've"],
+  [/\bwould not\b/gi, "wouldn't"],
+  [/\bshould not\b/gi, "shouldn't"],
+  [/\bcould not\b/gi, "couldn't"],
+  [/\bI had\b/gi, "I'd"],
+  [/\bhe is\b/gi, "he's"],
+  [/\bshe is\b/gi, "she's"],
+  [/\bthere is\b/gi, "there's"]
 ];
 
 function stripMarkdown(text: string): string {
@@ -137,9 +137,19 @@ export function humanize(text: string, language: AppLanguage, voiceLang?: string
 
   if (language === 'en') {
     for (const [pattern, replacement] of CONTRACTIONS_EN) {
-      result = result.replace(pattern, replacement);
+      // Preserve leading-case of the original match (regex `i` flag is case-insensitive
+      // but the replacement string is taken literally).
+      result = result.replace(pattern, (match) => {
+        if (!match || !replacement) return match;
+        if (match[0] === match[0].toUpperCase() && match[0] !== match[0].toLowerCase()) {
+          return replacement[0].toUpperCase() + replacement.slice(1);
+        }
+        return replacement;
+      });
     }
-    result = result.replace(/(\w{20,})\s+and\s+/g, '$1, and ');
+    // Add a breath comma before "and" when the preceding phrase is long enough
+    // (≥ 30 characters from the start of the sentence or after a period).
+    result = result.replace(/(^|\.\s+)(.{30,})\s+and\s+/g, '$1$2, and ');
   }
 
   // Apply Malay phonetic corrections when the active TTS voice is not a

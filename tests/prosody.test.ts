@@ -14,7 +14,7 @@ describe('humanize (English)', () => {
   });
   it('inserts a breath comma before "and" in long phrases only', () => {
     const longBefore = 'I am planning the entire wedding from start to finish and it is taking forever';
-    expect(humanize(longBefore, 'en')).toBe("I'm planning the entire wedding from start to finish, and it is taking forever");
+    expect(humanize(longBefore, 'en')).toBe("I'm planning the entire wedding from start to finish, and it's taking forever");
     expect(humanize('Python and JavaScript', 'en')).toBe('Python and JavaScript');
   });
   it('returns the input unchanged for empty strings', () => {

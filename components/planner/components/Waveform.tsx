@@ -18,6 +18,10 @@ export default function Waveform({ active, rms, bars = 32, height = 56, color = 
   const [samples, setSamples] = useState<number[]>(() => Array.from({ length: bars }, () => MIN_BAR));
   const samplesRef = useRef<number[]>(samples);
   samplesRef.current = samples;
+  // Keep rms in a ref so the rAF loop reads the latest value without being
+  // listed as a dep — avoids tearing down the loop on every frame.
+  const rmsRef = useRef(rms);
+  rmsRef.current = rms;
 
   useEffect(() => {
     if (!active) {
@@ -27,16 +31,15 @@ export default function Waveform({ active, rms, bars = 32, height = 56, color = 
     let raf: number;
     const tick = () => {
       const next = samplesRef.current.slice();
-      // Shift in the new RMS at the rightmost bar
       next.shift();
-      const target = Math.max(MIN_BAR, Math.min(1, rms));
+      const target = Math.max(MIN_BAR, Math.min(1, rmsRef.current));
       next.push(target);
       setSamples(next);
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [active, rms, bars]);
+  }, [active, bars]);
 
   return (
     <div
