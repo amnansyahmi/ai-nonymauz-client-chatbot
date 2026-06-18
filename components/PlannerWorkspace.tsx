@@ -2689,6 +2689,18 @@ export default function PlannerWorkspace() {
     />
   );
 
+  if (!isHydrated) {
+    return (
+      <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
+        <div className="app-loading">
+          <div className="skeleton-bar" />
+          <div className="skeleton-message" />
+          <div className="skeleton-message skeleton-message--user" />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
       {isOffline ? (

@@ -26,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ms">
+    <html lang="ms" suppressHydrationWarning>
       <body>
         {children}
       </body>
