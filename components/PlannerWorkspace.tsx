@@ -31,6 +31,7 @@ import NotificationToggle from './planner/components/NotificationToggle';
 import { buildWeeklyBriefing } from '../lib/planner/weeklyBriefing';
 import { parseChatActions, stripActionBlock, type PlannerAction } from '../lib/planner/chatActions';
 import { parseClarify, stripClarifyBlock } from '../lib/planner/chatClarify';
+import { budgetBlueprint, contingencyPercent } from '../lib/planner/budgetGenerator';
 import { collectDueReminders, fireReminders } from '../lib/notifications';
 import type {
   ActiveTab,
@@ -218,6 +219,21 @@ type ChatSession = {
   messages: Message[];
 };
 
+type DisambiguationCandidate = { id: string; label: string; sublabel?: string };
+
+type AmbiguousAction = {
+  action: PlannerAction;
+  /** Localized "Which X did you mean?" prompt. */
+  question: string;
+  candidates: DisambiguationCandidate[];
+};
+
+type DisambiguationState = {
+  queue: AmbiguousAction[];
+  /** Run once the whole queue is resolved (e.g. mark a chat message applied). */
+  onComplete: () => void;
+};
+
 export default function PlannerWorkspace() {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -290,10 +306,13 @@ export default function PlannerWorkspace() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [disambiguation, setDisambiguation] = useState<DisambiguationState | null>(null);
+  const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isLiveVoiceOpen, setIsLiveVoiceOpen] = useState(false);
   const [vendorMessageTarget, setVendorMessageTarget] = useState<Vendor | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const activityIdRef = useRef(0);
 
 
 
@@ -337,7 +356,13 @@ export default function PlannerWorkspace() {
     setBudgetItems(storedBudgetItems.length > 0 ? storedBudgetItems : defaultBudgetItems);
     setGuests(storedGuests);
     setSavedVendors(storedSavedVendors);
-    setActivity(storedActivity);
+    const seenActivityIds = new Set<string>();
+    setActivity(storedActivity.map((item, index) => {
+      const baseId = item.id || `activity-restored-${index}`;
+      const id = seenActivityIds.has(baseId) ? `${baseId}-${index}` : baseId;
+      seenActivityIds.add(id);
+      return { ...item, id };
+    }));
     if (storedCalendarMonth) {
       const storedMonth = new Date(storedCalendarMonth);
       setCalendarMonth(storedMonth);
@@ -511,7 +536,11 @@ export default function PlannerWorkspace() {
   }, []);
 
   function addActivity(text: string) {
-    setActivity((current) => [{ id: `${Date.now()}`, text, time: new Date().toISOString() }, ...current].slice(0, 8));
+    activityIdRef.current += 1;
+    setActivity((current) => [
+      { id: `activity-${Date.now()}-${activityIdRef.current}`, text, time: new Date().toISOString() },
+      ...current
+    ].slice(0, 8));
   }
 
   function completeOnboarding(event: FormEvent) {
@@ -547,14 +576,17 @@ export default function PlannerWorkspace() {
     setSetupOpen(true);
   }
 
-  function handleSetupComplete({ items, title, profileUpdate }: SetupCompletePayload) {
+  function handleSetupComplete({ items, title, budgetItems: setupBudgetItems, profileUpdate }: SetupCompletePayload) {
     setChecklistItems(items.map((item) => ({ ...item, status: item.status || (item.completed ? 'done' : 'not-started') })));
     setChecklistTitle(title);
+    if (setupBudgetItems && setupBudgetItems.length > 0) {
+      setBudgetItems(setupBudgetItems);
+    }
     setPlannerProfile((current) => ({ ...current, ...profileUpdate, completed: true }));
-    setActiveTab('checklist');
+    setActiveTab('dashboard');
     setSetupOpen(false);
-    addActivity('Personalized checklist generated from setup wizard.');
-    setStatusMessage(language === 'ms' ? 'Checklist peribadi dijana.' : 'Personalized checklist generated.');
+    addActivity('Personalized planner generated from setup wizard.');
+    setStatusMessage(language === 'ms' ? 'Planner peribadi dijana.' : 'Personalized planner generated.');
   }
 
   function addRecommendedItem(item: ChecklistItem) {
@@ -615,27 +647,10 @@ export default function PlannerWorkspace() {
 
   function applySmartBudgetSuggestion(total?: number) {
     const base = Math.max(total || plannerProfile.totalBudget || totalPlanned || totalActual || 30000, 10000);
-    // Guest-aware: bigger guest counts mean catering eats a larger slice.
+    // Guest-aware blueprint shared with the setup wizard (single source of truth).
     const guests = plannerProfile.guestTarget || 0;
-    const cateringPercent = guests > 600 ? 0.36 : guests > 300 ? 0.32 : 0.3;
-
-    const blueprint: Array<{ match: RegExp; label: string; percent: number }> = [
-      { match: /venue|dewan|hall/i, label: 'Venue / Dewan', percent: 0.18 },
-      { match: /cater|katering|catering/i, label: 'Catering', percent: cateringPercent },
-      { match: /pelamin|dekor|decor/i, label: 'Pelamin & Dekorasi', percent: 0.1 },
-      { match: /baju|pengantin|attire|dress/i, label: 'Baju Pengantin', percent: 0.06 },
-      { match: /andaman|mua|makeup|make-?up/i, label: 'Andaman / MUA', percent: 0.06 },
-      { match: /photo|foto/i, label: 'Photography', percent: 0.06 },
-      { match: /video/i, label: 'Videography', percent: 0.05 },
-      { match: /kad|invitation|jemputan/i, label: 'Kad Jemputan', percent: 0.02 },
-      { match: /cender|doorgift|door gift|gift/i, label: 'Cenderahati', percent: 0.04 },
-      { match: /hantaran/i, label: 'Hantaran', percent: 0.05 },
-      { match: /kompang|hiburan|entertain/i, label: 'Kompang & Hiburan', percent: 0.02 },
-      { match: /transport/i, label: 'Transport', percent: 0.02 },
-      { match: /pengin|accommod|hotel|stay/i, label: 'Penginapan', percent: 0.03 }
-    ];
-    const allocatedPercent = blueprint.reduce((sum, item) => sum + item.percent, 0);
-    const contingencyPercent = Math.max(0.05, 1 - allocatedPercent);
+    const blueprint = budgetBlueprint(guests);
+    const contingency = contingencyPercent(guests);
 
     setPlannerProfile((current) => ({ ...current, totalBudget: base }));
     setBudgetItems((current) => {
@@ -657,7 +672,7 @@ export default function PlannerWorkspace() {
         }
       };
       blueprint.forEach((item) => ensure(item.match, item.label, Math.round(base * item.percent)));
-      ensure(/conting|kecemasan|buffer/i, 'Contingency', Math.round(base * contingencyPercent));
+      ensure(/conting|kecemasan|buffer/i, 'Contingency', Math.round(base * contingency));
       return next;
     });
     setActiveTab('budget');
@@ -776,6 +791,45 @@ export default function PlannerWorkspace() {
 
     const checklistSummary = `${completedCount}/${checklistItems.length} selesai | ${overdueCount} overdue | ${weekCount} due minggu ini\nTask terbuka (ikut keutamaan):\n${itemLines}`;
 
+    // Compact "planner state summary" — a digest the AI reads before replying so
+    // it can reason about urgency, budget risk, guest status, and shortlist
+    // without re-deriving from the raw lists. Written language-neutral; the AI
+    // translates as needed.
+    const daysLeft = plannerProfile.majlisDate ? daysUntil(plannerProfile.majlisDate) : null;
+
+    const totalPlanned = budgetItems.reduce((sum, item) => sum + (item.planned || 0), 0);
+    const totalPaid = budgetItems.reduce((sum, item) => sum + (item.paid || 0), 0);
+    const budgetCap = plannerProfile.totalBudget || 0;
+    const budgetRisk = budgetCap > 0
+      ? totalPlanned > budgetCap
+        ? `RISIKO: planned ${money(totalPlanned)} melebihi bajet ${money(budgetCap)}`
+        : `OK: planned ${money(totalPlanned)}/${money(budgetCap)} (${Math.round((totalPlanned / budgetCap) * 100)}%), paid ${money(totalPaid)}`
+      : 'bajet belum diset';
+
+    const confirmedPax = guests.filter((g) => g.status === 'confirmed').reduce((sum, g) => sum + (g.pax || 1), 0);
+    const pendingGuests = guests.filter((g) => g.status === 'pending').length;
+    const declinedGuests = guests.filter((g) => g.status === 'declined').length;
+    const guestStatus = guests.length > 0
+      ? `${confirmedPax} pax confirm, ${pendingGuests} pending, ${declinedGuests} decline${plannerProfile.guestTarget ? ` (target ${plannerProfile.guestTarget})` : ''}`
+      : plannerProfile.guestTarget ? `belum ada senarai tetamu (target ${plannerProfile.guestTarget})` : 'belum ada tetamu / target';
+
+    const shortlist = savedVendors
+      .map((id) => vendorDirectory.find((vendor) => vendor.id === id)?.name)
+      .filter((name): name is string => Boolean(name));
+    const vendorShortlist = shortlist.length > 0 ? shortlist.join(', ') : 'belum ada shortlist vendor';
+
+    const urgentTasks = openChecklistForContext.filter((i) => i.d !== null && i.d <= 14).slice(0, 5).map((i) => `${i.text} (${i.when})`);
+    const urgentLine = urgentTasks.length > 0 ? urgentTasks.join('; ') : 'tiada task mendesak';
+
+    const stateSummary = [
+      `Tarikh majlis: ${plannerProfile.majlisDate || 'belum set'}${daysLeft !== null ? ` (${daysLeft} hari lagi)` : ''}`,
+      `Negeri: ${plannerProfile.negeri || 'belum set'}`,
+      `Task mendesak (<=14 hari): ${urgentLine}`,
+      `Bajet: ${budgetRisk}`,
+      `Tetamu: ${guestStatus}`,
+      `Shortlist vendor: ${vendorShortlist}`
+    ].join('\n');
+
     return {
       majlisDate: plannerProfile.majlisDate,
       groomName: plannerProfile.groomName,
@@ -783,6 +837,8 @@ export default function PlannerWorkspace() {
       negeri: plannerProfile.negeri,
       totalBudget: plannerProfile.totalBudget,
       guestTarget: plannerProfile.guestTarget,
+      daysLeft: daysLeft ?? undefined,
+      stateSummary: stateSummary.slice(0, 1500),
       checklistSummary: checklistSummary.slice(0, 3500),
       budgetSummary: budgetItems.map((item) => `${item.category}: planned ${money(item.planned)}, actual ${money(item.actual)}, paid ${money(item.paid)}`).slice(0, 10),
       upcomingAppointments: appointments.filter((appointment) => appointment.date >= dateKey(new Date())).sort(sortAppointments).slice(0, 5)
@@ -903,9 +959,23 @@ export default function PlannerWorkspace() {
                 )
               }));
             } else {
+              // Preview actions/clarify the moment their block finishes streaming.
+              // parseChatActions/parseClarify return [] until the block is complete,
+              // so this safely no-ops mid-stream and pops in once parseable.
+              const previewActions = parseChatActions(fullAnswer);
+              const previewClarify = parseClarify(fullAnswer);
               setMessages((current) =>
                 current.map((message, index) =>
-                  index === assistantIndex ? { ...message, content: displayContent, sources: currentSources } : message
+                  index === assistantIndex
+                    ? {
+                        ...message,
+                        content: displayContent,
+                        sources: currentSources,
+                        actions: previewActions.length > 0 ? previewActions : undefined,
+                        actionsState: previewActions.length > 0 ? (message.actionsState ?? 'pending') : undefined,
+                        clarify: previewClarify.length > 0 ? previewClarify : undefined
+                      }
+                    : message
                 )
               );
             }
@@ -1358,7 +1428,7 @@ export default function PlannerWorkspace() {
     addActivity('Guest removed.');
   }
 
-  function applyPlannerAction(action: PlannerAction, salt = 0) {
+  function applyPlannerAction(action: PlannerAction, salt = 0, targetId?: string) {
     const newId = `act-${Date.now()}-${salt}`;
     switch (action.type) {
       case 'add_checklist_item': {
@@ -1434,9 +1504,10 @@ export default function PlannerWorkspace() {
       case 'update_budget': {
         const needle = action.category.trim().toLowerCase();
         setBudgetItems((current) => {
-          const match =
-            current.find((item) => item.category.trim().toLowerCase() === needle) ||
-            current.find((item) => item.category.trim().toLowerCase().includes(needle) || needle.includes(item.category.trim().toLowerCase()));
+          const match = targetId
+            ? current.find((item) => item.id === targetId)
+            : current.find((item) => item.category.trim().toLowerCase() === needle) ||
+              current.find((item) => item.category.trim().toLowerCase().includes(needle) || needle.includes(item.category.trim().toLowerCase()));
           if (!match) {
             // No existing category — create it so the update is not lost.
             return [
@@ -1471,6 +1542,7 @@ export default function PlannerWorkspace() {
         const needle = action.text.trim().toLowerCase();
         setChecklistItems((current) =>
           current.map((item) => {
+            if (targetId) return item.id === targetId ? { ...item, completed: true, status: 'done' } : item;
             const text = getItemText(item).trim().toLowerCase();
             const matches = text === needle || text.includes(needle) || needle.includes(text);
             return matches ? { ...item, completed: true, status: 'done' } : item;
@@ -1484,7 +1556,9 @@ export default function PlannerWorkspace() {
         setAppointments((current) =>
           current.map((appointment) => {
             const title = appointment.title.trim().toLowerCase();
-            const matches = title === needle || title.includes(needle) || needle.includes(title);
+            const matches = targetId
+              ? appointment.id === targetId
+              : title === needle || title.includes(needle) || needle.includes(title);
             if (!matches) return appointment;
             return {
               ...appointment,
@@ -1511,12 +1585,112 @@ export default function PlannerWorkspace() {
     }
   }
 
+  // For update/complete actions the AI references an item by text. If that text
+  // matches more than one existing item, we must not guess — return the
+  // candidates so the user can pick. An exact match always wins (treated as
+  // unambiguous). Returns null when 0 or 1 item matches.
+  function resolveAmbiguity(action: PlannerAction): AmbiguousAction | null {
+    const isMs = language === 'ms';
+    if (action.type === 'complete_task') {
+      const needle = action.text.trim().toLowerCase();
+      const open = checklistItems.filter((item) => !(item.completed || item.status === 'done'));
+      const exact = open.filter((item) => getItemText(item).trim().toLowerCase() === needle);
+      if (exact.length === 1) return null;
+      const matches = (exact.length > 1 ? exact : open).filter((item) => {
+        const text = getItemText(item).trim().toLowerCase();
+        return text === needle || text.includes(needle) || needle.includes(text);
+      });
+      if (matches.length <= 1) return null;
+      return {
+        action,
+        question: isMs ? 'Task yang mana satu?' : 'Which task do you mean?',
+        candidates: matches.map((item) => ({ id: item.id, label: getItemText(item), sublabel: getItemPhase(item) }))
+      };
+    }
+    if (action.type === 'update_budget') {
+      const needle = action.category.trim().toLowerCase();
+      const exact = budgetItems.filter((item) => item.category.trim().toLowerCase() === needle);
+      if (exact.length === 1) return null;
+      const matches = (exact.length > 1 ? exact : budgetItems).filter((item) => {
+        const cat = item.category.trim().toLowerCase();
+        return cat === needle || cat.includes(needle) || needle.includes(cat);
+      });
+      if (matches.length <= 1) return null;
+      return {
+        action,
+        question: isMs ? 'Kategori bajet yang mana?' : 'Which budget category?',
+        candidates: matches.map((item) => ({ id: item.id, label: item.category, sublabel: `RM${item.planned || 0}` }))
+      };
+    }
+    if (action.type === 'update_appointment') {
+      const needle = action.title.trim().toLowerCase();
+      const exact = appointments.filter((item) => item.title.trim().toLowerCase() === needle);
+      if (exact.length === 1) return null;
+      const matches = (exact.length > 1 ? exact : appointments).filter((item) => {
+        const title = item.title.trim().toLowerCase();
+        return title === needle || title.includes(needle) || needle.includes(title);
+      });
+      if (matches.length <= 1) return null;
+      return {
+        action,
+        question: isMs ? 'Appointment yang mana?' : 'Which appointment?',
+        candidates: matches.map((item) => ({ id: item.id, label: item.title, sublabel: item.date }))
+      };
+    }
+    return null;
+  }
+
+  // Shared core for applying a batch of AI actions. Applies unambiguous ones
+  // immediately and queues anything that matches multiple items for the
+  // disambiguation picker. onComplete runs once nothing is left to confirm.
+  // Used by both the text chat panel and the live-voice sheet.
+  function runActionsWithDisambiguation(actions: PlannerAction[], onComplete: () => void) {
+    const ambiguous: AmbiguousAction[] = [];
+    const ready: PlannerAction[] = [];
+    for (const action of actions) {
+      const amb = resolveAmbiguity(action);
+      if (amb) ambiguous.push(amb);
+      else ready.push(action);
+    }
+
+    ready.forEach((action, index) => applyPlannerAction(action, index));
+
+    if (ambiguous.length > 0) {
+      setDisambiguation({ queue: ambiguous, onComplete });
+      setStatusMessage(
+        ready.length > 0
+          ? language === 'ms' ? 'Sebahagian ditambah — sahkan yang berbaki.' : 'Some added — confirm the rest.'
+          : language === 'ms' ? 'Sahkan pilihan dahulu.' : 'Please confirm your choice.'
+      );
+      return;
+    }
+
+    onComplete();
+  }
+
   function applyMessageActions(messageIndex: number, actions: PlannerAction[]) {
-    actions.forEach((action, index) => applyPlannerAction(action, index));
-    setMessages((current) =>
-      current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'applied' } : message))
-    );
-    setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+    runActionsWithDisambiguation(actions, () => {
+      setMessages((current) =>
+        current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'applied' } : message))
+      );
+      setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+    });
+  }
+
+  // Resolve the head of the disambiguation queue. targetId = the chosen item;
+  // null = skip this one. When the queue empties, run the completion callback.
+  function resolveDisambiguation(targetId: string | null) {
+    if (!disambiguation) return;
+    const [head, ...rest] = disambiguation.queue;
+    if (head && targetId) applyPlannerAction(head.action, 0, targetId);
+
+    if (rest.length > 0) {
+      setDisambiguation({ queue: rest, onComplete: disambiguation.onComplete });
+      return;
+    }
+
+    disambiguation.onComplete();
+    setDisambiguation(null);
   }
 
   function dismissMessageActions(messageIndex: number) {
@@ -1901,6 +2075,16 @@ export default function PlannerWorkspace() {
   }
 
   const completedCount = checklistItems.filter((item) => item.completed).length;
+  // Appointments happening within the next 7 days that aren't done yet and
+  // haven't been dismissed — surfaced as a reminder strip on the dashboard.
+  const upcomingReminders = appointments
+    .filter((appointment) => {
+      if (appointment.status === 'done' || dismissedReminders.includes(appointment.id)) return false;
+      const due = daysUntil(appointment.date);
+      return due !== null && due >= 0 && due <= 7;
+    })
+    .sort(sortAppointments)
+    .slice(0, 3);
   const calendarDays = getCalendarDays(calendarMonth);
   const selectedMonthAppointments = appointments
     .filter((appointment) => {
@@ -2140,21 +2324,9 @@ export default function PlannerWorkspace() {
       if (recentMessages[recentMessages.length - 1]?.content !== trimmed) {
         recentMessages.push({ role: 'user', content: trimmed });
       }
-      const plannerContext = {
-        groomName: plannerProfile.groomName,
-        brideName: plannerProfile.brideName,
-        majlisDate: plannerProfile.majlisDate,
-        negeri: plannerProfile.negeri,
-        totalBudget: plannerProfile.totalBudget,
-        guestTarget: plannerProfile.guestTarget,
-        upcomingAppointments: appointments.slice(0, 3).map((appointment: { title: string; date: string; time?: string; vendor?: string; location?: string }) => ({
-          title: appointment.title,
-          date: appointment.date,
-          time: appointment.time,
-          vendor: appointment.vendor,
-          location: appointment.location
-        }))
-      };
+      // Use the same rich context as text chat so voice gets the planner state
+      // summary (days left, urgent tasks, budget risk, guest status, shortlist).
+      const plannerContext = buildPlannerContext();
 
       // Conversation memory is captured by <MemoryIndicator> and persisted.
       return askStream({
@@ -2164,7 +2336,7 @@ export default function PlannerWorkspace() {
         voiceMode: opts?.voiceMode ?? false
       });
     },
-    [messages, plannerProfile, appointments, language, copy.welcome]
+    [messages, plannerProfile, appointments, checklistItems, budgetItems, guests, savedVendors, language, copy.welcome]
   );
 
   const liveVoice = useLiveVoice({ language, ask: askVoiceStream });
@@ -2718,8 +2890,9 @@ export default function PlannerWorkspace() {
             setIsLiveVoiceOpen(false);
           }}
           onApplyActions={(actions) => {
-            actions.forEach((action, index) => applyPlannerAction(action, index));
-            setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+            runActionsWithDisambiguation(actions, () => {
+              setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
+            });
           }}
         />
       ) : null}
@@ -2952,6 +3125,43 @@ export default function PlannerWorkspace() {
           </div>
           {activeTab === 'dashboard' ? (
         <>
+        {upcomingReminders.length > 0 ? (
+          <div className="reminder-strip" role="region" aria-label={language === 'ms' ? 'Peringatan appointment' : 'Appointment reminders'}>
+            {upcomingReminders.map((appointment) => {
+              const due = daysUntil(appointment.date);
+              const whenLabel = due === 0
+                ? language === 'ms' ? 'hari ini' : 'today'
+                : due === 1
+                  ? language === 'ms' ? 'esok' : 'tomorrow'
+                  : language === 'ms' ? `dalam ${due} hari` : `in ${due} days`;
+              return (
+                <div key={appointment.id} className="reminder-item">
+                  <span className="reminder-icon" aria-hidden="true">📅</span>
+                  <button
+                    type="button"
+                    className="reminder-body"
+                    onClick={() => {
+                      setCalendarMonth(new Date(`${appointment.date}T00:00:00`));
+                      setSelectedDate(appointment.date);
+                      setActiveTab('calendar');
+                    }}
+                  >
+                    <strong>{appointment.title}</strong>
+                    <span>{whenLabel}{appointment.time ? ` · ${appointment.time}` : ''}{appointment.vendor ? ` · ${appointment.vendor}` : ''}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="reminder-dismiss"
+                    aria-label={language === 'ms' ? 'Tutup peringatan' : 'Dismiss reminder'}
+                    onClick={() => setDismissedReminders((current) => [...current, appointment.id])}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
         {(() => {
           const readiness = profileReadyForChecklist(plannerProfile);
           if (!readiness.ready) {
@@ -4317,6 +4527,45 @@ export default function PlannerWorkspace() {
         onComplete={handleSetupComplete}
         initialProfile={plannerProfile}
       />
+      {disambiguation && disambiguation.queue.length > 0 ? (
+        <div
+          className="disambiguation-backdrop"
+          role="presentation"
+          onMouseDown={() => resolveDisambiguation(null)}
+        >
+          <div
+            className="disambiguation-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={disambiguation.queue[0].question}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <p className="disambiguation-question">{disambiguation.queue[0].question}</p>
+            <div className="disambiguation-options">
+              {disambiguation.queue[0].candidates.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  className="disambiguation-option"
+                  onClick={() => resolveDisambiguation(candidate.id)}
+                >
+                  <span className="disambiguation-option__label">{candidate.label}</span>
+                  {candidate.sublabel ? (
+                    <span className="disambiguation-option__sub">{candidate.sublabel}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="disambiguation-skip"
+              onClick={() => resolveDisambiguation(null)}
+            >
+              {language === 'ms' ? 'Langkau' : 'Skip'}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

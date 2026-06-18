@@ -39,44 +39,55 @@ type ChatWidgetProps = {
   onSubmit: (event: FormEvent) => void;
 };
 
-const ACTION_ICON: Record<PlannerAction['type'], string> = {
-  add_checklist_item: '✓',
-  add_budget_item: 'RM',
-  add_appointment: '📅',
-  add_guest: '👤',
-  update_budget: 'RM',
-  complete_task: '✓',
-  update_appointment: '📅',
-  set_profile: '💍'
-};
-
 type ActionPanelProps = {
   messageIndex: number;
   actions: PlannerAction[];
   state?: Message['actionsState'];
   language: 'ms' | 'en';
+  preview?: boolean;
   onApply?: (messageIndex: number, actions: PlannerAction[]) => void;
   onDismiss?: (messageIndex: number) => void;
 };
 
-function ActionPanel({ messageIndex, actions, state, language, onApply, onDismiss }: ActionPanelProps) {
+function getActionIcon(type: PlannerAction['type']): string {
+  switch (type) {
+    case 'add_budget_item':
+    case 'update_budget':
+      return 'RM';
+    case 'add_appointment':
+    case 'update_appointment':
+      return 'Cal';
+    case 'add_guest':
+      return 'Pax';
+    case 'set_profile':
+      return 'Set';
+    case 'add_checklist_item':
+    case 'complete_task':
+    default:
+      return 'OK';
+  }
+}
+
+function ActionPanel({ messageIndex, actions, state, language, preview, onApply, onDismiss }: ActionPanelProps) {
   const isMs = language === 'ms';
   if (state === 'dismissed') return null;
   const applied = state === 'applied';
 
   return (
-    <div className={`chat-actions${applied ? ' is-applied' : ''}`}>
+    <div className={`chat-actions${applied ? ' is-applied' : ''}${preview ? ' is-preview' : ''}`}>
       <span className="chat-actions__title">
         {applied
           ? isMs ? 'Ditambah ke planner' : 'Added to your planner'
-          : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
+          : preview
+            ? isMs ? 'MajlisMate sedang sediakan…' : 'MajlisMate is preparing…'
+            : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
       </span>
       <ul className="chat-actions__list">
         {actions.map((action, i) => {
           const { kind, label } = summarizeAction(action, language);
           return (
             <li key={i} className={`chat-action-chip type-${action.type}`}>
-              <span className="chat-action-chip__icon" aria-hidden="true">{ACTION_ICON[action.type]}</span>
+              <span className="chat-action-chip__icon" aria-hidden="true">{getActionIcon(action.type)}</span>
               <span className="chat-action-chip__kind">{kind}</span>
               <span className="chat-action-chip__label">{label}</span>
             </li>
@@ -88,6 +99,7 @@ function ActionPanel({ messageIndex, actions, state, language, onApply, onDismis
           <button
             type="button"
             className="chat-actions__apply"
+            disabled={preview}
             onClick={() => onApply?.(messageIndex, actions)}
           >
             {actions.length > 1
@@ -97,6 +109,7 @@ function ActionPanel({ messageIndex, actions, state, language, onApply, onDismis
           <button
             type="button"
             className="chat-actions__dismiss"
+            disabled={preview}
             onClick={() => onDismiss?.(messageIndex)}
           >
             {isMs ? 'Abaikan' : 'Dismiss'}
@@ -187,7 +200,11 @@ function MessageBubble({ message, isStreaming, emptyTypingLabel, language = 'ms'
       {message.content ? (
         <Markdown content={message.content} streaming={isStreaming} />
       ) : (
-        <p className="typing">{emptyTypingLabel}</p>
+        <div className="typing-indicator" role="status" aria-label={emptyTypingLabel}>
+          <span className="typing-dot" />
+          <span className="typing-dot" />
+          <span className="typing-dot" />
+        </div>
       )}
       {message.sources && message.sources.length > 0 ? (
         <InlineCitations sources={message.sources} language={language} />
@@ -278,12 +295,13 @@ export default function ChatWidget({
                     emptyTypingLabel={emptyTypingLabel}
                     language={language}
                   />
-                  {message.actions && message.actions.length > 0 && !isStreaming ? (
+                  {message.actions && message.actions.length > 0 ? (
                     <ActionPanel
                       messageIndex={index}
                       actions={message.actions}
                       state={message.actionsState}
                       language={language}
+                      preview={isStreaming}
                       onApply={onApplyActions}
                       onDismiss={onDismissActions}
                     />

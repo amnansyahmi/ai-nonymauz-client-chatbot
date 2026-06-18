@@ -49,7 +49,15 @@ function isUnrelatedCreationRequest(message: string) {
   return CREATION_REQUEST_PATTERN.test(message) && !WEDDING_RELATED_PATTERN.test(message);
 }
 
-function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voiceMode = false) {
+function buildDemoPlannerAnswer(
+  userMessage: string,
+  language: AppLanguage,
+  voiceMode = false,
+  plannerContext?: ChatRequest['plannerContext']
+) {
+  const hasDate = Boolean(plannerContext?.majlisDate);
+  const hasGuests = Boolean(plannerContext?.guestTarget);
+  const hasBudget = Boolean(plannerContext?.totalBudget);
   const isChecklist = /\b(checklist|senarai|task|tugas|todo|to-do)\b/i.test(userMessage);
   const isVendor = /\b(vendor|photographer|caterer|catering|katering|dewan|venue|andaman|makeup|mua|florist|flower|floral|bunga|bouquet|pelamin|dekor|decor|hantaran|kompang|kad|invitation|cenderahati|doorgift|gubahan|baju|gown|tailor|jahit|kek|cake|dj|band|kahwin\s+\w+)\b/i.test(userMessage);
   const isBudget = /\b(budget|bajet|harga|kos|rm|payment|bayar|deposit)\b/i.test(userMessage);
@@ -93,17 +101,17 @@ function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voic
   }
 
   if (language === 'en') {
-    if (isChecklist) return 'I can help with that. A clean wedding checklist should be grouped by timing, not just category.\n\nStart with:\n- 12-9 months: date, venue, budget, main vendors\n- 8-6 months: outfits, photographer, catering, guest list\n- 5-3 months: invitation, doorgift, decoration, documents\n- Final month: vendor confirmations, seating, payment balance, day schedule\n\nTell me your wedding date and guest estimate so I can make it more specific.';
+    if (isChecklist) return `I can help with that. A clean wedding checklist should be grouped by timing, not just category.\n\nStart with:\n- 12-9 months: date, venue, budget, main vendors\n- 8-6 months: outfits, photographer, catering, guest list\n- 5-3 months: invitation, doorgift, decoration, documents\n- Final month: vendor confirmations, seating, payment balance, day schedule\n\n${hasDate && hasGuests ? 'I have your date and guest target — want me to generate the checklist now?' : 'Tell me your wedding date and guest estimate so I can make it more specific.'}`;
     if (isVendor) return 'Good idea. For vendors, shortlist by fit before price.\n\nCompare each vendor on:\n- Availability for your date\n- Package inclusions and hidden charges\n- Deposit and cancellation terms\n- Recent portfolio or reviews\n- Travel fee and setup timing\n\nShare the vendor type and negeri, and I can prepare questions or a WhatsApp message.';
-    if (isBudget) return 'Let’s keep the budget practical. Split it into confirmed, estimated, and optional costs.\n\nA simple structure:\n- Venue and catering\n- Outfit and makeup\n- Photo/video\n- Decoration and pelamin\n- Door gifts and invitation\n- Buffer, usually 8-12%\n\nTell me your total budget and guest count, and I’ll suggest a cleaner allocation.';
+    if (isBudget) return `Let’s keep the budget practical. Split it into confirmed, estimated, and optional costs.\n\nA simple structure:\n- Venue and catering\n- Outfit and makeup\n- Photo/video\n- Decoration and pelamin\n- Door gifts and invitation\n- Buffer, usually 8-12%\n\n${hasBudget && hasGuests ? 'I have your budget and guest target — want me to suggest a full allocation now?' : 'Tell me your total budget and guest count, and I’ll suggest a cleaner allocation.'}`;
     if (isAppointment) return 'Sure. For appointments, track three things: who, when, and what decision must be made.\n\nUseful notes:\n- Vendor name\n- Date and time\n- Location or call link\n- Questions to ask\n- Deposit or document needed\n\nGive me the date, time, and vendor, and I’ll help format it.';
     if (isRsvp) return 'For RSVP, separate guests by family side or group first. That makes follow-up easier.\n\nTrack:\n- Name and phone\n- Group\n- Pax count\n- Status: pending, confirmed, declined\n- Notes, such as kids or transport\n\nIf you already have a guest estimate, I can suggest a follow-up plan.';
     return 'I’ve noted that. Here’s a practical next step: turn it into one clear planning action.\n\nTry this:\n- Decide whether it affects checklist, budget, vendor, guest list, or appointment\n- Add the key date or amount if there is one\n- Ask me to draft the next message, task, or reminder\n\nFor example: “Create a checklist for my final month” or “Draft a WhatsApp message to a caterer.”';
   }
 
-  if (isChecklist) return 'Boleh. Checklist kahwin paling senang bila susun ikut masa, bukan ikut kategori semata-mata.\n\nMula dengan:\n- 12-9 bulan: tarikh, dewan, bajet, vendor utama\n- 8-6 bulan: baju, photographer, katering, senarai tetamu\n- 5-3 bulan: kad jemputan, doorgift, dekorasi, dokumen\n- Bulan terakhir: confirm vendor, seating, baki bayaran, tentatif hari majlis\n\nBeritahu tarikh majlis dan anggaran tetamu, saya boleh susun lebih tepat.';
+  if (isChecklist) return `Boleh. Checklist kahwin paling senang bila susun ikut masa, bukan ikut kategori semata-mata.\n\nMula dengan:\n- 12-9 bulan: tarikh, dewan, bajet, vendor utama\n- 8-6 bulan: baju, photographer, katering, senarai tetamu\n- 5-3 bulan: kad jemputan, doorgift, dekorasi, dokumen\n- Bulan terakhir: confirm vendor, seating, baki bayaran, tentatif hari majlis\n\n${hasDate && hasGuests ? 'Saya dah ada tarikh dan guest target — nak saya jana checklist sekarang?' : 'Beritahu tarikh majlis dan anggaran tetamu, saya boleh susun lebih tepat.'}`;
   if (isVendor) return 'Bagus. Untuk vendor, shortlist ikut kesesuaian dulu sebelum harga.\n\nBandingkan setiap vendor pada:\n- Available atau tidak pada tarikh majlis\n- Apa yang termasuk dalam pakej\n- Caj tambahan tersembunyi\n- Deposit dan syarat cancel\n- Portfolio atau review terkini\n- Caj travel dan masa setup\n\nBagi jenis vendor dan negeri, saya boleh bantu sediakan soalan atau mesej WhatsApp.';
-  if (isBudget) return 'Jom kemaskan bajet. Pecahkan kepada kos confirm, kos anggaran, dan kos optional.\n\nStruktur mudah:\n- Dewan dan katering\n- Baju dan makeup\n- Photo/video\n- Dekorasi dan pelamin\n- Doorgift dan jemputan\n- Buffer sekitar 8-12%\n\nBeritahu jumlah bajet dan jumlah tetamu, saya boleh cadangkan pecahan yang lebih sesuai.';
+  if (isBudget) return `Jom kemaskan bajet. Pecahkan kepada kos confirm, kos anggaran, dan kos optional.\n\nStruktur mudah:\n- Dewan dan katering\n- Baju dan makeup\n- Photo/video\n- Dekorasi dan pelamin\n- Doorgift dan jemputan\n- Buffer sekitar 8-12%\n\n${hasBudget && hasGuests ? 'Saya dah ada bajet dan guest target — nak saya cadangkan pecahan penuh sekarang?' : 'Beritahu jumlah bajet dan jumlah tetamu, saya boleh cadangkan pecahan yang lebih sesuai.'}`;
   if (isAppointment) return 'Boleh. Untuk appointment, simpan tiga benda: siapa, bila, dan keputusan apa yang perlu dibuat.\n\nNota appointment yang berguna:\n- Nama vendor\n- Tarikh dan masa\n- Lokasi atau link call\n- Soalan yang nak ditanya\n- Deposit atau dokumen yang perlu dibawa\n\nBagi tarikh, masa, dan vendor, saya boleh formatkan untuk calendar.';
   if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut side keluarga atau group dulu. Nanti follow-up lebih mudah.\n\nTrack benda ini:\n- Nama dan nombor telefon\n- Group tetamu\n- Bilangan pax\n- Status: belum reply, confirm, tidak hadir\n- Nota seperti anak kecil atau transport\n\nKalau ada anggaran tetamu, saya boleh cadangkan cara follow-up.';
   return 'Saya dah noted. Langkah terbaik sekarang ialah tukarkan perkara ini kepada satu tindakan planning yang jelas.\n\nCuba pilih kategori:\n- Checklist\n- Bajet\n- Vendor\n- Tetamu\n- Appointment\n\nContoh: “Buat checklist untuk bulan terakhir” atau “Draft mesej WhatsApp untuk caterer.”';
@@ -114,13 +122,61 @@ function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voic
  * the "ask before acting" behavior for clearly-ambiguous add requests by asking
  * one question and emitting a clarify block of tappable options.
  */
-function buildDemoClarification(userMessage: string, language: AppLanguage): string | null {
+function buildDemoClarification(
+  userMessage: string,
+  language: AppLanguage,
+  plannerContext?: ChatRequest['plannerContext']
+): string | null {
   const isMs = language === 'ms';
   const msg = userMessage.toLowerCase();
-  const wantsAdd = /\b(tambah|add|buat|create|nak|cari|find|set|setkan|book|tempah)\b/.test(msg);
+  const wantsAdd = /\b(tambah|add|buat|create|nak|cari|find|set|setkan|book|tempah|cadang|suggest)\b/.test(msg);
   if (!wantsAdd) return null;
 
   const block = (options: string[]) => `${MM_CLARIFY_OPEN}\n${JSON.stringify(options)}\n${MM_CLARIFY_CLOSE}`;
+
+  const hasNegeri = Boolean(plannerContext?.negeri);
+  const hasGuestTarget = Boolean(plannerContext?.guestTarget);
+  const hasBudget = Boolean(plannerContext?.totalBudget);
+  const guestOptions = isMs ? ['Bawah 100', '100-200', '200-300', '300+'] : ['Under 100', '100-200', '200-300', '300+'];
+  const negeriOptions = ['Selangor', 'Kuala Lumpur', 'Johor', 'Pulau Pinang'];
+  const budgetOptions = isMs
+    ? ['Bawah RM30k', 'RM30k-RM60k', 'RM60k-RM100k', 'RM100k+']
+    : ['Under RM30k', 'RM30k-RM60k', 'RM60k-RM100k', 'RM100k+'];
+
+  // Checklist: ask only for the single most important MISSING input.
+  const mentionsChecklist = /\b(checklist|senarai tugas|senarai task|to-?do|todo)\b/.test(msg);
+  if (mentionsChecklist) {
+    if (!hasGuestTarget) {
+      const q = isMs ? 'Boleh — berapa guest target majlis anda?' : 'Sure — what is your guest target?';
+      return `${q}\n${block(guestOptions)}`;
+    }
+    if (!hasNegeri) {
+      const q = isMs ? 'Boleh — majlis dekat negeri mana?' : 'Sure — which state is the wedding in?';
+      return `${q}\n${block(negeriOptions)}`;
+    }
+    return null;
+  }
+
+  // Budget suggestion: needs total budget and guest target to be useful.
+  const budgetMentioned = /\b(bajet|budget)\b/.test(msg);
+  if (budgetMentioned) {
+    if (!hasBudget && !/\d/.test(msg)) {
+      const q = isMs ? 'Boleh — berapa jumlah bajet keseluruhan?' : 'Sure — what is your total budget?';
+      return `${q}\n${block(budgetOptions)}`;
+    }
+    if (!hasGuestTarget) {
+      const q = isMs ? 'Boleh — berapa guest target supaya saya boleh pecahkan bajet?' : 'Sure — what is your guest target so I can split the budget?';
+      return `${q}\n${block(guestOptions)}`;
+    }
+    if (!/\d/.test(msg)) {
+      const q = isMs ? 'Boleh — bajet untuk kategori yang mana?' : 'Sure — which budget category?';
+      const options = isMs
+        ? ['Dewan & katering', 'Fotografi', 'Baju & makeup', 'Dekorasi']
+        : ['Venue & catering', 'Photography', 'Outfit & makeup', 'Decoration'];
+      return `${q}\n${block(options)}`;
+    }
+    return null;
+  }
 
   const mentionsVendor = /\bvendor(s)?\b/.test(msg);
   const specificVendor =
@@ -128,15 +184,6 @@ function buildDemoClarification(userMessage: string, language: AppLanguage): str
   if (mentionsVendor && !specificVendor) {
     const q = isMs ? 'Boleh — vendor jenis apa yang anda fikirkan?' : 'Sure — what type of vendor are you thinking of?';
     const options = isMs ? ['Jurugambar', 'Katering', 'MUA / Andaman', 'Dewan'] : ['Photographer', 'Caterer', 'Makeup artist', 'Venue'];
-    return `${q}\n${block(options)}`;
-  }
-
-  const mentionsBudget = /\b(bajet|budget)\b/.test(msg);
-  if (mentionsBudget && !/\d/.test(msg)) {
-    const q = isMs ? 'Boleh — bajet untuk kategori yang mana?' : 'Sure — which budget category?';
-    const options = isMs
-      ? ['Dewan & katering', 'Fotografi', 'Baju & makeup', 'Dekorasi']
-      : ['Venue & catering', 'Photography', 'Outfit & makeup', 'Decoration'];
     return `${q}\n${block(options)}`;
   }
 
@@ -161,7 +208,8 @@ async function forwardAiNonymauzStream(
   encoder: TextEncoder,
   messages: ChatMessage[],
   language: AppLanguage,
-  voiceMode = false
+  voiceMode = false,
+  plannerContext?: ChatRequest['plannerContext']
 ) {
   const env = {
     baseUrl: process.env.AI_NONYMAUZ_BASE_URL?.replace(/\/$/, '') ?? '',
@@ -172,8 +220,8 @@ async function forwardAiNonymauzStream(
 
   if (!env.baseUrl || !env.apiKey || env.apiKey === 'your-secret-api-key') {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-    const demoClarification = voiceMode ? null : buildDemoClarification(userMessage, language);
-    const demoAnswer = cleanDemoText(demoClarification ?? buildDemoPlannerAnswer(userMessage, language, voiceMode));
+    const demoClarification = voiceMode ? null : buildDemoClarification(userMessage, language, plannerContext);
+    const demoAnswer = cleanDemoText(demoClarification ?? buildDemoPlannerAnswer(userMessage, language, voiceMode, plannerContext));
 
     for (const word of demoAnswer.split(/(\s+)/)) {
       controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: word })));
@@ -273,6 +321,36 @@ function forwardSseEvents(
   }
 }
 
+// Durable signals worth remembering from earlier in the conversation —
+// decisions, preferences, and concrete details the couple stated.
+const MEMORY_SIGNAL_PATTERN =
+  /\b(tema|theme|warna|colou?r|pilih|chose|choose|decided|putus|prefer|suka|nak|mahu|want|elak|avoid|tarikh|date|negeri|state|bajet|budget|rm\s?\d|guest|tetamu|pax|vendor|dewan|venue|katering|caterer|photographer|jurugambar|mua|makeup|outdoor|indoor|garden|hotel|masjid|pagi|petang|malam)\b/i;
+
+/**
+ * Build a compact memory of the older part of the conversation (the messages
+ * that fall outside the recent window we forward verbatim). Pure heuristic
+ * extraction — no extra AI call — so it stays free and fast. Returns '' when
+ * there is nothing worth remembering.
+ */
+function buildPriorConversationNotes(messages: ChatMessage[], keepRecent: number): string {
+  if (messages.length <= keepRecent) return '';
+  const older = messages.slice(0, messages.length - keepRecent);
+  const notes: string[] = [];
+  const seen = new Set<string>();
+  for (let i = older.length - 1; i >= 0 && notes.length < 10; i--) {
+    const message = older[i];
+    if (message.role !== 'user') continue;
+    const text = message.content.trim().replace(/\s+/g, ' ');
+    if (text.length < 4 || text.length > 240) continue;
+    if (!MEMORY_SIGNAL_PATTERN.test(text)) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    notes.unshift(`- ${text}`);
+  }
+  return notes.join('\n');
+}
+
 function buildSystemPrompt(
   language: AppLanguage,
   plannerContext: ChatRequest['plannerContext'],
@@ -299,13 +377,15 @@ Supported actions (use only these types and fields):
 - {"type":"update_appointment","title":string,"reason":string?,"date":"YYYY-MM-DD"?,"time":"HH:MM"?,"status":"planned"|"confirmed"|"done"?} (title should match an existing appointment)
 - {"type":"set_profile","majlisDate":"YYYY-MM-DD"?,"negeri":string?,"totalBudget":number?,"guestTarget":number?} (use when the user states their wedding date, state, total budget, or guest count)
 Action rules: Today is ${todayIso}; resolve any relative dates (e.g. "next month", "minggu depan") to absolute YYYY-MM-DD using today and the majlis date. Never invent prices, dates, names, or phone numbers the user did not provide — omit optional fields you are unsure about. Only include actions you are confident the user wants now. Do NOT mention the block, JSON, or "actions" in your visible reply; the app renders confirm buttons automatically. If the user is only asking a question or no concrete change is requested, do not output the block at all.
-14. ANSWER-FIRST PATTERN: If the user asks a factual question (e.g. "bila kena buat HIV test?"), FIRST answer the question in your visible reply, THEN propose a planner action with a reason field explaining the connection. Example: "HIV test biasanya dibuat 6 bulan sebelum majlis untuk kursus pra-perkahwinan JAIS'. Nak saya tambah ke checklist?" then include an action with reason: "Wajib untuk kursus pra-perkahwinan JAIS". NEVER skip the answer to just ask which category.`;
+14. ANSWER-FIRST PATTERN: If the user asks a factual question (e.g. "bila kena buat HIV test?"), FIRST answer the question in your visible reply, THEN propose a planner action with a reason field explaining the connection. Example: "HIV test biasanya dibuat 6 bulan sebelum majlis untuk kursus pra-perkahwinan JAIS'. Nak saya tambah ke checklist?" then include an action with reason: "Wajib untuk kursus pra-perkahwinan JAIS". NEVER skip the answer to just ask which category.
+15. ACTION-FIRST CLOSE: Almost every reply should end by offering the single most useful next step, phrased as a short question the user can act on. Prefer offers that map to a planner action you can perform now: add to checklist, add a budget item, create/update an appointment, add a guest, or update the profile (emit the matching MM_ACTIONS block when you have the details). You may ALSO offer two app capabilities in plain text when relevant even though they are not MM_ACTIONS: "draft a WhatsApp message" (for contacting a vendor) and "compare vendors" (to shortlist by fit/price). Offer only ONE clear next step, never a menu of five. Make the offer specific to what was just discussed, not generic.`;
 
   const clarifyRule = `\n13. ASK BEFORE ACTING (clarify when unsure): When the user asks you to add or change something concrete BUT a key detail needed to do it well is missing or ambiguous — and you would otherwise have to guess — do NOT guess and do NOT output an actions block. Instead ask exactly ONE short, friendly clarifying question in your visible reply, then append exactly one block on its own lines with 2-4 short suggested answers (each at most ~6 words, written in ${languageName}, phrased as tappable replies):
 ${'<<<MM_CLARIFY'}
 ["...", "...", "..."]
 ${'MM_CLARIFY>>>'}
-NEVER use MM_CLARIFY to dodge a question. If the user asks a factual question, ALWAYS answer in your visible reply first THEN offer an action. Clarify rules: Only ask when the missing detail genuinely matters (e.g. which vendor type, which date, which budget category, how many pax) — never ask filler questions. Ask at most ONE question per reply. Do NOT output both an MM_CLARIFY block and an MM_ACTIONS block in the same reply — choose to either ask OR act. If you already have everything you need, skip clarifying and act (or just answer). Do NOT mention the block, JSON, "options", or "clarify" in your visible reply; the app renders the suggestions as tappable chips automatically.`;
+NEVER use MM_CLARIFY to dodge a question. If the user asks a factual question, ALWAYS answer in your visible reply first THEN offer an action. Clarify rules: Only ask when the missing detail genuinely matters (e.g. which vendor type, which date, which budget category, how many pax) — never ask filler questions. Ask at most ONE question per reply. Do NOT output both an MM_CLARIFY block and an MM_ACTIONS block in the same reply — choose to either ask OR act. If you already have everything you need, skip clarifying and act (or just answer). Do NOT mention the block, JSON, "options", or "clarify" in your visible reply; the app renders the suggestions as tappable chips automatically.
+TARGETED CLARIFY: First check the PLANNER STATE SUMMARY and planner context. Ask ONLY for a field that is genuinely missing there — never re-ask something already known. For "buat checklist"/"create checklist": the key inputs are majlis date, negeri, and guest target; if the guest target is missing ask "Berapa guest target?" / "What's your guest target?"; if negeri is missing ask "Majlis dekat negeri mana?" / "Which state is the wedding in?"; if the date is missing ask for the date. For "cadang bajet"/"suggest a budget": the key inputs are total budget and guest target; ask for whichever is missing. Pick the single most important missing field and ask only that, with concrete tappable options when sensible (e.g. ["100-200", "200-300", "300-500", "500+"] for guest target, or a list of negeri).`;
 
   return `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
@@ -321,13 +401,17 @@ Rules:
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
 10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).${voiceMode ? '\n11. This is a voice conversation. Answer in 1–3 short spoken sentences only. No markdown, no bullet lists, no numbered lists, no headings, no asterisks. Speak naturally and conversationally as if talking aloud.' : ''}${actionsRule}${clarifyRule}
 
+PLANNER STATE SUMMARY (read this first and reason from it — it reflects the couple's live workspace):
+${plannerContext?.stateSummary || 'not available yet'}
+Use this summary to make replies smart and specific: lead with what is urgent given days-left, flag budget risk when planned exceeds the budget, nudge on pending guests, and reference the vendor shortlist when relevant. Do not repeat the whole summary back — use it to prioritise.
+
 Internal knowledge context:
 ${context}
 
 Current planner context from the local MajlisMate.ai workspace:
 - Groom name: ${plannerContext?.groomName || 'not set'}
 - Bride name: ${plannerContext?.brideName || 'not set'}
-- Majlis date: ${plannerContext?.majlisDate || 'not set'}
+- Majlis date: ${plannerContext?.majlisDate || 'not set'}${typeof plannerContext?.daysLeft === 'number' ? ` (${plannerContext.daysLeft} days left)` : ''}
 - Negeri: ${plannerContext?.negeri || 'not set'}
 - Total budget: ${plannerContext?.totalBudget ? `RM${plannerContext.totalBudget}` : 'not set'}
 - Guest target: ${plannerContext?.guestTarget || 'not set'}
@@ -396,9 +480,17 @@ export async function POST(request: NextRequest) {
 
     const selectedDocs = retrieveContext(latestUserMessage, 3);
     const systemPrompt = buildSystemPrompt(language, plannerContext, selectedDocs, voiceMode);
+    const RECENT_WINDOW = 8;
+    const priorNotes = buildPriorConversationNotes(messages, RECENT_WINDOW);
     const aiMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...messages.slice(-6).map((message) => ({ role: message.role, content: message.content }))
+      ...(priorNotes
+        ? [{
+            role: 'system' as const,
+            content: `EARLIER CONVERSATION NOTES (things the couple said earlier in this chat — honour these and do not contradict or re-ask them):\n${priorNotes}`
+          }]
+        : []),
+      ...messages.slice(-RECENT_WINDOW).map((message) => ({ role: message.role, content: message.content }))
     ];
 
     const stream = new ReadableStream<Uint8Array>({
@@ -413,7 +505,7 @@ export async function POST(request: NextRequest) {
             )
           );
 
-          await forwardAiNonymauzStream(controller, encoder, aiMessages, language, voiceMode);
+          await forwardAiNonymauzStream(controller, encoder, aiMessages, language, voiceMode, plannerContext);
           controller.enqueue(encoder.encode(sseDone()));
         } catch (error) {
           const message = error instanceof Error ? error.message : 'Unexpected error';

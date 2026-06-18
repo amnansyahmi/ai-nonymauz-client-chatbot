@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { MOBILE_NAV_LABELS, MOBILE_NAV_TABS, type MobileTab } from '../../components/mobile/types';
 
 describe('MobileBottomNav exports', () => {
-  it('exposes the five primary tabs in a stable order', () => {
-    expect(MOBILE_NAV_TABS).toEqual(['dashboard', 'checklist', 'chat', 'budget', 'rsvp']);
+  it('exposes the six primary tabs in a stable order', () => {
+    expect(MOBILE_NAV_TABS).toEqual(['dashboard', 'checklist', 'chat', 'budget', 'rsvp', 'vendors']);
   });
 
   it('uses MobileTab type values that match the workspace ActiveTab union', () => {
@@ -21,9 +21,9 @@ describe('MobileBottomNav exports', () => {
     }
   });
 
-  it('does not include calendar or vendors in the primary bar (full nav lives elsewhere)', () => {
+  it('keeps calendar out of the primary bar while including vendors', () => {
     expect(MOBILE_NAV_TABS).not.toContain('calendar');
-    expect(MOBILE_NAV_TABS).not.toContain('vendors');
+    expect(MOBILE_NAV_TABS).toContain('vendors');
   });
 
   it('provides BM labels for every tab', () => {

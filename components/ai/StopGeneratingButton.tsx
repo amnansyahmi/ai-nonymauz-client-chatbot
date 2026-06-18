@@ -12,7 +12,7 @@ type StopGeneratingButtonProps = {
 function StopIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="6" y="6" width="12" height="12" rx="2" />
+      <rect x="7" y="7" width="10" height="10" rx="1.8" />
     </svg>
   );
 }
@@ -30,7 +30,7 @@ export default function StopGeneratingButton({ visible, language = 'ms', onStop 
       aria-label={isMs ? 'Berhenti jana' : 'Stop generating'}
     >
       <StopIcon />
-      <span>{isMs ? 'Berhenti' : 'Stop'}</span>
+      <span>{isMs ? 'Henti jana' : 'Stop generating'}</span>
     </button>
   );
 }

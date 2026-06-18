@@ -13,6 +13,8 @@ export const plannerContextSchema = z
     negeri: z.string().max(80).optional(),
     totalBudget: z.number().nonnegative().max(10_000_000).optional(),
     guestTarget: z.number().int().nonnegative().max(100_000).optional(),
+    daysLeft: z.number().int().optional(),
+    stateSummary: z.string().max(2000).optional(),
     checklistSummary: z.string().max(4000).optional(),
     budgetSummary: z.array(z.string().max(160)).max(50).optional(),
     upcomingAppointments: z

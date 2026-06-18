@@ -4830,6 +4830,53 @@ body {
   color: var(--mm-muted) !important;
 }
 
+/* Animated "thinking" indicator shown before the first streamed token. */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 0;
+}
+
+.typing-indicator .typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mm-muted, #62666d);
+  opacity: 0.4;
+  animation: mm-typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-indicator .typing-dot:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.typing-indicator .typing-dot:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes mm-typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing-indicator .typing-dot {
+    animation: mm-typing-fade 1.4s ease-in-out infinite;
+    transform: none;
+  }
+  @keyframes mm-typing-fade {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 0.85; }
+  }
+}
+
 .pwa-banner {
   position: fixed;
   left: 50%;
@@ -7497,6 +7544,161 @@ button,
   justify-items: center;
   background: rgba(0, 0, 0, 0.18);
   padding: min(12vh, 90px) 16px 24px;
+}
+
+/* Dashboard appointment reminder strip. */
+.reminder-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--mm-border);
+  border-left: 3px solid var(--mm-brand, #7b3f5f);
+  border-radius: 12px;
+  background: var(--mm-surface-subtle);
+  padding: 10px 12px;
+}
+
+.reminder-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.reminder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--mm-text);
+  padding: 0;
+}
+
+.reminder-body strong {
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminder-body span {
+  font-size: 0.78rem;
+  color: var(--mm-text-muted, #62666d);
+}
+
+.reminder-body:hover strong {
+  color: var(--mm-brand-strong, #8f4f3d);
+}
+
+.reminder-dismiss {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--mm-text-muted, #62666d);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reminder-dismiss:hover {
+  background: var(--mm-hover, rgba(36, 28, 24, 0.045));
+  color: var(--mm-text);
+}
+
+/* Disambiguation picker: "which item did you mean?" before applying an action. */
+.disambiguation-backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 16px;
+}
+
+.disambiguation-modal {
+  width: min(420px, 100%);
+  border: 1px solid var(--mm-border);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.22);
+  padding: 18px 18px 14px;
+}
+
+.disambiguation-question {
+  margin: 0 0 12px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+.disambiguation-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.disambiguation-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--mm-border);
+  border-radius: 12px;
+  background: var(--mm-surface-subtle);
+  color: var(--mm-text);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.disambiguation-option:hover {
+  background: var(--mm-brand, #7b3f5f);
+  border-color: var(--mm-brand, #7b3f5f);
+  color: #ffffff;
+}
+
+.disambiguation-option__label {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.disambiguation-option__sub {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.disambiguation-skip {
+  margin-top: 12px;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--mm-text-muted, #62666d);
+  font-size: 0.85rem;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.disambiguation-skip:hover {
+  background: var(--mm-hover, rgba(36, 28, 24, 0.045));
+  color: var(--mm-text);
 }
 
 .command-palette {
@@ -14651,6 +14853,17 @@ button.priority-chip:hover {
 .chat-actions.is-applied {
   border-color: rgba(76, 175, 125, 0.35);
   background: rgba(76, 175, 125, 0.07);
+}
+
+/* Streaming preview: dim the panel and signal it is not yet actionable. */
+.chat-actions.is-preview {
+  border-style: dashed;
+  opacity: 0.78;
+}
+
+.chat-actions.is-preview .chat-actions__buttons button:disabled {
+  opacity: 0.5;
+  cursor: progress;
 }
 
 .chat-actions__title {

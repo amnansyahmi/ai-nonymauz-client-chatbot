@@ -1,6 +1,6 @@
 export type MobileTab = 'chat' | 'dashboard' | 'checklist' | 'calendar' | 'budget' | 'rsvp' | 'vendors';
 
-export const MOBILE_NAV_TABS: ReadonlyArray<MobileTab> = ['dashboard', 'checklist', 'chat', 'budget', 'rsvp'];
+export const MOBILE_NAV_TABS: ReadonlyArray<MobileTab> = ['dashboard', 'checklist', 'chat', 'budget', 'rsvp', 'vendors'];
 
 export const MOBILE_NAV_LABELS: Record<'ms' | 'en', Record<MobileTab, string>> = {
   ms: {

@@ -35,7 +35,8 @@ export default function MobileBottomNav({ activeTab, onChange, language = 'ms' }
     { id: 'checklist', label: t.checklist, icon: <MenuChecklistIcon size={22} /> },
     { id: 'chat', label: t.chat, icon: <MenuChatIcon size={22} /> },
     { id: 'budget', label: t.budget, icon: <MenuBudgetIcon size={22} /> },
-    { id: 'rsvp', label: t.rsvp, icon: <MenuGuestsIcon size={22} /> }
+    { id: 'rsvp', label: t.rsvp, icon: <MenuGuestsIcon size={22} /> },
+    { id: 'vendors', label: t.vendors, icon: <MenuVendorsIcon size={22} /> }
   ];
 
   return (

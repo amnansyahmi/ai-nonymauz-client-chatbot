@@ -11,6 +11,7 @@ import '../styles/app-states.css';
 import '../styles/dark.css';
 import '../styles/mobile.css';
 import '../styles/ai-features.css';
+import '../styles/majlismate-theme.css';
 
 /**
  * Layout for the actual application surfaces (/chat, /embed, ...).
