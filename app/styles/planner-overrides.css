@@ -1173,6 +1173,11 @@ body,
   box-shadow: none !important;
 }
 
+.sidebar-tabs button:hover:not(.active) {
+  background: var(--mm-hover) !important;
+  color: var(--mm-text) !important;
+}
+
 .menu-chevron {
   display: none !important;
 }
@@ -3583,6 +3588,7 @@ body,
 .main-chat-panel .composer-voice-button:hover {
   background: #2a2a2a !important;
   border-color: #2a2a2a !important;
+  color: #ffffff !important;
   transform: translateY(-1px) !important;
 }
 
@@ -3637,6 +3643,7 @@ body,
 .assistant-drawer .menu-assistant-actions button:hover {
   background: #f6f6f4 !important;
   border-color: var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
 }
 
 .planner-workspace button:disabled,
@@ -4486,6 +4493,7 @@ body,
 
 .menu-assistant-insights button:hover {
   background: var(--mm-surface-muted) !important;
+  color: var(--mm-text) !important;
 }
 
 .vendor-compare-actions {
@@ -5241,6 +5249,7 @@ body,
 .checklist-generate-btn:hover {
   background: var(--mm-brand-strong) !important;
   border-color: var(--mm-brand-strong) !important;
+  color: #ffffff !important;
 }
 
 .checklist-generate-btn:focus-visible {
@@ -5354,6 +5363,7 @@ body,
 
 .checklist-recommend-ai:hover {
   background: var(--mm-surface-subtle);
+  color: var(--mm-text);
 }
 
 .checklist-recommend-ai:focus-visible {

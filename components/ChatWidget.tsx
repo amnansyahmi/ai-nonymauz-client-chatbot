@@ -30,6 +30,7 @@ type ChatWidgetProps = {
   onVoiceMode?: () => void;
   onApplyActions?: (messageIndex: number, actions: PlannerAction[]) => void;
   onDismissActions?: (messageIndex: number) => void;
+  onClarifyReply?: (messageIndex: number, reply: string) => void;
   onAttachImage?: (image: AttachedImage) => void;
   onClearImage?: () => void;
   onImageError?: (message: string) => void;
@@ -102,6 +103,35 @@ function ActionPanel({ messageIndex, actions, state, language, onApply, onDismis
           </button>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+type ClarifyChipsProps = {
+  messageIndex: number;
+  options: string[];
+  answered?: boolean;
+  language: 'ms' | 'en';
+  disabled?: boolean;
+  onReply?: (messageIndex: number, reply: string) => void;
+};
+
+function ClarifyChips({ messageIndex, options, answered, language, disabled, onReply }: ClarifyChipsProps) {
+  if (answered) return null;
+  const isMs = language === 'ms';
+  return (
+    <div className="chat-clarify" role="group" aria-label={isMs ? 'Pilihan jawapan pantas' : 'Quick reply options'}>
+      {options.map((option, i) => (
+        <button
+          key={i}
+          type="button"
+          className="chat-clarify__chip"
+          disabled={disabled}
+          onClick={() => onReply?.(messageIndex, option)}
+        >
+          {option}
+        </button>
+      ))}
     </div>
   );
 }
@@ -206,6 +236,7 @@ export default function ChatWidget({
   onVoiceMode,
   onApplyActions,
   onDismissActions,
+  onClarifyReply,
   onAttachImage,
   onClearImage,
   onImageError,
@@ -255,6 +286,16 @@ export default function ChatWidget({
                       language={language}
                       onApply={onApplyActions}
                       onDismiss={onDismissActions}
+                    />
+                  ) : null}
+                  {message.clarify && message.clarify.length > 0 && !isStreaming ? (
+                    <ClarifyChips
+                      messageIndex={index}
+                      options={message.clarify}
+                      answered={message.clarifyAnswered}
+                      language={language}
+                      disabled={loading}
+                      onReply={onClarifyReply}
                     />
                   ) : null}
                 </div>

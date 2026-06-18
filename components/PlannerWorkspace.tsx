@@ -29,6 +29,7 @@ import VendorMessageSheet from './planner/components/VendorMessageSheet';
 import NotificationToggle from './planner/components/NotificationToggle';
 import { buildWeeklyBriefing } from '../lib/planner/weeklyBriefing';
 import { parseChatActions, stripActionBlock, type PlannerAction } from '../lib/planner/chatActions';
+import { parseClarify, stripClarifyBlock } from '../lib/planner/chatClarify';
 import { collectDueReminders, fireReminders } from '../lib/notifications';
 import type {
   ActiveTab,
@@ -893,7 +894,7 @@ export default function PlannerWorkspace() {
 
           if (event.type === 'delta' && event.text) {
             fullAnswer += event.text;
-            const displayContent = stripActionBlock(fullAnswer);
+            const displayContent = stripClarifyBlock(stripActionBlock(fullAnswer));
             if (targetTab) {
               setMenuMessages((current) => ({
                 ...current,
@@ -943,7 +944,8 @@ export default function PlannerWorkspace() {
 
       const finalAnswer = fullAnswer.trim() || copy.noAnswer;
       const parsedActions = parseChatActions(fullAnswer);
-      const displayAnswer = stripActionBlock(finalAnswer).trim() || copy.noAnswer;
+      const parsedClarify = parseClarify(fullAnswer);
+      const displayAnswer = stripClarifyBlock(stripActionBlock(finalAnswer)).trim() || copy.noAnswer;
 
       if (targetTab) {
         setMenuMessages((current) => ({
@@ -960,7 +962,8 @@ export default function PlannerWorkspace() {
                   ...message,
                   content: displayAnswer,
                   actions: parsedActions.length > 0 ? parsedActions : undefined,
-                  actionsState: parsedActions.length > 0 ? 'pending' : undefined
+                  actionsState: parsedActions.length > 0 ? 'pending' : undefined,
+                  clarify: parsedClarify.length > 0 ? parsedClarify : undefined
                 }
               : message
           )
@@ -1520,6 +1523,16 @@ export default function PlannerWorkspace() {
     setMessages((current) =>
       current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'dismissed' } : message))
     );
+  }
+
+  // User tapped a clarify quick-reply chip: collapse the chips and send the
+  // chosen answer as the next message so the AI can now act on it.
+  function answerClarify(messageIndex: number, reply: string) {
+    if (loading) return;
+    setMessages((current) =>
+      current.map((message, index) => (index === messageIndex ? { ...message, clarifyAnswered: true } : message))
+    );
+    ask(reply);
   }
 
   function toggleSavedVendor(id: string) {
@@ -3038,6 +3051,7 @@ export default function PlannerWorkspace() {
             onVoiceMode={() => setIsLiveVoiceOpen(true)}
             onApplyActions={applyMessageActions}
             onDismissActions={dismissMessageActions}
+            onClarifyReply={answerClarify}
             onSubmit={onSubmit}
           />
         </div>

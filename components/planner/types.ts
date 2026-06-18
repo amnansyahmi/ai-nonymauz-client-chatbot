@@ -6,6 +6,10 @@ export type Message = {
   sources?: Source[];
   actions?: import('../../lib/planner/chatActions').PlannerAction[];
   actionsState?: 'pending' | 'applied' | 'dismissed';
+  /** Suggested quick-reply options when the AI asks a clarifying question. */
+  clarify?: string[];
+  /** Set once the user taps a clarify chip, so the chips collapse. */
+  clarifyAnswered?: boolean;
 };
 
 export type StreamEvent = {

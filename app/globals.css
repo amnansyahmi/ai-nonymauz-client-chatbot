@@ -5533,6 +5533,7 @@ body {
 .action-empty button:hover {
   background: #303030 !important;
   border-color: #303030 !important;
+  color: #ffffff !important;
 }
 
 .vendor-discovery-panel {
@@ -6850,6 +6851,7 @@ button,
 .checklist-side-actions button:hover {
   border-color: #cfcfcf !important;
   background: #f8f8f8 !important;
+  color: var(--mm-text) !important;
 }
 
 .checklist-template-row {
@@ -9911,6 +9913,7 @@ select:focus-visible {
 .budget-edit-actions button.danger:hover,
 .guest-edit-actions button.danger:hover {
   background: var(--mm-danger-soft) !important;
+  color: var(--mm-danger) !important;
 }
 
 .utility-action {
@@ -12047,6 +12050,7 @@ textarea:focus {
 .today-command-center > button:hover,
 .action-empty button:hover {
   background: #2a2a2a !important;
+  color: #ffffff !important;
 }
 
 .empty-state,
@@ -13604,6 +13608,7 @@ textarea:focus {
 
 .workspace-live-button:hover {
   background: #2b2b2b;
+  color: #fff;
 }
 
 .workspace-live-button:active {
@@ -13655,6 +13660,7 @@ textarea:focus {
 
 .sidebar-live-button:hover {
   background: #2b2b2b;
+  color: #fff;
 }
 
 .sidebar-live-button.is-active {
@@ -13705,6 +13711,7 @@ textarea:focus {
 
 .scroll-to-bottom-btn:hover {
   background: #2a2a2a;
+  color: #fff;
   transform: translateY(-2px);
 }
 
@@ -14119,6 +14126,7 @@ textarea:focus {
 
 .checklist-note-save:hover {
   background: var(--mm-brand-strong);
+  color: #fff;
 }
 
 .checklist-note-actions button:not(.checklist-note-save) {
@@ -14217,6 +14225,7 @@ textarea:focus {
 
 .checklist-bulk-done:hover {
   background: var(--mm-brand-strong);
+  color: #fff;
 }
 
 .checklist-bulk-delete {
@@ -14729,6 +14738,7 @@ button.priority-chip:hover {
 
 .chat-actions__apply:hover {
   background: var(--mm-brand-strong);
+  color: #fff;
 }
 
 .chat-actions__dismiss {
@@ -14745,6 +14755,41 @@ button.priority-chip:hover {
 .chat-actions__dismiss:hover {
   border-color: var(--mm-brand);
   color: var(--mm-brand-strong);
+}
+
+/* ══ Clarify quick-reply chips ══ */
+.chat-clarify {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chat-clarify__chip {
+  border: 1px solid var(--mm-brand);
+  background: var(--mm-surface);
+  color: var(--mm-brand-strong);
+  padding: 8px 14px;
+  border-radius: var(--mm-radius-pill, 999px);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.chat-clarify__chip:hover:not(:disabled) {
+  background: var(--mm-brand);
+  color: #ffffff;
+}
+
+.chat-clarify__chip:focus-visible {
+  outline: none;
+  box-shadow: var(--mm-focus);
+}
+
+.chat-clarify__chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ══ Vendor message generator sheet ══ */
@@ -14907,6 +14952,7 @@ button.priority-chip:hover {
 
 .vendor-msg-wa:hover {
   background: #1fb855;
+  color: #fff;
 }
 
 .vendor-msg-hint {
@@ -14995,6 +15041,7 @@ a.vendor-search-nearby {
 .vendor-search-nearby:hover:not(:disabled) {
   background: var(--mm-brand-strong);
   border-color: var(--mm-brand-strong);
+  color: #fff;
 }
 
 .vendor-search-nearby:disabled {

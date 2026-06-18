@@ -16,14 +16,14 @@ export const MM_ACTIONS_OPEN = '<<<MM_ACTIONS';
 export const MM_ACTIONS_CLOSE = 'MM_ACTIONS>>>';
 
 export type PlannerAction =
-  | { type: 'add_checklist_item'; text: string; deadline?: string; phase?: string }
-  | { type: 'add_budget_item'; category: string; planned?: number; note?: string }
-  | { type: 'add_appointment'; title: string; date: string; time?: string; vendor?: string; location?: string }
-  | { type: 'add_guest'; name: string; pax?: number; group?: string; phone?: string }
-  | { type: 'update_budget'; category: string; planned?: number; actual?: number; paid?: number }
-  | { type: 'complete_task'; text: string }
-  | { type: 'update_appointment'; title: string; date?: string; time?: string; status?: 'planned' | 'confirmed' | 'done' }
-  | { type: 'set_profile'; majlisDate?: string; negeri?: string; totalBudget?: number; guestTarget?: number };
+  | { type: 'add_checklist_item'; text: string; deadline?: string; phase?: string; reason?: string }
+  | { type: 'add_budget_item'; category: string; planned?: number; note?: string; reason?: string }
+  | { type: 'add_appointment'; title: string; date: string; time?: string; vendor?: string; location?: string; reason?: string }
+  | { type: 'add_guest'; name: string; pax?: number; group?: string; phone?: string; reason?: string }
+  | { type: 'update_budget'; category: string; planned?: number; actual?: number; paid?: number; reason?: string }
+  | { type: 'complete_task'; text: string; reason?: string }
+  | { type: 'update_appointment'; title: string; date?: string; time?: string; status?: 'planned' | 'confirmed' | 'done'; reason?: string }
+  | { type: 'set_profile'; majlisDate?: string; negeri?: string; totalBudget?: number; guestTarget?: number; reason?: string };
 
 export type PlannerActionType = PlannerAction['type'];
 
@@ -60,6 +60,8 @@ function validateAction(raw: unknown): PlannerAction | null {
       if (isIsoDate(record.deadline)) action.deadline = record.deadline;
       const phase = asText(record.phase);
       if (phase) action.phase = phase;
+      const r0 = asText(record.reason);
+      if (r0) action.reason = r0;
       return action;
     }
     case 'add_budget_item': {
@@ -70,6 +72,8 @@ function validateAction(raw: unknown): PlannerAction | null {
       if (planned !== undefined) action.planned = planned;
       const note = asText(record.note);
       if (note) action.note = note;
+      const r1 = asText(record.reason);
+      if (r1) action.reason = r1;
       return action;
     }
     case 'add_appointment': {
@@ -82,6 +86,8 @@ function validateAction(raw: unknown): PlannerAction | null {
       if (vendor) action.vendor = vendor;
       const location = asText(record.location);
       if (location) action.location = location;
+      const r2 = asText(record.reason);
+      if (r2) action.reason = r2;
       return action;
     }
     case 'add_guest': {
@@ -94,6 +100,8 @@ function validateAction(raw: unknown): PlannerAction | null {
       if (group) action.group = group;
       const phone = asText(record.phone);
       if (phone) action.phone = phone;
+      const r3 = asText(record.reason);
+      if (r3) action.reason = r3;
       return action;
     }
     case 'update_budget': {
@@ -107,6 +115,8 @@ function validateAction(raw: unknown): PlannerAction | null {
       if (planned !== undefined) action.planned = planned;
       if (actual !== undefined) action.actual = actual;
       if (paid !== undefined) action.paid = paid;
+      const r4 = asText(record.reason);
+      if (r4) action.reason = r4;
       return action;
     }
     case 'complete_task': {
@@ -192,11 +202,13 @@ export function stripActionBlock(text: string): string {
 export function summarizeAction(action: PlannerAction, language: AppLanguage): { kind: string; label: string } {
   const isMs = language === 'ms';
   switch (action.type) {
-    case 'add_checklist_item':
+    case 'add_checklist_item': {
+      const _base = action.deadline ? action.text + ' (' + action.deadline + ')' : action.text;
       return {
         kind: isMs ? 'Tugas' : 'Task',
-        label: action.deadline ? `${action.text} · ${action.deadline}` : action.text
+        label: action.reason ? _base + ' \u2014 ' + action.reason : _base
       };
+    }
     case 'add_budget_item':
       return {
         kind: isMs ? 'Bajet' : 'Budget',

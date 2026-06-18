@@ -4,6 +4,8 @@ import { chatRequestSchema, type ChatRequest } from '../../../lib/chatSchema';
 import { formatContext, getClientName, retrieveContext, type KnowledgeDoc } from '../../../lib/retrieval';
 import { clientKeyFromRequest, SimpleRateLimiter } from '../../../lib/rateLimit';
 import { encodeSseError, encodeSseEvent, parseSseEvents, type StreamEvent } from '../../../lib/stream/sse';
+import { MM_CLARIFY_OPEN, MM_CLARIFY_CLOSE } from '../../../lib/planner/chatClarify';
+import { MM_ACTIONS_OPEN, MM_ACTIONS_CLOSE } from '../../../lib/planner/chatActions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -54,6 +56,21 @@ function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voic
   const isAppointment = /\b(appointment|temujanji|schedule|jadual|booking|book|tempah)\b/i.test(userMessage);
   const isRsvp = /\b(rsvp|guest|tetamu|jemputan|headcount|pax)\b/i.test(userMessage);
   const isPlanning = /\b(what should i|where do i start|this month|next step|focus|priorit|apa.*(buat|patut)|bulan ini|mula|fokus|seterusnya)\b/i.test(userMessage);
+  const isHivTest = /\bhiv\b/i.test(userMessage);
+  const isKursusPra = /\b(kursus\s+pra|kppim|pra[\s-]perkahwinan)\b/i.test(userMessage);
+
+  if (isHivTest || isKursusPra) {
+    if (voiceMode) {
+      if (language === 'en') return 'An HIV test is required as part of the kursus pra-perkahwinan for Muslim marriage in Malaysia. Get it done at a government health clinic at least three months before your wedding.';
+      return 'Ujian HIV wajib untuk kursus pra-perkahwinan perkahwinan Islam di Malaysia. Buat di Klinik Kesihatan kerajaan, sekurang-kurangnya tiga bulan sebelum majlis.';
+    }
+    if (language === 'en') {
+      const action = JSON.stringify([{ type: 'add_checklist_item', text: 'HIV test (kursus pra-perkahwinan requirement)', reason: 'Mandatory for nikah registration at JAI/PAID', phase: '3-6 months before wedding' }]);
+      return `An HIV test is mandatory for Muslim marriages in Malaysia, required as part of the **Kursus Pra-Perkahwinan** registration.\n\n**When to do it:**\n- At least 3–6 months before the wedding\n- Before or during kursus pra-perkahwinan registration at your state JAI\n- Can be done at a government health clinic (Klinik Kesihatan) or approved private clinic\n\n**What to bring after:**\n- Test results when registering your nikah at JAI or PAID\n\n*Source: malaysia.gov.my — procedures differ by state, verify with your state JAI or PAID.*\n${MM_ACTIONS_OPEN}\n${action}\n${MM_ACTIONS_CLOSE}`;
+    }
+    const action = JSON.stringify([{ type: 'add_checklist_item', text: 'Buat ujian HIV (syarat kursus pra-perkahwinan)', reason: 'Wajib untuk pendaftaran nikah di JAI/PAID', phase: '3-6 bulan sebelum majlis' }]);
+    return `Ujian HIV adalah wajib untuk perkahwinan Islam di Malaysia, sebagai syarat pendaftaran **Kursus Pra-Perkahwinan**.\n\n**Bila kena buat:**\n- Sekurang-kurangnya 3–6 bulan sebelum majlis\n- Sebelum atau semasa mendaftar kursus pra-perkahwinan di JAI negeri anda\n- Boleh dibuat di mana-mana Klinik Kesihatan kerajaan atau klinik swasta yang diiktiraf\n\n**Apa yang perlu dibawa selepas:**\n- Keputusan ujian semasa mendaftar nikah di Jabatan Agama Islam (JAI) atau Pejabat Agama Islam Daerah (PAID)\n\n*Sumber: malaysia.gov.my — prosedur berbeza mengikut negeri, semak dengan JAI atau PAID negeri anda.*\n${MM_ACTIONS_OPEN}\n${action}\n${MM_ACTIONS_CLOSE}`;
+  }
 
   // Voice mode: short, conversational, no markdown — meant to be spoken aloud.
   if (voiceMode) {
@@ -92,6 +109,47 @@ function buildDemoPlannerAnswer(userMessage: string, language: AppLanguage, voic
   return 'Saya dah noted. Langkah terbaik sekarang ialah tukarkan perkara ini kepada satu tindakan planning yang jelas.\n\nCuba pilih kategori:\n- Checklist\n- Bajet\n- Vendor\n- Tetamu\n- Appointment\n\nContoh: “Buat checklist untuk bulan terakhir” atau “Draft mesej WhatsApp untuk caterer.”';
 }
 
+/**
+ * Demo-mode clarification: when the backend isn't configured, still demonstrate
+ * the "ask before acting" behavior for clearly-ambiguous add requests by asking
+ * one question and emitting a clarify block of tappable options.
+ */
+function buildDemoClarification(userMessage: string, language: AppLanguage): string | null {
+  const isMs = language === 'ms';
+  const msg = userMessage.toLowerCase();
+  const wantsAdd = /\b(tambah|add|buat|create|nak|cari|find|set|setkan|book|tempah)\b/.test(msg);
+  if (!wantsAdd) return null;
+
+  const block = (options: string[]) => `${MM_CLARIFY_OPEN}\n${JSON.stringify(options)}\n${MM_CLARIFY_CLOSE}`;
+
+  const mentionsVendor = /\bvendor(s)?\b/.test(msg);
+  const specificVendor =
+    /(jurugambar|photographer|katering|caterer|mua|makeup|andaman|dewan|venue|hall|florist|bunga|kek|cake|dj|band|kompang|baju|gown|dekor|decor|pelamin|hantaran)/.test(msg);
+  if (mentionsVendor && !specificVendor) {
+    const q = isMs ? 'Boleh — vendor jenis apa yang anda fikirkan?' : 'Sure — what type of vendor are you thinking of?';
+    const options = isMs ? ['Jurugambar', 'Katering', 'MUA / Andaman', 'Dewan'] : ['Photographer', 'Caterer', 'Makeup artist', 'Venue'];
+    return `${q}\n${block(options)}`;
+  }
+
+  const mentionsBudget = /\b(bajet|budget)\b/.test(msg);
+  if (mentionsBudget && !/\d/.test(msg)) {
+    const q = isMs ? 'Boleh — bajet untuk kategori yang mana?' : 'Sure — which budget category?';
+    const options = isMs
+      ? ['Dewan & katering', 'Fotografi', 'Baju & makeup', 'Dekorasi']
+      : ['Venue & catering', 'Photography', 'Outfit & makeup', 'Decoration'];
+    return `${q}\n${block(options)}`;
+  }
+
+  const mentionsAppointment = /\b(appointment|temujanji|jumpa|meeting)\b/.test(msg);
+  if (mentionsAppointment && !/\d/.test(msg)) {
+    const q = isMs ? 'Boleh — appointment dengan vendor mana?' : 'Sure — an appointment with which vendor?';
+    const options = isMs ? ['Jurugambar', 'Katering', 'MUA', 'Dewan'] : ['Photographer', 'Caterer', 'Makeup artist', 'Venue'];
+    return `${q}\n${block(options)}`;
+  }
+
+  return null;
+}
+
 function cleanDemoText(text: string) {
   return text
     .replace(/â€™/g, "'")
@@ -114,7 +172,8 @@ async function forwardAiNonymauzStream(
 
   if (!env.baseUrl || !env.apiKey || env.apiKey === 'your-secret-api-key') {
     const userMessage = [...messages].reverse().find((message) => message.role === 'user')?.content || '';
-    const demoAnswer = cleanDemoText(buildDemoPlannerAnswer(userMessage, language, voiceMode));
+    const demoClarification = voiceMode ? null : buildDemoClarification(userMessage, language);
+    const demoAnswer = cleanDemoText(demoClarification ?? buildDemoPlannerAnswer(userMessage, language, voiceMode));
 
     for (const word of demoAnswer.split(/(\s+)/)) {
       controller.enqueue(encoder.encode(encodeSseEvent({ type: 'delta', text: word })));
@@ -231,15 +290,22 @@ ${'<<<MM_ACTIONS'}
 [ {"type":"add_checklist_item","text":"..."} ]
 ${'MM_ACTIONS>>>'}
 Supported actions (use only these types and fields):
-- {"type":"add_checklist_item","text":string,"deadline":"YYYY-MM-DD"?,"phase":string?}
-- {"type":"add_budget_item","category":string,"planned":number(RM)?,"note":string?}
-- {"type":"add_appointment","title":string,"date":"YYYY-MM-DD","time":"HH:MM"?,"vendor":string?,"location":string?}
-- {"type":"add_guest","name":string,"pax":number?,"group":string?,"phone":string?}
-- {"type":"update_budget","category":string,"planned":number?,"actual":number?,"paid":number?} (use when the user reports a quote/cost or a payment made; match an existing budget category from the budget snapshot)
-- {"type":"complete_task","text":string} (use when the user says a task is done; text should match an existing checklist item)
-- {"type":"update_appointment","title":string,"date":"YYYY-MM-DD"?,"time":"HH:MM"?,"status":"planned"|"confirmed"|"done"?} (title should match an existing appointment)
+- {"type":"add_checklist_item","text":string,"reason":string?,"deadline":"YYYY-MM-DD"?,"phase":string?}
+- {"type":"add_budget_item","category":string,"reason":string?,"planned":number(RM)?,"note":string?}
+- {"type":"add_appointment","title":string,"reason":string?,"date":"YYYY-MM-DD","time":"HH:MM"?,"vendor":string?,"location":string?}
+- {"type":"add_guest","name":string,"reason":string?,"pax":number?,"group":string?,"phone":string?}
+- {"type":"update_budget","category":string,"reason":string?,"planned":number?,"actual":number?,"paid":number?} (use when the user reports a quote/cost or a payment made; match an existing budget category from the budget snapshot)
+- {"type":"complete_task","text":string,"reason":string?} (use when the user says a task is done; text should match an existing checklist item)
+- {"type":"update_appointment","title":string,"reason":string?,"date":"YYYY-MM-DD"?,"time":"HH:MM"?,"status":"planned"|"confirmed"|"done"?} (title should match an existing appointment)
 - {"type":"set_profile","majlisDate":"YYYY-MM-DD"?,"negeri":string?,"totalBudget":number?,"guestTarget":number?} (use when the user states their wedding date, state, total budget, or guest count)
-Action rules: Today is ${todayIso}; resolve any relative dates (e.g. "next month", "minggu depan") to absolute YYYY-MM-DD using today and the majlis date. Never invent prices, dates, names, or phone numbers the user did not provide — omit optional fields you are unsure about. Only include actions you are confident the user wants now. Do NOT mention the block, JSON, or "actions" in your visible reply; the app renders confirm buttons automatically. If the user is only asking a question or no concrete change is requested, do not output the block at all.`;
+Action rules: Today is ${todayIso}; resolve any relative dates (e.g. "next month", "minggu depan") to absolute YYYY-MM-DD using today and the majlis date. Never invent prices, dates, names, or phone numbers the user did not provide — omit optional fields you are unsure about. Only include actions you are confident the user wants now. Do NOT mention the block, JSON, or "actions" in your visible reply; the app renders confirm buttons automatically. If the user is only asking a question or no concrete change is requested, do not output the block at all.
+14. ANSWER-FIRST PATTERN: If the user asks a factual question (e.g. "bila kena buat HIV test?"), FIRST answer the question in your visible reply, THEN propose a planner action with a reason field explaining the connection. Example: "HIV test biasanya dibuat 6 bulan sebelum majlis untuk kursus pra-perkahwinan JAIS'. Nak saya tambah ke checklist?" then include an action with reason: "Wajib untuk kursus pra-perkahwinan JAIS". NEVER skip the answer to just ask which category.`;
+
+  const clarifyRule = `\n13. ASK BEFORE ACTING (clarify when unsure): When the user asks you to add or change something concrete BUT a key detail needed to do it well is missing or ambiguous — and you would otherwise have to guess — do NOT guess and do NOT output an actions block. Instead ask exactly ONE short, friendly clarifying question in your visible reply, then append exactly one block on its own lines with 2-4 short suggested answers (each at most ~6 words, written in ${languageName}, phrased as tappable replies):
+${'<<<MM_CLARIFY'}
+["...", "...", "..."]
+${'MM_CLARIFY>>>'}
+NEVER use MM_CLARIFY to dodge a question. If the user asks a factual question, ALWAYS answer in your visible reply first THEN offer an action. Clarify rules: Only ask when the missing detail genuinely matters (e.g. which vendor type, which date, which budget category, how many pax) — never ask filler questions. Ask at most ONE question per reply. Do NOT output both an MM_CLARIFY block and an MM_ACTIONS block in the same reply — choose to either ask OR act. If you already have everything you need, skip clarifying and act (or just answer). Do NOT mention the block, JSON, "options", or "clarify" in your visible reply; the app renders the suggestions as tappable chips automatically.`;
 
   return `You are ${chatbotName}, an AI wedding planning assistant for ${clientName}.
 
@@ -253,7 +319,7 @@ Rules:
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
-10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).${voiceMode ? '\n11. This is a voice conversation. Answer in 1–3 short spoken sentences only. No markdown, no bullet lists, no numbered lists, no headings, no asterisks. Speak naturally and conversationally as if talking aloud.' : ''}${actionsRule}
+10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).${voiceMode ? '\n11. This is a voice conversation. Answer in 1–3 short spoken sentences only. No markdown, no bullet lists, no numbered lists, no headings, no asterisks. Speak naturally and conversationally as if talking aloud.' : ''}${actionsRule}${clarifyRule}
 
 Internal knowledge context:
 ${context}
