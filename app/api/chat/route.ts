@@ -6,6 +6,16 @@ import { clientKeyFromRequest, SimpleRateLimiter } from '../../../lib/rateLimit'
 import { encodeSseError, encodeSseEvent, parseSseEvents, type StreamEvent } from '../../../lib/stream/sse';
 import { MM_CLARIFY_OPEN, MM_CLARIFY_CLOSE } from '../../../lib/planner/chatClarify';
 import { MM_ACTIONS_OPEN, MM_ACTIONS_CLOSE } from '../../../lib/planner/chatActions';
+import {
+  detectPlannerDuplicate,
+  findChecklistDuplicate,
+  hasAddIntent,
+  wantsNewEntry,
+  wantsMarkDone,
+  buildDuplicateClarifyMessage,
+  buildMarkDoneMessage,
+  buildStillOpenMessage
+} from '../../../lib/planner/duplicateGuard';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,6 +76,28 @@ function buildDemoPlannerAnswer(
   const isPlanning = /\b(what should i|where do i start|this month|next step|focus|priorit|apa.*(buat|patut)|bulan ini|mula|fokus|seterusnya)\b/i.test(userMessage);
   const isHivTest = /\bhiv\b/i.test(userMessage);
   const isKursusPra = /\b(kursus\s+pra|kppim|pra[\s-]perkahwinan)\b/i.test(userMessage);
+
+  // Generic duplicate handling (replaces the old HIV-specific code). The clarify
+  // chips carry the topic forward, so these follow-up branches can re-detect it.
+  const newEntryRequested = wantsNewEntry(userMessage);
+  const checklistDuplicate = findChecklistDuplicate(userMessage, plannerContext?.checklistSummary);
+  const isCheckingExisting = /\b(nak semak|just checking|sama.*semak|checking on|semak je)\b/i.test(userMessage);
+
+  // "Mark <topic> done" clarify-chip reply → emit a complete_task action.
+  if (!voiceMode && wantsMarkDone(userMessage) && checklistDuplicate) {
+    return buildMarkDoneMessage(checklistDuplicate, language);
+  }
+
+  // "Same one — just checking" clarify-chip reply → confirm it is still open.
+  if (!voiceMode && isCheckingExisting) {
+    return buildStillOpenMessage(checklistDuplicate, language);
+  }
+
+  // Topic already in the checklist and the user did NOT ask for a new entry →
+  // ask whether they mean the same item instead of offering to add it again.
+  if (!voiceMode && checklistDuplicate && !newEntryRequested) {
+    return buildDuplicateClarifyMessage(checklistDuplicate, language);
+  }
 
   if (isHivTest || isKursusPra) {
     // Same one-tap action in voice and text. In voice the spoken pipeline strips
@@ -400,7 +432,12 @@ Supported actions (use only these types and fields):
 - {"type":"set_profile","majlisDate":"YYYY-MM-DD"?,"negeri":string?,"totalBudget":number?,"guestTarget":number?} (use when the user states their wedding date, state, total budget, or guest count)
 Action rules: Today is ${todayIso}; resolve any relative dates (e.g. "next month", "minggu depan") to absolute YYYY-MM-DD using today and the majlis date. Never invent prices, dates, names, or phone numbers the user did not provide — omit optional fields you are unsure about. Only include actions you are confident the user wants now. Do NOT mention the block, JSON, or "actions" in your visible reply; the app renders confirm buttons automatically. If the user is only asking a question or no concrete change is requested, do not output the block at all.
 14. ANSWER-FIRST PATTERN: If the user asks a factual question (e.g. "bila kena buat HIV test?"), FIRST answer the question in your visible reply, THEN propose a planner action with a reason field explaining the connection. Example: "HIV test biasanya dibuat 6 bulan sebelum majlis untuk kursus pra-perkahwinan JAIS'. Nak saya tambah ke checklist?" then include an action with reason: "Wajib untuk kursus pra-perkahwinan JAIS". NEVER skip the answer to just ask which category.
-15. ACTION-FIRST CLOSE: Almost every reply should end by offering the single most useful next step, phrased as a short question the user can act on. Prefer offers that map to a planner action you can perform now: add to checklist, add a budget item, create/update an appointment, add a guest, or update the profile (emit the matching MM_ACTIONS block when you have the details). You may ALSO offer two app capabilities in plain text when relevant even though they are not MM_ACTIONS: "draft a WhatsApp message" (for contacting a vendor) and "compare vendors" (to shortlist by fit/price). Offer only ONE clear next step, never a menu of five. Make the offer specific to what was just discussed, not generic.`;
+15. ACTION-FIRST CLOSE: Almost every reply should end by offering the single most useful next step, phrased as a short question the user can act on. Prefer offers that map to a planner action you can perform now: add to checklist, add a budget item, create/update an appointment, add a guest, or update the profile (emit the matching MM_ACTIONS block when you have the details). You may ALSO offer two app capabilities in plain text when relevant even though they are not MM_ACTIONS: "draft a WhatsApp message" (for contacting a vendor) and "compare vendors" (to shortlist by fit/price). Offer only ONE clear next step, never a menu of five. Make the offer specific to what was just discussed, not generic.
+16. DUPLICATE PREVENTION: Before proposing any MM_ACTIONS block, scan the relevant planner context section first:
+- add_checklist_item: scan "Checklist progress" in the context below. If an item with the same or very similar meaning is already listed there as open, do NOT suggest adding it again. Instead acknowledge the existing item by name, then ask "Adakah ini task yang sama, atau nak tambah entri baru?" / "Is this the same task, or did you want to add a new entry?" using a MM_CLARIFY block with options like ["Same task — checking on it", "Add a new entry", "Mark it done"] / ["Task yang sama", "Tambah entri baru", "Tandakan selesai"].
+- add_budget_item: if the same category already exists in "Budget snapshot", prefer update_budget instead of add_budget_item.
+- add_appointment: if the same vendor/title already appears in "Upcoming appointments", ask before adding a duplicate.
+Only proceed with the original add action after the user explicitly confirms they want a new separate entry.`;
 
   const clarifyRule = `\n13. ASK BEFORE ACTING (clarify when unsure): When the user asks you to add or change something concrete BUT a key detail needed to do it well is missing or ambiguous — and you would otherwise have to guess — do NOT guess and do NOT output an actions block. Instead ask exactly ONE short, friendly clarifying question in your visible reply, then append exactly one block on its own lines with 2-4 short suggested answers (each at most ~6 words, written in ${languageName}, phrased as tappable replies):
 ${'<<<MM_CLARIFY'}
@@ -417,7 +454,7 @@ Rules:
 3. If the user asks for nearby venues or vendors and no exact location is available, ask for the city/negeri or use the workspace Negeri if it is set. Do not reject the question.
 4. Never create or explain code, HTML, CSS, JavaScript, scripts, apps, websites, APIs, or software, even when the subject is wedding-related. Briefly redirect to non-code wedding planning help.
 5. If the user asks to create generic prompts, copy, wording, or templates that are not related to wedding, majlis, kahwin, vendor, event, or planning work, do not fulfill it. Briefly redirect them to a wedding-planning version of the request.
-6. Use the internal knowledge context first.
+6. KNOWLEDGE BOUNDARY: For factual questions about Malaysian wedding procedures, costs, legal requirements, Islamic marriage rules, government fees, or specific vendor prices — answer ONLY from the Internal knowledge context below. If the provided context does not contain a clear answer, say you do not have that specific detail and direct the user to the relevant authority (JAI/PAID for nikah procedures, JPN for registration, their chosen vendor for pricing). Do NOT infer, extrapolate, or answer from general training knowledge for these factual topics.
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
@@ -498,6 +535,25 @@ export async function POST(request: NextRequest) {
         `${encodeSseEvent({ type: 'sources', sources: [] })}${encodeSseEvent({ type: 'delta', text: redirect })}${sseDone()}`,
         { headers: sseHeaders() }
       );
+    }
+
+    // Deterministic duplicate guard: if the user explicitly asks to ADD something
+    // that already exists in the planner, short-circuit with a clarify question
+    // instead of calling the AI. Runs before BOTH the real backend and the demo
+    // fallback so the behaviour is reliable regardless of which answers.
+    if (!voiceMode && hasAddIntent(latestUserMessage) && !wantsNewEntry(latestUserMessage)) {
+      const duplicate = detectPlannerDuplicate(latestUserMessage, {
+        checklistSummary: plannerContext?.checklistSummary,
+        budgetSummary: plannerContext?.budgetSummary,
+        upcomingAppointments: plannerContext?.upcomingAppointments
+      });
+      if (duplicate) {
+        const clarify = buildDuplicateClarifyMessage(duplicate, language);
+        return new Response(
+          `${encodeSseEvent({ type: 'sources', sources: [] })}${encodeSseEvent({ type: 'delta', text: clarify })}${sseDone()}`,
+          { headers: sseHeaders() }
+        );
+      }
     }
 
     const selectedDocs = retrieveContext(latestUserMessage, 4);

@@ -23,7 +23,89 @@ type DashboardPanelProps = {
   planningPhase: string;
   smartReminders: string[];
   onAskToday: () => void;
+  language?: AppLanguage;
 };
+
+const dashboardCopy = {
+  ms: {
+    todayEyebrow: 'Hari ini',
+    todayTitle: 'Apa perlu perhatian',
+    todayLead: 'Mula dengan task, appointment, dan bajet sebelum buka menu lain.',
+    askToday: 'Tanya MajlisMate hari ini',
+    nextTask: 'Task seterusnya',
+    nextTaskNone: 'Tiada task mendesak',
+    due: (date: string) => `Tarikh akhir ${date}`,
+    recommendedNow: 'Disyorkan sekarang',
+    nextAppointment: 'Appointment seterusnya',
+    noAppointment: 'Belum ada appointment',
+    noAppointmentHint: 'Jadualkan follow-up vendor atau peringatan bayaran.',
+    at: (time: string) => ` jam ${time}`,
+    budgetSignal: 'Isyarat bajet',
+    budgetHint: 'Semak anggaran, sebenar, bayaran, dan baki.',
+    planningPhaseLabel: 'Fasa perancangan',
+    setDateHint: 'Set tarikh majlis dalam tetapan.',
+    smartEyebrow: 'Peringatan pintar',
+    smartTitle: 'Fokus disyorkan',
+    smartSub: 'Dicadangkan berdasarkan data planner semasa',
+    countdown: 'Kira detik',
+    setDate: 'Set tarikh',
+    days: (n: number) => `${n} hari`,
+    majlisPassed: 'Majlis berlalu',
+    countdownHint: 'Tambah tarikh majlis untuk buka alert timeline.',
+    progress: 'Kemajuan',
+    itemsDone: (done: number, total: number) => `${done}/${total} item checklist selesai`,
+    budget: 'Bajet',
+    budgetMeta: (planned: string, actual: string) => `${planned} dirancang, ${actual} sebenar`,
+    rsvp: 'RSVP',
+    rsvpMeta: (pending: number, declined: number) => `${pending} pending, ${declined} tidak hadir`,
+    urgentEyebrow: 'Ikut tarikh akhir',
+    urgentTitle: 'Tindakan mendesak',
+    generateChecklist: 'Jana checklist asas',
+    planning: 'Perancangan',
+    activityEyebrow: 'Aktiviti terkini',
+    activityTitle: 'Perubahan terbaru',
+    activityEmpty: 'Kemaskini planner terbaru anda akan dipaparkan di sini.'
+  },
+  en: {
+    todayEyebrow: 'Today',
+    todayTitle: 'What needs attention',
+    todayLead: 'Start with your next task, appointment, and budget before the detailed menus.',
+    askToday: 'Ask MajlisMate today',
+    nextTask: 'Next task',
+    nextTaskNone: 'No urgent task',
+    due: (date: string) => `Due ${date}`,
+    recommendedNow: 'Recommended now',
+    nextAppointment: 'Next appointment',
+    noAppointment: 'No appointment yet',
+    noAppointmentHint: 'Schedule vendor follow-ups or payment reminders.',
+    at: (time: string) => ` at ${time}`,
+    budgetSignal: 'Budget signal',
+    budgetHint: 'Review planned, actual, paid, and balance.',
+    planningPhaseLabel: 'Planning phase',
+    setDateHint: 'Set wedding date in settings.',
+    smartEyebrow: 'Smart reminders',
+    smartTitle: 'Recommended focus',
+    smartSub: 'Suggested by current planner data',
+    countdown: 'Countdown',
+    setDate: 'Set date',
+    days: (n: number) => `${n} days`,
+    majlisPassed: 'Majlis passed',
+    countdownHint: 'Add your majlis date to unlock timeline alerts.',
+    progress: 'Progress',
+    itemsDone: (done: number, total: number) => `${done}/${total} checklist items done`,
+    budget: 'Budget',
+    budgetMeta: (planned: string, actual: string) => `${planned} planned, ${actual} actual`,
+    rsvp: 'RSVP',
+    rsvpMeta: (pending: number, declined: number) => `${pending} pending, ${declined} declined`,
+    urgentEyebrow: 'Deadline-aware',
+    urgentTitle: 'Urgent actions',
+    generateChecklist: 'Generate default checklist',
+    planning: 'Planning',
+    activityEyebrow: 'Recent activity',
+    activityTitle: 'Latest changes',
+    activityEmpty: 'Your latest planner updates will appear here.'
+  }
+} as const;
 
 export function DashboardPanel({
   plannerProfile,
@@ -45,37 +127,40 @@ export function DashboardPanel({
   budgetAlert,
   planningPhase,
   smartReminders,
-  onAskToday
+  onAskToday,
+  language = 'ms'
 }: DashboardPanelProps) {
+  const t = dashboardCopy[language];
+  const locale = language === 'ms' ? 'ms-MY' : 'en-MY';
   return (
     <div className="dashboard-panel">
-      <section className="today-command-center" aria-label="Today planning overview">
+      <section className="today-command-center" aria-label={t.todayTitle}>
         <div className="today-hero-copy">
-          <p className="eyebrow">Today view</p>
-          <h3>What needs attention now</h3>
-          <p>Start with the next task, next appointment, and any budget pressure before opening the detailed menus.</p>
+          <p className="eyebrow">{t.todayEyebrow}</p>
+          <h3>{t.todayTitle}</h3>
+          <p>{t.todayLead}</p>
         </div>
-        <button type="button" onClick={onAskToday}>Ask MajlisMate today</button>
+        <button type="button" onClick={onAskToday}>{t.askToday}</button>
         <div className="today-card-grid">
           <article>
-            <span>Next task</span>
-            <strong>{urgentChecklist[0]?.text || fallbackUrgent[0]}</strong>
-            <p>{urgentChecklist[0]?.deadline ? `Due ${urgentChecklist[0].deadline}` : urgentChecklist[0]?.phase || 'Recommended now'}</p>
+            <span>{t.nextTask}</span>
+            <strong>{urgentChecklist[0]?.text || fallbackUrgent[0] || t.nextTaskNone}</strong>
+            <p>{urgentChecklist[0]?.deadline ? t.due(urgentChecklist[0].deadline) : urgentChecklist[0]?.phase || t.recommendedNow}</p>
           </article>
           <article>
-            <span>Next appointment</span>
-            <strong>{nextAppointment ? nextAppointment.title : 'No appointment yet'}</strong>
-            <p>{nextAppointment ? `${nextAppointment.date}${nextAppointment.time ? ` at ${nextAppointment.time}` : ''}` : 'Schedule vendor follow-ups or payment reminders.'}</p>
+            <span>{t.nextAppointment}</span>
+            <strong>{nextAppointment ? nextAppointment.title : t.noAppointment}</strong>
+            <p>{nextAppointment ? `${nextAppointment.date}${nextAppointment.time ? t.at(nextAppointment.time) : ''}` : t.noAppointmentHint}</p>
           </article>
           <article>
-            <span>Budget signal</span>
+            <span>{t.budgetSignal}</span>
             <strong>{budgetAlert}</strong>
-            <p>Review planned, actual, paid, and balance.</p>
+            <p>{t.budgetHint}</p>
           </article>
           <article>
-            <span>Planning phase</span>
+            <span>{t.planningPhaseLabel}</span>
             <strong>{planningPhase}</strong>
-            <p>{plannerProfile.majlisDate || 'Set wedding date in settings.'}</p>
+            <p>{plannerProfile.majlisDate || t.setDateHint}</p>
           </article>
         </div>
       </section>
@@ -83,15 +168,15 @@ export function DashboardPanel({
       <section className="planner-section reminder-section">
         <div className="section-row">
           <div>
-            <p className="eyebrow">Smart reminders</p>
-            <h3>Recommended focus</h3>
+            <p className="eyebrow">{t.smartEyebrow}</p>
+            <h3>{t.smartTitle}</h3>
           </div>
         </div>
         <ul className="action-list reminder-list">
           {smartReminders.map((reminder) => (
             <li key={reminder}>
               <strong>{reminder}</strong>
-              <span>Suggested by current planner data</span>
+              <span>{t.smartSub}</span>
             </li>
           ))}
         </ul>
@@ -99,25 +184,25 @@ export function DashboardPanel({
 
       <div className="dashboard-grid">
         <article className="metric-card hero-metric">
-          <span>Countdown</span>
-          <strong>{daysLeft === null ? 'Set date' : daysLeft >= 0 ? `${daysLeft} days` : 'Majlis passed'}</strong>
-          <p>{plannerProfile.majlisDate || 'Add your majlis date to unlock timeline alerts.'}</p>
+          <span>{t.countdown}</span>
+          <strong>{daysLeft === null ? t.setDate : daysLeft >= 0 ? t.days(daysLeft) : t.majlisPassed}</strong>
+          <p>{plannerProfile.majlisDate || t.countdownHint}</p>
         </article>
         <article className="metric-card">
-          <span>Progress</span>
+          <span>{t.progress}</span>
           <strong>{planningProgress}%</strong>
           <div className="progress-track"><span style={{ width: `${planningProgress}%` }} /></div>
-          <p>{completedCount}/{totalChecklistItems} checklist items done</p>
+          <p>{t.itemsDone(completedCount, totalChecklistItems)}</p>
         </article>
         <article className="metric-card">
-          <span>Budget</span>
+          <span>{t.budget}</span>
           <strong>{money(totalPaid)}</strong>
-          <p>{money(totalPlanned)} planned, {money(totalActual)} actual</p>
+          <p>{t.budgetMeta(money(totalPlanned), money(totalActual))}</p>
         </article>
         <article className="metric-card">
-          <span>RSVP</span>
+          <span>{t.rsvp}</span>
           <strong>{confirmedGuests}</strong>
-          <p>{pendingGuests} pending, {declinedGuests} declined</p>
+          <p>{t.rsvpMeta(pendingGuests, declinedGuests)}</p>
         </article>
       </div>
 
@@ -125,23 +210,23 @@ export function DashboardPanel({
         <section className="planner-section">
           <div className="section-row">
             <div>
-              <p className="eyebrow">Deadline-aware</p>
-              <h3>Urgent actions</h3>
+              <p className="eyebrow">{t.urgentEyebrow}</p>
+              <h3>{t.urgentTitle}</h3>
             </div>
-            <button type="button" onClick={createDefaultChecklist}>Generate default checklist</button>
+            <button type="button" onClick={createDefaultChecklist}>{t.generateChecklist}</button>
           </div>
           <ul className="action-list">
             {urgentChecklist.length > 0
               ? urgentChecklist.map((item) => (
                   <li key={item.id}>
                     <strong>{item.text}</strong>
-                    <span>{item.deadline ? `Due ${item.deadline}` : item.phase || 'Planning'}</span>
+                    <span>{item.deadline ? t.due(item.deadline) : item.phase || t.planning}</span>
                   </li>
                 ))
               : fallbackUrgent.map((item) => (
                   <li key={item}>
                     <strong>{item}</strong>
-                    <span>Recommended now</span>
+                    <span>{t.recommendedNow}</span>
                   </li>
                 ))}
           </ul>
@@ -150,21 +235,21 @@ export function DashboardPanel({
         <section className="planner-section">
           <div className="section-row">
             <div>
-              <p className="eyebrow">Recent activity</p>
-              <h3>Latest changes</h3>
+              <p className="eyebrow">{t.activityEyebrow}</p>
+              <h3>{t.activityTitle}</h3>
             </div>
           </div>
           {activity.length > 0 ? (
             <ul className="activity-list">
               {activity.slice(0, 5).map((item) => (
                 <li key={item.id}>
-                  <span>{new Date(item.time).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+                  <span>{new Date(item.time).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })}</span>
                   <strong>{item.text}</strong>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="empty-state">Your latest planner updates will appear here.</p>
+            <p className="empty-state">{t.activityEmpty}</p>
           )}
         </section>
       </div>
