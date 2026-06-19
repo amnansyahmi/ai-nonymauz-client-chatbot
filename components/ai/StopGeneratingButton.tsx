@@ -28,9 +28,9 @@ export default function StopGeneratingButton({ visible, language = 'ms', onStop 
       onClick={onStop}
       data-event="stop_generating"
       aria-label={isMs ? 'Berhenti jana' : 'Stop generating'}
+      title={isMs ? 'Henti jana' : 'Stop generating'}
     >
       <StopIcon />
-      <span>{isMs ? 'Henti jana' : 'Stop generating'}</span>
     </button>
   );
 }

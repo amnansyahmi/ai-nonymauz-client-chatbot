@@ -4540,17 +4540,6 @@ body,
     display: none !important;
   }
 
-  .main-chat-panel .messages {
-    min-height: 0 !important;
-    max-height: none !important;
-    height: auto !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    padding-bottom: 12px !important;
-    scrollbar-gutter: auto !important;
-  }
 
   .main-chat-panel .chat-form {
     position: relative !important;

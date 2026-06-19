@@ -704,16 +704,6 @@ footer {
   padding: 22px;
 }
 
-.main-chat-panel .messages {
-  border: 1px solid var(--border);
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-}
-
-.main-chat-panel .chat-form {
-  border: 1px solid var(--border);
-  border-radius: 0 0 16px 16px;
-}
 
 .menu-assistant-copy {
   display: grid;
@@ -4811,8 +4801,11 @@ body {
 }
 
 .message.assistant .bubble {
-  background: var(--mm-assistant) !important;
-  padding: 4px 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 0 !important;
 }
 
 .message.user .bubble {
@@ -13638,36 +13631,6 @@ textarea:focus {
 }
 
 /* =============================================
-   ASSISTANT AVATAR
-   ============================================= */
-
-.message {
-  align-items: flex-start;
-}
-
-.msg-avatar {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  margin-top: 3px;
-  margin-right: 8px;
-  border-radius: 8px;
-  background: var(--ink);
-  color: var(--bg);
-}
-.msg-avatar svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
-}
-
-/* =============================================
    COPY BUTTON ON ASSISTANT BUBBLES
    ============================================= */
 
@@ -13690,22 +13653,21 @@ textarea:focus {
 .bubble-copy-btn {
   display: inline-grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--border);
+  width: 28px;
+  height: 28px;
+  border: 0;
   border-radius: 6px;
-  background: var(--bg);
-  color: var(--muted);
+  background: transparent;
+  color: var(--mm-text-soft, var(--muted));
   cursor: pointer;
-  transition: background 120ms, color 120ms, border-color 120ms;
+  transition: background 120ms, color 120ms;
 }
 .bubble-copy-btn:hover {
-  background: var(--bg-2);
-  color: var(--ink);
+  background: var(--mm-hover, rgba(0,0,0,0.06));
+  color: var(--mm-text, var(--ink));
 }
 .bubble-copy-btn.copied {
-  color: var(--success);
-  border-color: var(--success);
+  color: var(--mm-success, var(--success));
 }
 .bubble-copy-btn svg {
   width: 13px;
@@ -14855,17 +14817,6 @@ button.priority-chip:hover {
   background: rgba(76, 175, 125, 0.07);
 }
 
-/* Streaming preview: dim the panel and signal it is not yet actionable. */
-.chat-actions.is-preview {
-  border-style: dashed;
-  opacity: 0.78;
-}
-
-.chat-actions.is-preview .chat-actions__buttons button:disabled {
-  opacity: 0.5;
-  cursor: progress;
-}
-
 .chat-actions__title {
   display: block;
   font-size: 0.74rem;
@@ -15327,4 +15278,150 @@ a.vendor-search-nearby {
 
 .vendor-live-links a:hover {
   text-decoration: underline;
+}
+
+/* ══ Inline citations (sources under assistant messages) ══ */
+.inline-citations {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.inline-citations__label {
+  font-size: 0.72rem;
+  color: var(--mm-text-soft);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.inline-citations__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-pill, 999px);
+  background: transparent;
+  color: var(--mm-text-soft);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: border-color 120ms, color 120ms, background 120ms;
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inline-citations__chip:hover {
+  border-color: var(--mm-brand);
+  color: var(--mm-brand-strong);
+  background: rgba(194, 122, 99, 0.06);
+}
+
+/* Citation confidence levels — subtle colour cues */
+.inline-citations__chip--pasti {
+  border-color: rgba(76, 175, 125, 0.4);
+  color: var(--mm-success);
+}
+.inline-citations__chip--pasti:hover {
+  border-color: var(--mm-success);
+  background: var(--mm-success-soft);
+}
+.inline-citations__chip--mungkin {
+  border-color: var(--mm-border);
+}
+.inline-citations__chip--lazim {
+  border-color: var(--mm-border);
+}
+
+/* Citation slide-up panel */
+.citation-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+}
+
+.citation-panel__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(36, 28, 24, 0.4);
+  border: 0;
+  cursor: pointer;
+}
+
+.citation-panel__drawer {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--mm-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -8px 32px rgba(36, 28, 24, 0.12);
+}
+
+.citation-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.citation-panel__header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mm-text);
+  margin: 0 0 4px;
+  line-height: 1.35;
+}
+
+.citation-panel__category {
+  font-size: 0.75rem;
+  color: var(--mm-text-soft);
+  margin: 0;
+}
+
+.citation-panel__confidence {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mm-text-soft);
+  margin-bottom: 6px;
+}
+
+.citation-panel__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--mm-surface-muted);
+  color: var(--mm-text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.citation-panel__close:hover {
+  background: var(--mm-border);
+  color: var(--mm-text);
+}
+
+.citation-panel__hint {
+  font-size: 0.82rem;
+  color: var(--mm-text-soft);
+  line-height: 1.5;
+  margin: 0;
 }

@@ -44,7 +44,6 @@ type ActionPanelProps = {
   actions: PlannerAction[];
   state?: Message['actionsState'];
   language: 'ms' | 'en';
-  preview?: boolean;
   onApply?: (messageIndex: number, actions: PlannerAction[]) => void;
   onDismiss?: (messageIndex: number) => void;
 };
@@ -68,19 +67,17 @@ function getActionIcon(type: PlannerAction['type']): string {
   }
 }
 
-function ActionPanel({ messageIndex, actions, state, language, preview, onApply, onDismiss }: ActionPanelProps) {
+function ActionPanel({ messageIndex, actions, state, language, onApply, onDismiss }: ActionPanelProps) {
   const isMs = language === 'ms';
   if (state === 'dismissed') return null;
   const applied = state === 'applied';
 
   return (
-    <div className={`chat-actions${applied ? ' is-applied' : ''}${preview ? ' is-preview' : ''}`}>
+    <div className={`chat-actions${applied ? ' is-applied' : ''}`}>
       <span className="chat-actions__title">
         {applied
           ? isMs ? 'Ditambah ke planner' : 'Added to your planner'
-          : preview
-            ? isMs ? 'MajlisMate sedang sediakan…' : 'MajlisMate is preparing…'
-            : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
+          : isMs ? 'MajlisMate boleh tambah ini:' : 'MajlisMate can add these:'}
       </span>
       <ul className="chat-actions__list">
         {actions.map((action, i) => {
@@ -99,7 +96,6 @@ function ActionPanel({ messageIndex, actions, state, language, preview, onApply,
           <button
             type="button"
             className="chat-actions__apply"
-            disabled={preview}
             onClick={() => onApply?.(messageIndex, actions)}
           >
             {actions.length > 1
@@ -109,7 +105,6 @@ function ActionPanel({ messageIndex, actions, state, language, preview, onApply,
           <button
             type="button"
             className="chat-actions__dismiss"
-            disabled={preview}
             onClick={() => onDismiss?.(messageIndex)}
           >
             {isMs ? 'Abaikan' : 'Dismiss'}
@@ -145,17 +140,6 @@ function ClarifyChips({ messageIndex, options, answered, language, disabled, onR
           {option}
         </button>
       ))}
-    </div>
-  );
-}
-
-function AssistantAvatar() {
-  return (
-    <div className="msg-avatar" aria-hidden="true">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 4V2M8 4h8a4 4 0 0 1 4 4v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8a4 4 0 0 1 4-4Z" />
-        <path d="M8 12h.01M16 12h.01M9 16h6" />
-      </svg>
     </div>
   );
 }
@@ -286,7 +270,6 @@ export default function ChatWidget({
           const isStreaming = loading && message.role === 'assistant' && index === messages.length - 1;
           return (
             <article key={`${message.role}-${index}`} className={`message ${message.role}`}>
-              {message.role === 'assistant' && <AssistantAvatar />}
               {message.role === 'assistant' ? (
                 <div className="assistant-stack">
                   <MessageBubble
@@ -295,13 +278,12 @@ export default function ChatWidget({
                     emptyTypingLabel={emptyTypingLabel}
                     language={language}
                   />
-                  {message.actions && message.actions.length > 0 ? (
+                  {message.actions && message.actions.length > 0 && !isStreaming ? (
                     <ActionPanel
                       messageIndex={index}
                       actions={message.actions}
                       state={message.actionsState}
                       language={language}
-                      preview={isStreaming}
                       onApply={onApplyActions}
                       onDismiss={onDismissActions}
                     />

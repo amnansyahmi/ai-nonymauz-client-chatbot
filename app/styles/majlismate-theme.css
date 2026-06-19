@@ -437,12 +437,6 @@ textarea {
   padding: 18px !important;
 }
 
-.main-chat-panel .messages {
-  border: 1px solid var(--mm-border) !important;
-  border-bottom: 0 !important;
-  border-radius: 14px 14px 0 0 !important;
-  background: var(--mm-surface-subtle) !important;
-}
 
 .message.assistant {
   gap: 10px;
@@ -472,7 +466,6 @@ textarea {
 
 .chat-actions,
 .chat-clarify__chip,
-.citation-panel,
 .source-chip {
   border-color: var(--mm-border) !important;
   background: var(--mm-surface) !important;
@@ -624,29 +617,25 @@ textarea::placeholder {
 .chat-stop-wrapper {
   display: flex !important;
   justify-content: center !important;
-  padding: 8px 14px 4px !important;
-  background: var(--mm-surface-subtle) !important;
+  padding: 6px 14px 2px !important;
+  background: transparent !important;
 }
 
 .stop-generating {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  min-width: 0 !important;
-  min-height: 36px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 36px !important;
   height: 36px !important;
-  border: 1px solid var(--mm-border-strong) !important;
-  border-radius: var(--mm-radius-pill) !important;
-  background: color-mix(in srgb, var(--mm-surface) 92%, transparent) !important;
-  color: var(--mm-text) !important;
-  padding: 0 14px !important;
-  font-size: 0.86rem !important;
-  font-weight: 650 !important;
-  line-height: 1 !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07) !important;
-  backdrop-filter: blur(12px);
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  background: var(--mm-text) !important;
+  color: var(--mm-surface) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
   cursor: pointer;
+  transition: background 120ms, transform 80ms !important;
 }
 
 .stop-generating svg {
@@ -657,10 +646,12 @@ textarea::placeholder {
 }
 
 .stop-generating:hover {
-  border-color: var(--mm-text) !important;
-  background: var(--mm-text) !important;
-  color: var(--mm-surface) !important;
-  transform: none !important;
+  background: #333 !important;
+  transform: scale(1.06) !important;
+}
+
+.stop-generating:active {
+  transform: scale(0.94) !important;
 }
 
 .stop-generating:focus-visible {
@@ -1256,6 +1247,126 @@ textarea::placeholder {
 .guest-focus-grid article,
 .today-card-grid article {
   box-shadow: none !important;
+}
+
+/* ═══ Wedding countdown — desktop (mobile rules live in the 760px block) ═══ */
+.wedding-countdown {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 22px 28px;
+  margin: 22px 6px 8px;
+  padding: 26px 28px;
+  border: 1px solid var(--mm-border);
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--mm-accent) 16%, transparent) 0%, transparent 52%),
+    var(--mm-surface);
+  box-shadow: var(--mm-shadow-soft);
+}
+
+.wedding-countdown__hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  grid-column: 1;
+}
+
+.wedding-countdown__emoji {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--mm-brand-soft);
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.wedding-countdown__hero .eyebrow {
+  margin: 0 0 2px;
+  color: var(--mm-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.wedding-countdown__days {
+  display: block;
+  color: var(--mm-text);
+  font-size: 2.4rem;
+  font-weight: 820;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.wedding-countdown__units {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(72px, 1fr));
+  gap: 10px;
+  grid-column: 2;
+  justify-self: end;
+  min-width: 280px;
+}
+
+.wedding-countdown__units > div {
+  display: grid;
+  gap: 3px;
+  padding: 12px 10px;
+  border: 1px solid var(--mm-border);
+  border-radius: 14px;
+  background: var(--mm-surface-subtle);
+  text-align: center;
+}
+
+.wedding-countdown__units strong {
+  display: block;
+  color: var(--mm-text);
+  font-size: 1.5rem;
+  font-weight: 760;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.wedding-countdown__units span {
+  display: block;
+  color: var(--mm-text-muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.wedding-countdown__date {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--mm-border);
+  color: var(--mm-text);
+  font-weight: 650;
+}
+
+.wedding-countdown__hint {
+  grid-column: 1 / -1;
+  margin: -8px 0 0;
+  color: var(--mm-text-muted);
+  font-size: 0.92rem;
+}
+
+.wedding-countdown--passed {
+  grid-template-columns: auto 1fr;
+}
+
+.wedding-countdown--passed strong {
+  display: block;
+  color: var(--mm-text);
+  font-size: 1.3rem;
+  font-weight: 760;
+}
+
+.wedding-countdown--passed p {
+  margin: 4px 0 0;
+  color: var(--mm-text-muted);
 }
 
 @media (max-width: 760px) {
@@ -2142,5 +2253,49 @@ textarea::placeholder {
   .assistant-drawer .menu-assistant-form .composer-send-button,
   .assistant-drawer .menu-assistant-form .composer-voice-button {
     margin-left: 6px !important;
+  }
+}
+
+/* ═══ Mobile active-chat: flex layout pins composer to viewport bottom ═══
+ * Root cause: position:sticky doesn't work inside overflow:hidden.
+ * Fix: switch panel to flex column so chat-form is always at the bottom.
+ */
+@media (max-width: 760px) {
+  /* Stop planner-content from scrolling when active chat is shown */
+  .planner-content:has(.main-chat-panel.active-chat) {
+    overflow: hidden !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Panel fills viewport below the 64px sticky titlebar */
+  .main-chat-panel.active-chat {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100dvh - 64px) !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Messages fill all remaining space and scroll internally */
+  .main-chat-panel.active-chat .messages {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    padding: 12px 18px 16px !important;
+  }
+
+  /* Composer pinned at bottom; padding clears the fixed bottom nav (≈82px) */
+  .main-chat-panel.active-chat .chat-form {
+    flex: 0 0 auto !important;
+    position: static !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    margin: 0 !important;
+    padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(82px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)) !important;
   }
 }

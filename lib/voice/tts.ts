@@ -39,6 +39,29 @@ function estimateDurationMs(text: string, rate: number): number {
 
 export function createTtsController(): TtsController {
   let active: ActiveSession | null = null;
+  // Chrome SpeechSynthesis 14-second stall bug: after ~14s Chrome silently
+  // stops without firing onend. Pause+resume every 10s keeps the engine alive.
+  let keepAliveId: number | null = null;
+
+  function startKeepAlive() {
+    if (typeof window === 'undefined') return;
+    if (keepAliveId !== null) return;
+    keepAliveId = window.setInterval(() => {
+      try {
+        if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }
+      } catch {}
+    }, 10_000);
+  }
+
+  function stopKeepAlive() {
+    if (keepAliveId !== null) {
+      window.clearInterval(keepAliveId);
+      keepAliveId = null;
+    }
+  }
 
   function finalize(session: ActiveSession, errorReason?: string) {
     if (session.finished) return;
@@ -47,6 +70,7 @@ export function createTtsController(): TtsController {
       window.clearTimeout(session.watchdog);
       session.watchdog = null;
     }
+    stopKeepAlive();
     if (active === session) active = null;
     if (errorReason) session.onError(errorReason);
     else session.onEnd();
@@ -63,6 +87,7 @@ export function createTtsController(): TtsController {
     }
 
     cancel();
+    startKeepAlive();
 
     const rate = options.rate ?? 1;
     const utterance = new SpeechSynthesisUtterance(options.text);
@@ -103,11 +128,16 @@ export function createTtsController(): TtsController {
       finalize(session);
     }, estimated + WATCHDOG_BUFFER_MS);
 
-    try {
-      window.speechSynthesis.speak(utterance);
-    } catch (error) {
-      finalize(session, error instanceof Error ? error.message : 'speak-failed');
-    }
+    // Small gap before calling speak() so Chrome has time to settle after
+    // the cancel() above — prevents silent failures on rapid sequences.
+    window.setTimeout(() => {
+      if (session.finished) return;
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (error) {
+        finalize(session, error instanceof Error ? error.message : 'speak-failed');
+      }
+    }, 30);
   }
 
   function cancel() {
@@ -119,6 +149,7 @@ export function createTtsController(): TtsController {
       }
       active = null;
     }
+    stopKeepAlive();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -366,7 +397,10 @@ export function createStreamingTts(options: StreamingTtsOptions): StreamingTtsHa
     finished = true;
     if (queue.length > 0 && !speaking) {
       next();
-    } else if (queue.length === 0) {
+    } else if (queue.length === 0 && !speaking) {
+      // Only fire onComplete when nothing is queued AND nothing is speaking.
+      // If speaking=true the last sentence is still playing — next() will fire
+      // onComplete once that sentence's onEnd arrives.
       options.onComplete?.(fullText);
     }
     return fullText;

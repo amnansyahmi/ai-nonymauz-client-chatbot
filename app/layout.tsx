@@ -17,6 +17,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  // Shrink the content area when the virtual keyboard opens so the chat
+  // composer stays pinned at the bottom rather than being pushed up.
+  interactiveWidget: 'resizes-content',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#241c18' },
     { media: '(prefers-color-scheme: dark)', color: '#1b1410' }

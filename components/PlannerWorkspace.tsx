@@ -2095,6 +2095,15 @@ export default function PlannerWorkspace() {
     voiceHistoryRef.current = liveVoice.history;
   }, [liveVoice.history]);
 
+  // Stop the mic/STT/TTS whenever the live voice sheet is closed, regardless
+  // of which code path triggered the close (onClose callback, backdrop, etc.).
+  useEffect(() => {
+    if (!isLiveVoiceOpen) {
+      liveVoice.stop();
+    }
+    // Intentionally only re-run on open/close; liveVoice is a stable ref-like handle.
+  }, [isLiveVoiceOpen]);
+
   const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
     ? copy.defaultTemplate
     : checklistTitle;
@@ -2630,6 +2639,7 @@ export default function PlannerWorkspace() {
           voice={liveVoice}
           isOpen={isLiveVoiceOpen}
           onClose={() => {
+            liveVoice.stop();
             setIsLiveVoiceOpen(false);
           }}
           onApplyActions={(actions) => {
@@ -2961,6 +2971,7 @@ export default function PlannerWorkspace() {
           budgetAlert={budgetAlert}
           planningPhase={planningPhase}
           smartReminders={smartReminders}
+          language={language}
           onAskToday={() => {
             setActiveTab('chat');
             setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');

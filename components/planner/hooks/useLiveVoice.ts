@@ -42,6 +42,21 @@ const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
   ],
 };
 
+// Played once if the backend takes longer than ~7 seconds to start streaming,
+// so the user does not experience dead silence after the initial ack fades out.
+const STILL_THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
+  en: [
+    'Still looking into that…',
+    'Bear with me a moment…',
+    'Almost there…',
+  ],
+  ms: [
+    'Tengah cari maklumat ni, sabar ya…',
+    'Jap lagi, tengah fikir…',
+    'Sekejap lagi ya…',
+  ],
+};
+
 export type VoiceExchange = {
   id: string;
   user: string;
@@ -145,6 +160,7 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
   const autoStopTimerRef = useRef<number | null>(null);
   const transcriptIdleTimerRef = useRef<number | null>(null);
   const thinkingAckRef = useRef<number | null>(null);
+  const stillThinkingTimerRef = useRef<number | null>(null);
   const detectedLangRef = useRef<LanguageDetection | null>(null);
 
   useEffect(() => {
@@ -238,6 +254,10 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       window.clearTimeout(thinkingAckRef.current);
       thinkingAckRef.current = null;
     }
+    if (stillThinkingTimerRef.current) {
+      window.clearTimeout(stillThinkingTimerRef.current);
+      stillThinkingTimerRef.current = null;
+    }
   }, []);
 
   const clearTranscriptIdleTimer = useCallback(() => {
@@ -304,6 +324,10 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       if (thinkingAckRef.current) {
         window.clearTimeout(thinkingAckRef.current);
         thinkingAckRef.current = null;
+      }
+      if (stillThinkingTimerRef.current) {
+        window.clearTimeout(stillThinkingTimerRef.current);
+        stillThinkingTimerRef.current = null;
       }
       if (transcriptIdleTimerRef.current) {
         window.clearTimeout(transcriptIdleTimerRef.current);
@@ -443,6 +467,16 @@ export function useLiveVoice({ language, ask, enabled = true }: UseLiveVoiceOpti
       thinkingAckRef.current = window.setTimeout(() => {
         speakImmediate(ackText);
       }, 700);
+
+      // If the backend takes longer than ~7 s (e.g. Render cold start), speak a
+      // second patient-waiting phrase so the user does not experience dead silence
+      // after the initial ack fades out. Cleared as soon as the first AI sentence
+      // arrives via clearThinkingAck() in onSentenceStart.
+      const stillAcks = STILL_THINKING_ACKS[language];
+      stillThinkingTimerRef.current = window.setTimeout(() => {
+        stillThinkingTimerRef.current = null;
+        speakImmediate(stillAcks[Math.floor(Math.random() * stillAcks.length)]);
+      }, 7000);
 
       const { voice: answerVoice, lang: answerLang, detection } = pickVoiceForText(trimmed, language);
       detectedLangRef.current = detection;
