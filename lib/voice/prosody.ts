@@ -104,12 +104,91 @@ function stripMarkdown(text: string): string {
     .replace(/^\d+\.\s+/gm, '');               // numbered lists
 }
 
+const MS_ONES = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'lapan', 'sembilan'];
+
+/** Convert 0..999 to spoken Malay, honouring the "se-" prefix (seratus, sepuluh, sebelas). */
+function malayThreeDigits(n: number): string {
+  const parts: string[] = [];
+  const hundreds = Math.floor(n / 100);
+  const rem = n % 100;
+  if (hundreds === 1) parts.push('seratus');
+  else if (hundreds > 1) parts.push(`${MS_ONES[hundreds]} ratus`);
+  if (rem > 0) {
+    if (rem < 10) parts.push(MS_ONES[rem]);
+    else if (rem === 10) parts.push('sepuluh');
+    else if (rem === 11) parts.push('sebelas');
+    else if (rem < 20) parts.push(`${MS_ONES[rem - 10]} belas`);
+    else {
+      const tens = Math.floor(rem / 10);
+      const unit = rem % 10;
+      parts.push(`${MS_ONES[tens]} puluh`);
+      if (unit > 0) parts.push(MS_ONES[unit]);
+    }
+  }
+  return parts.join(' ');
+}
+
+/** Spoken Malay for whole numbers up to the billions (seribu, sejuta-style scaling). */
+export function malayNumberToWords(value: number): string {
+  const n = Math.floor(Math.abs(value));
+  if (n === 0) return 'kosong';
+  let remaining = n;
+  const parts: string[] = [];
+  const billions = Math.floor(remaining / 1_000_000_000);
+  remaining %= 1_000_000_000;
+  const millions = Math.floor(remaining / 1_000_000);
+  remaining %= 1_000_000;
+  const thousands = Math.floor(remaining / 1_000);
+  remaining %= 1_000;
+  if (billions > 0) parts.push(`${malayThreeDigits(billions)} bilion`);
+  if (millions > 0) parts.push(`${malayThreeDigits(millions)} juta`);
+  if (thousands > 0) parts.push(thousands === 1 ? 'seribu' : `${malayThreeDigits(thousands)} ribu`);
+  if (remaining > 0) parts.push(malayThreeDigits(remaining));
+  return parts.join(' ');
+}
+
 function expandCurrency(text: string, language: AppLanguage): string {
-  // RM1,500 / RM 1500 → "1500 ringgit"
-  const ringgit = language === 'ms' ? 'ringgit' : 'ringgit';
-  return text.replace(/RM\s*([\d,]+(?:\.\d{2})?)/g, (_, amount) =>
-    `${amount.replace(/,/g, '')} ${ringgit}`
-  );
+  return text.replace(/RM\s*([\d,]+)(?:\.(\d{1,2}))?/g, (_, intPart: string, decPart?: string) => {
+    const ringgit = Number.parseInt(intPart.replace(/,/g, ''), 10) || 0;
+    if (language !== 'ms') {
+      // English voices read digits naturally; just normalise the symbol.
+      const decimals = decPart ? `.${decPart}` : '';
+      return `${intPart.replace(/,/g, '')}${decimals} ringgit`;
+    }
+    let out = `${malayNumberToWords(ringgit)} ringgit`;
+    if (decPart) {
+      const sen = Number.parseInt(decPart.padEnd(2, '0').slice(0, 2), 10);
+      if (sen > 0) out += ` ${malayNumberToWords(sen)} sen`;
+    }
+    return out;
+  });
+}
+
+const MS_MONTHS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+const EN_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+/** Speak dates as "14 September 2026" (ms) / "September 14, 2026" (en) instead of "2026-09-14". */
+function expandDates(text: string, language: AppLanguage): string {
+  const months = language === 'ms' ? MS_MONTHS : EN_MONTHS;
+
+  // ISO: 2026-09-14 (unambiguous)
+  let result = text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, (match, year: string, mo: string, day: string) => {
+    const monthIndex = Number.parseInt(mo, 10) - 1;
+    const dayNum = Number.parseInt(day, 10);
+    if (monthIndex < 0 || monthIndex > 11 || dayNum < 1 || dayNum > 31) return match;
+    return language === 'ms' ? `${dayNum} ${months[monthIndex]} ${year}` : `${months[monthIndex]} ${dayNum}, ${year}`;
+  });
+
+  // D/M/YYYY — require a year to avoid mangling fractions like "1/2".
+  result = result.replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{2,4})\b/g, (match, day: string, mo: string, year: string) => {
+    const monthIndex = Number.parseInt(mo, 10) - 1;
+    const dayNum = Number.parseInt(day, 10);
+    if (monthIndex < 0 || monthIndex > 11 || dayNum < 1 || dayNum > 31) return match;
+    const fullYear = year.length === 2 ? `20${year}` : year;
+    return language === 'ms' ? `${dayNum} ${months[monthIndex]} ${fullYear}` : `${months[monthIndex]} ${dayNum}, ${fullYear}`;
+  });
+
+  return result;
 }
 
 function expandNumbers(text: string, language: AppLanguage): string {
@@ -132,6 +211,7 @@ export function humanize(text: string, language: AppLanguage, voiceLang?: string
   if (!text) return text;
 
   let result = stripMarkdown(text);
+  result = expandDates(result, language);
   result = expandCurrency(result, language);
   result = expandNumbers(result, language);
 

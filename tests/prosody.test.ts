@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from 'vitest';
-import { humanize, isQuestionSentence, sentenceProsody } from '../lib/voice/prosody';
+import { humanize, isQuestionSentence, malayNumberToWords, sentenceProsody } from '../lib/voice/prosody';
 
 describe('humanize (English)', () => {
   it('expands common contractions', () => {
@@ -26,6 +26,44 @@ describe('humanize (Malay)', () => {
   it('normalizes whitespace but does not change words', () => {
     expect(humanize('Saya nak pergi kedai', 'ms')).toBe('Saya nak pergi kedai');
     expect(humanize('  Saya   nak   pergi  ', 'ms')).toBe('Saya nak pergi');
+  });
+});
+
+describe('malayNumberToWords', () => {
+  it('handles se- prefixes and scaling', () => {
+    expect(malayNumberToWords(0)).toBe('kosong');
+    expect(malayNumberToWords(5)).toBe('lima');
+    expect(malayNumberToWords(11)).toBe('sebelas');
+    expect(malayNumberToWords(100)).toBe('seratus');
+    expect(malayNumberToWords(150)).toBe('seratus lima puluh');
+    expect(malayNumberToWords(1000)).toBe('seribu');
+    expect(malayNumberToWords(1500)).toBe('seribu lima ratus');
+    expect(malayNumberToWords(5000)).toBe('lima ribu');
+    expect(malayNumberToWords(25000)).toBe('dua puluh lima ribu');
+    expect(malayNumberToWords(2026)).toBe('dua ribu dua puluh enam');
+    expect(malayNumberToWords(1_000_000)).toBe('satu juta');
+  });
+});
+
+describe('humanize money & dates (Malay)', () => {
+  it('speaks ringgit amounts as Malay words', () => {
+    expect(humanize('Bajet RM5,000 untuk katering', 'ms')).toBe('Bajet lima ribu ringgit untuk katering');
+    expect(humanize('Deposit RM1,500.50', 'ms')).toBe('Deposit seribu lima ratus ringgit lima puluh sen');
+  });
+  it('speaks ISO dates with month names', () => {
+    expect(humanize('Majlis pada 2026-09-14', 'ms')).toBe('Majlis pada 14 September 2026');
+  });
+  it('speaks slash dates that include a year', () => {
+    expect(humanize('Tarikh 14/9/2026', 'ms')).toBe('Tarikh 14 September 2026');
+  });
+  it('leaves fraction-like values alone', () => {
+    expect(humanize('Guna 1/2 cawan', 'ms')).toBe('Guna 1/2 cawan');
+  });
+});
+
+describe('humanize money & dates (English)', () => {
+  it('keeps ringgit digits and formats the ISO date', () => {
+    expect(humanize('Venue is RM5,000 on 2026-09-14', 'en')).toBe('Venue is 5000 ringgit on September 14, 2026');
   });
 });
 

@@ -960,8 +960,9 @@ textarea::placeholder {
 }
 
 .landing__hero-bubble--user {
-  background: var(--mm-brand) !important;
-  color: var(--mm-on-brand) !important;
+  border: 1px solid var(--mm-border) !important;
+  background: var(--mm-accent-soft) !important;
+  color: var(--mm-text) !important;
 }
 
 .landing__features,
@@ -1288,5 +1289,858 @@ textarea::placeholder {
 
   .onboarding-tour {
     display: none !important;
+  }
+}
+
+/* Mobile usability repair */
+@media (max-width: 760px) {
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  .planner-workspace,
+  .planner-body,
+  .planner-content {
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .planner-content {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .main-chat-panel,
+  .dashboard-panel,
+  .planner-panel,
+  .checklist-panel,
+  .calendar-panel,
+  .budget-command-center,
+  .guest-command-center,
+  .vendor-discovery-panel {
+    min-width: 0 !important;
+    padding-inline: 18px !important;
+    padding-bottom: calc(128px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .workspace-titlebar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 40 !important;
+    min-height: 64px !important;
+    padding: 8px 18px !important;
+  }
+
+  .workspace-title-center {
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  .workspace-title-center .sidebar-logo-mark {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .workspace-title-center strong {
+    max-width: 120px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-title-actions {
+    gap: 8px !important;
+  }
+
+  .workspace-live-button {
+    width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    color: transparent !important;
+    font-size: 0 !important;
+  }
+
+  .workspace-live-button svg {
+    color: var(--mm-text) !important;
+  }
+
+  .workspace-ai-button {
+    min-width: 42px !important;
+    height: 42px !important;
+    padding: 0 12px !important;
+    gap: 7px !important;
+  }
+
+  .workspace-ai-button .workspace-ai-icon {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .planner-panel-header,
+  .calendar-toolbar,
+  .budget-hero-modern,
+  .vendor-page-header,
+  .guest-hero-modern,
+  .checklist-hero-modern {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+    gap: 14px !important;
+    padding: 24px 0 18px !important;
+  }
+
+  .today-command-center {
+    display: grid !important;
+    gap: 16px !important;
+    padding: 24px 0 18px !important;
+  }
+
+  .planner-panel-header > div:first-child,
+  .calendar-toolbar > div:first-child,
+  .budget-hero-modern > div:first-child,
+  .vendor-page-header > div:first-child,
+  .guest-hero-modern > div:first-child,
+  .checklist-hero-modern > div:first-child {
+    max-width: 100% !important;
+  }
+
+  .planner-panel-header h3,
+  .calendar-toolbar h3,
+  .budget-hero-modern h3,
+  .vendor-page-header h3,
+  .guest-hero-modern h3,
+  .checklist-hero-modern h3,
+  .today-command-center h3,
+  .today-hero-copy h3 {
+    max-width: 100% !important;
+    margin-block: 8px !important;
+    font-size: clamp(2rem, 9vw, 2.35rem) !important;
+    line-height: 1.04 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .planner-panel-header p:not(.eyebrow),
+  .calendar-toolbar p:not(.eyebrow),
+  .budget-hero-modern p:not(.eyebrow),
+  .vendor-page-header p:not(.eyebrow),
+  .guest-hero-modern p:not(.eyebrow),
+  .checklist-hero-modern p:not(.eyebrow),
+  .today-command-center p:not(.eyebrow) {
+    max-width: 100% !important;
+    font-size: 0.95rem !important;
+  }
+
+  .budget-hero-actions,
+  .guest-header-actions,
+  .vendor-header-actions,
+  .calendar-toolbar > div:last-child {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .budget-focus-grid,
+  .guest-focus-grid,
+  .today-card-grid,
+  .checklist-stat-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .budget-focus-grid article,
+  .guest-focus-grid article,
+  .today-card-grid article,
+  .checklist-stat-row article {
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 132px !important;
+    padding: 18px !important;
+  }
+
+  .budget-focus-grid article strong,
+  .guest-focus-grid article strong,
+  .today-card-grid article strong,
+  .checklist-stat-row article strong {
+    font-size: clamp(1.55rem, 7vw, 2rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .budget-view-tabs,
+  .guest-view-tabs,
+  .checklist-view-tabs,
+  .calendar-agenda-filter {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overscroll-behavior-inline: contain !important;
+    padding: 4px !important;
+    scrollbar-width: none !important;
+  }
+
+  .budget-view-tabs::-webkit-scrollbar,
+  .guest-view-tabs::-webkit-scrollbar,
+  .checklist-view-tabs::-webkit-scrollbar,
+  .calendar-agenda-filter::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .budget-view-tabs button,
+  .guest-view-tabs button,
+  .checklist-view-tabs button,
+  .calendar-agenda-filter button {
+    flex: 0 0 auto !important;
+    min-height: 44px !important;
+    white-space: nowrap !important;
+  }
+
+  .budget-row-card,
+  .guest-row-card {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+  }
+
+  .budget-row-summary,
+  .guest-row-summary {
+    grid-template-columns: auto minmax(0, 1fr) auto !important;
+    gap: 12px !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    padding: 16px !important;
+  }
+
+  .budget-row-title,
+  .guest-row-title {
+    min-width: 0 !important;
+  }
+
+  .budget-row-title strong,
+  .guest-row-title strong,
+  .budget-row-title small,
+  .guest-row-title small {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .budget-row-amount {
+    align-items: flex-end !important;
+    min-width: 82px !important;
+  }
+
+  .budget-status,
+  .guest-status {
+    grid-column: 2 / -1 !important;
+    justify-self: start !important;
+  }
+
+  .budget-quick-pay {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 0 16px 16px !important;
+  }
+
+  .budget-quick-pay button {
+    min-width: 0 !important;
+    padding-inline: 10px !important;
+    white-space: nowrap !important;
+  }
+
+  .guest-edit-panel,
+  .budget-edit-panel {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-inline: 0 !important;
+    border-bottom: 0 !important;
+  }
+
+  .sidebar-backdrop,
+  .command-palette-backdrop,
+  .settings-backdrop,
+  .disambiguation-backdrop {
+    z-index: 95 !important;
+  }
+
+  .planner-body.sidebar-open .mobile-bottom-nav,
+  .command-palette-backdrop ~ .mobile-bottom-nav,
+  .settings-backdrop ~ .mobile-bottom-nav,
+  .disambiguation-backdrop ~ .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .command-palette-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    padding: calc(76px + env(safe-area-inset-top, 0px)) 16px 16px !important;
+    background: rgba(16, 16, 16, 0.42) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  .command-palette {
+    position: relative !important;
+    width: min(100%, 560px) !important;
+    max-height: min(68dvh, 540px) !important;
+    margin: 0 auto !important;
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 22px !important;
+    background: var(--mm-surface) !important;
+    overflow: hidden !important;
+    box-shadow: var(--mm-shadow-panel) !important;
+  }
+
+  .command-palette input {
+    width: 100% !important;
+    min-height: 60px !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--mm-border) !important;
+    border-radius: 0 !important;
+    padding: 0 18px !important;
+    font-size: 1rem !important;
+  }
+
+  .command-results {
+    max-height: calc(min(68dvh, 540px) - 61px) !important;
+    overflow-y: auto !important;
+    padding: 10px !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .command-results button {
+    border-radius: 14px !important;
+    padding: 14px !important;
+  }
+
+  .mobile-bottom-nav {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 60 !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .workspace-ai-button {
+    width: 42px !important;
+    overflow: hidden !important;
+    color: transparent !important;
+    font-size: 0 !important;
+  }
+
+  .workspace-ai-button .workspace-ai-icon {
+    color: var(--mm-on-brand) !important;
+  }
+
+  .budget-focus-grid,
+  .guest-focus-grid,
+  .today-card-grid,
+  .checklist-stat-row {
+    gap: 10px !important;
+  }
+
+  .budget-focus-grid article,
+  .guest-focus-grid article,
+  .today-card-grid article,
+  .checklist-stat-row article {
+    padding: 16px !important;
+  }
+}
+
+/* Targeted mobile regression fixes */
+@media (max-width: 760px) {
+  .sidebar-backdrop {
+    z-index: 70 !important;
+    background: rgba(16, 16, 16, 0.28) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .planner-sidebar {
+    z-index: 90 !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .planner-body.sidebar-open .planner-sidebar,
+  .planner-body.sidebar-open .planner-sidebar * {
+    filter: none !important;
+  }
+
+  .assistant-drawer-backdrop {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .planner-assistant-rail.assistant-drawer {
+    display: flex !important;
+    flex-direction: column !important;
+    height: min(88dvh, 760px) !important;
+    max-height: calc(100dvh - 18px) !important;
+    overflow: hidden !important;
+  }
+
+  .assistant-drawer .menu-assistant {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+  }
+
+  .assistant-drawer .menu-assistant-workflow {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    flex-direction: column !important;
+  }
+
+  .assistant-drawer .menu-assistant-actions {
+    flex: 0 0 auto !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+  }
+
+  .assistant-drawer .menu-assistant-messages {
+    flex: 1 1 auto !important;
+    min-height: 120px !important;
+    overflow-y: auto !important;
+  }
+
+  .assistant-drawer .menu-assistant-form.chat-form {
+    position: sticky !important;
+    bottom: 0 !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    padding: 8px 8px 8px 16px !important;
+    border-radius: 24px !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    color: var(--mm-text) !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-send-button,
+  .assistant-drawer .menu-assistant-form .composer-voice-button {
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-color: var(--mm-border-strong) !important;
+    background: var(--mm-brand-soft) !important;
+    color: var(--mm-text) !important;
+    opacity: 1 !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-send-button.has-input,
+  .assistant-drawer .menu-assistant-form .composer-voice-button.has-input {
+    border-color: var(--mm-brand) !important;
+    background: var(--mm-brand) !important;
+    color: var(--mm-on-brand) !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-send-button svg,
+  .assistant-drawer .menu-assistant-form .composer-voice-button svg {
+    opacity: 1 !important;
+  }
+
+  .dashboard-panel .today-command-center {
+    display: block !important;
+    padding-top: 28px !important;
+  }
+
+  .dashboard-panel .today-hero-copy h3 {
+    max-width: 100% !important;
+    font-size: clamp(2rem, 10vw, 2.45rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  .dashboard-panel .today-card-grid {
+    margin-top: 18px !important;
+  }
+
+  .budget-command-center .budget-focus-grid,
+  .guest-command-center .guest-focus-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .budget-command-center .budget-focus-grid article,
+  .guest-command-center .guest-focus-grid article {
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: 120px !important;
+  }
+
+  .budget-row-card {
+    border-radius: 16px !important;
+    background: var(--mm-surface) !important;
+    overflow: hidden !important;
+  }
+
+  .budget-row-summary {
+    display: grid !important;
+    grid-template-columns: 10px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "dot title amount"
+      "dot status amount" !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    gap: 6px 12px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 16px !important;
+  }
+
+  .budget-category-dot {
+    grid-area: dot !important;
+    align-self: center !important;
+    width: 8px !important;
+    height: 8px !important;
+  }
+
+  .budget-row-title {
+    grid-area: title !important;
+    min-width: 0 !important;
+  }
+
+  .budget-row-title strong {
+    display: block !important;
+    overflow: hidden !important;
+    color: var(--mm-text) !important;
+    font-size: 1rem !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .budget-row-title small {
+    display: block !important;
+    margin-top: 3px !important;
+    overflow: hidden !important;
+    font-size: 0.84rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .budget-row-amount {
+    grid-area: amount !important;
+    align-self: start !important;
+    min-width: 76px !important;
+    text-align: right !important;
+  }
+
+  .budget-row-amount strong {
+    font-size: 1.1rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .budget-status {
+    grid-area: status !important;
+    grid-column: auto !important;
+    justify-self: start !important;
+    max-width: 100% !important;
+    margin-top: 4px !important;
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    white-space: nowrap !important;
+  }
+
+  .budget-row-meter {
+    margin: 0 16px 12px !important;
+  }
+
+  .budget-quick-pay {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 0 16px 16px !important;
+  }
+
+  .budget-quick-pay button {
+    width: 100% !important;
+    min-height: 42px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .guest-row-summary {
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .landing__nav {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 14px 18px !important;
+  }
+
+  .landing__brand {
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  .landing__brand-logo {
+    flex: 0 0 34px !important;
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .landing__brand strong {
+    max-width: 150px !important;
+    overflow: hidden !important;
+    font-size: 1.12rem !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .landing__nav-links {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    min-width: 0 !important;
+    gap: 8px !important;
+  }
+
+  .landing__nav-links a:not(.landing__nav-cta) {
+    display: none !important;
+  }
+
+  .landing__nav-cta {
+    max-width: 150px !important;
+    min-height: 48px !important;
+    padding: 0 18px !important;
+    overflow: hidden !important;
+    border-radius: var(--mm-radius-pill) !important;
+    text-align: center !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .landing__hero {
+    padding-inline: 20px !important;
+  }
+
+  .landing__hero-card {
+    margin-bottom: 52px !important;
+  }
+}
+
+/* Mobile budget rows: one card only, no nested pill frame. */
+@media (max-width: 760px) {
+  .budget-command-center .budget-row-card {
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 16px !important;
+    background: var(--mm-surface) !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .budget-command-center .budget-row-card::before,
+  .budget-command-center .budget-row-card::after,
+  .budget-command-center .budget-row-summary::before,
+  .budget-command-center .budget-row-summary::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .budget-command-center .budget-row-summary,
+  .budget-command-center .budget-row-summary:hover,
+  .budget-command-center .budget-row-summary:focus-visible {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .budget-command-center .budget-row-card:hover,
+  .budget-command-center .budget-row-card:focus-within {
+    border-color: var(--mm-border) !important;
+    background: var(--mm-surface) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .budget-command-center .budget-row-meter {
+    height: 4px !important;
+    margin: 0 16px 14px !important;
+    border-radius: var(--mm-radius-pill) !important;
+  }
+}
+
+/* Final mobile dashboard and assistant polish. */
+@media (max-width: 760px) {
+  .dashboard-panel {
+    padding-top: 18px !important;
+  }
+
+  .dashboard-panel .today-command-center {
+    display: grid !important;
+    gap: 16px !important;
+    padding: 18px 0 10px !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-panel .today-hero-copy {
+    display: grid !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-panel .today-hero-copy .eyebrow {
+    width: max-content !important;
+    margin: 0 !important;
+  }
+
+  .dashboard-panel .today-hero-copy h3 {
+    margin: 0 !important;
+    max-width: 12ch !important;
+    font-size: clamp(2rem, 8.6vw, 2.45rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .dashboard-panel .today-hero-copy p:not(.eyebrow) {
+    margin: 0 !important;
+    font-size: 0.98rem !important;
+  }
+
+  .dashboard-panel .today-command-center > button {
+    position: static !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    margin: 0 !important;
+    justify-content: center !important;
+  }
+
+  .dashboard-panel .today-card-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-top: 0 !important;
+  }
+
+  .dashboard-panel .weekly-briefing {
+    margin-top: 0 !important;
+  }
+
+  .wedding-countdown {
+    display: grid !important;
+    gap: 14px !important;
+    margin: 18px 0 96px !important;
+    padding: 16px !important;
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 18px !important;
+    background: var(--mm-surface) !important;
+    box-shadow: none !important;
+  }
+
+  .wedding-countdown__hero {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .wedding-countdown__emoji {
+    display: grid !important;
+    width: 42px !important;
+    height: 42px !important;
+    place-items: center !important;
+    border-radius: 50% !important;
+    background: var(--mm-brand-soft) !important;
+    font-size: 1.35rem !important;
+  }
+
+  .wedding-countdown__days {
+    display: block !important;
+    margin-top: 2px !important;
+    font-size: 1.55rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .wedding-countdown__units {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .wedding-countdown__units > div {
+    display: grid !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+    padding: 10px 6px !important;
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 14px !important;
+    background: var(--mm-surface-subtle) !important;
+    text-align: center !important;
+  }
+
+  .wedding-countdown__units strong {
+    display: block !important;
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+  }
+
+  .wedding-countdown__units span {
+    display: block !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 0.76rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .wedding-countdown__date,
+  .wedding-countdown__hint {
+    margin: 0 !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 0.94rem !important;
+    line-height: 1.4 !important;
+  }
+
+  .assistant-drawer .menu-assistant-actions button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .assistant-drawer .menu-assistant-form.chat-form {
+    position: sticky !important;
+    bottom: 10px !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: auto 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 8px 8px 8px 16px !important;
+    border-radius: 26px !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-input {
+    min-width: 0 !important;
+    padding-right: 6px !important;
+  }
+
+  .assistant-drawer .menu-assistant-form .composer-send-button,
+  .assistant-drawer .menu-assistant-form .composer-voice-button {
+    margin-left: 6px !important;
   }
 }
