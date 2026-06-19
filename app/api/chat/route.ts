@@ -68,35 +68,57 @@ function buildDemoPlannerAnswer(
   const isKursusPra = /\b(kursus\s+pra|kppim|pra[\s-]perkahwinan)\b/i.test(userMessage);
 
   if (isHivTest || isKursusPra) {
+    // Same one-tap action in voice and text. In voice the spoken pipeline strips
+    // everything from MM_ACTIONS onward, so only the sentence is read aloud while
+    // the "add to checklist" chip still appears.
+    const hivActionEn = JSON.stringify([{ type: 'add_checklist_item', text: 'HIV test (kursus pra-perkahwinan requirement)', reason: 'Mandatory for nikah registration at JAI/PAID', phase: '3-6 months before wedding' }]);
+    const hivActionMs = JSON.stringify([{ type: 'add_checklist_item', text: 'Buat ujian HIV (syarat kursus pra-perkahwinan)', reason: 'Wajib untuk pendaftaran nikah di JAI/PAID', phase: '3-6 bulan sebelum majlis' }]);
     if (voiceMode) {
-      if (language === 'en') return 'An HIV test is required as part of the kursus pra-perkahwinan for Muslim marriage in Malaysia. Get it done at a government health clinic at least three months before your wedding.';
-      return 'Ujian HIV wajib untuk kursus pra-perkahwinan perkahwinan Islam di Malaysia. Buat di Klinik Kesihatan kerajaan, sekurang-kurangnya tiga bulan sebelum majlis.';
+      if (language === 'en') return `An HIV test is required as part of the kursus pra-perkahwinan for Muslim marriage in Malaysia. Get it done at a government health clinic at least three months before your wedding. Want me to add it to your checklist?\n${MM_ACTIONS_OPEN}\n${hivActionEn}\n${MM_ACTIONS_CLOSE}`;
+      return `Ujian HIV wajib untuk kursus pra-perkahwinan perkahwinan Islam di Malaysia. Buat di Klinik Kesihatan kerajaan, sekurang-kurangnya tiga bulan sebelum majlis. Nak saya tambah ke checklist?\n${MM_ACTIONS_OPEN}\n${hivActionMs}\n${MM_ACTIONS_CLOSE}`;
     }
     if (language === 'en') {
-      const action = JSON.stringify([{ type: 'add_checklist_item', text: 'HIV test (kursus pra-perkahwinan requirement)', reason: 'Mandatory for nikah registration at JAI/PAID', phase: '3-6 months before wedding' }]);
+      const action = hivActionEn;
       return `An HIV test is mandatory for Muslim marriages in Malaysia, required as part of the **Kursus Pra-Perkahwinan** registration.\n\n**When to do it:**\n- At least 3–6 months before the wedding\n- Before or during kursus pra-perkahwinan registration at your state JAI\n- Can be done at a government health clinic (Klinik Kesihatan) or approved private clinic\n\n**What to bring after:**\n- Test results when registering your nikah at JAI or PAID\n\n*Source: malaysia.gov.my — procedures differ by state, verify with your state JAI or PAID.*\n${MM_ACTIONS_OPEN}\n${action}\n${MM_ACTIONS_CLOSE}`;
     }
-    const action = JSON.stringify([{ type: 'add_checklist_item', text: 'Buat ujian HIV (syarat kursus pra-perkahwinan)', reason: 'Wajib untuk pendaftaran nikah di JAI/PAID', phase: '3-6 bulan sebelum majlis' }]);
+    const action = hivActionMs;
     return `Ujian HIV adalah wajib untuk perkahwinan Islam di Malaysia, sebagai syarat pendaftaran **Kursus Pra-Perkahwinan**.\n\n**Bila kena buat:**\n- Sekurang-kurangnya 3–6 bulan sebelum majlis\n- Sebelum atau semasa mendaftar kursus pra-perkahwinan di JAI negeri anda\n- Boleh dibuat di mana-mana Klinik Kesihatan kerajaan atau klinik swasta yang diiktiraf\n\n**Apa yang perlu dibawa selepas:**\n- Keputusan ujian semasa mendaftar nikah di Jabatan Agama Islam (JAI) atau Pejabat Agama Islam Daerah (PAID)\n\n*Sumber: malaysia.gov.my — prosedur berbeza mengikut negeri, semak dengan JAI atau PAID negeri anda.*\n${MM_ACTIONS_OPEN}\n${action}\n${MM_ACTIONS_CLOSE}`;
   }
 
   // Voice mode: short, conversational, no markdown — meant to be spoken aloud.
+  // Planner-aware: reference what we already know and offer the next step
+  // instead of re-asking for details the couple has already given.
   if (voiceMode) {
+    const daysLeft = plannerContext?.daysLeft;
+    const daysPhraseEn = typeof daysLeft === 'number' && daysLeft >= 0 ? `With ${daysLeft} days to go, ` : '';
+    const daysPhraseMs = typeof daysLeft === 'number' && daysLeft >= 0 ? `Majlis tinggal ${daysLeft} hari, ` : '';
     if (language === 'en') {
-      if (isChecklist) return 'Sure, I can help with your checklist. Tell me your wedding date and rough guest count, and I will suggest the key tasks.';
-      if (isVendor) return 'For vendors, check availability and what is included before price. Tell me the vendor type and your state, and I can prepare questions.';
-      if (isBudget) return 'Let us keep the budget simple. Tell me your total budget and guest count, and I will suggest a breakdown.';
+      if (isChecklist) return hasDate && hasGuests
+        ? `${daysPhraseEn}I have your date and guest target. Want me to generate your checklist now?`
+        : 'Sure, I can help with your checklist. Tell me your wedding date and rough guest count, and I will suggest the key tasks.';
+      if (isVendor) return 'For vendors, check availability and what is included before price. Tell me the vendor type, and I can prepare questions or a WhatsApp message.';
+      if (isBudget) return hasBudget && hasGuests
+        ? 'I have your budget and guest target. Want me to suggest a full allocation now?'
+        : 'Let us keep the budget simple. Tell me your total budget and guest count, and I will suggest a breakdown.';
       if (isAppointment) return 'Okay. Give me the vendor, date, and time, and I will help set up the appointment.';
       if (isRsvp) return 'For RSVP, group your guests first, then track who is confirmed. Want me to start a follow-up plan?';
-      if (isPlanning) return 'This month, focus on your most urgent tasks first. Want me to suggest what to prioritise based on your timeline?';
+      if (isPlanning) return daysPhraseEn
+        ? `${daysPhraseEn}focus on your most urgent tasks first. Want me to suggest what to prioritise?`
+        : 'Focus on your most urgent tasks first. Want me to suggest what to prioritise?';
       return 'I can help with that. Tell me a bit more, and I will turn it into a clear next step for your wedding.';
     }
-    if (isChecklist) return 'Boleh, saya boleh bantu checklist. Beritahu tarikh majlis dan anggaran tetamu, nanti saya cadangkan task penting.';
-    if (isVendor) return 'Untuk vendor, semak available dan apa yang termasuk dulu sebelum harga. Bagi jenis vendor dan negeri, saya boleh sediakan soalan.';
-    if (isBudget) return 'Jom kemaskan bajet. Beritahu jumlah bajet dan bilangan tetamu, nanti saya cadangkan pecahan.';
+    if (isChecklist) return hasDate && hasGuests
+      ? `${daysPhraseMs}saya dah ada tarikh dan anggaran tetamu. Nak saya jana checklist sekarang?`
+      : 'Boleh, saya boleh bantu checklist. Beritahu tarikh majlis dan anggaran tetamu, nanti saya cadangkan task penting.';
+    if (isVendor) return 'Untuk vendor, semak available dan apa yang termasuk dulu sebelum harga. Bagi jenis vendor, saya boleh sediakan soalan atau mesej WhatsApp.';
+    if (isBudget) return hasBudget && hasGuests
+      ? 'Saya dah ada bajet dan anggaran tetamu. Nak saya cadangkan pecahan penuh sekarang?'
+      : 'Jom kemaskan bajet. Beritahu jumlah bajet dan bilangan tetamu, nanti saya cadangkan pecahan.';
     if (isAppointment) return 'Okay. Bagi nama vendor, tarikh, dan masa, nanti saya bantu set appointment.';
     if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut group dulu, lepas tu track siapa dah confirm. Nak saya mulakan pelan follow-up?';
-    if (isPlanning) return 'Bulan ni, fokus pada task paling penting dulu. Nak saya cadangkan keutamaan ikut timeline anda?';
+    if (isPlanning) return daysPhraseMs
+      ? `${daysPhraseMs}fokus pada task paling penting dulu. Nak saya cadangkan keutamaan?`
+      : 'Fokus pada task paling penting dulu. Nak saya cadangkan keutamaan?';
     return 'Boleh, saya bantu. Cerita sikit lagi, nanti saya tukarkan jadi satu langkah jelas untuk majlis anda.';
   }
 
@@ -478,7 +500,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const selectedDocs = retrieveContext(latestUserMessage, 3);
+    const selectedDocs = retrieveContext(latestUserMessage, 4);
     const systemPrompt = buildSystemPrompt(language, plannerContext, selectedDocs, voiceMode);
     const RECENT_WINDOW = 8;
     const priorNotes = buildPriorConversationNotes(messages, RECENT_WINDOW);

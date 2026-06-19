@@ -12,37 +12,37 @@ export const menuAssistantPrompts: Record<MenuAssistantTab, { title: string; des
   dashboard: {
     title: 'Dashboard assistant',
     description: 'Review your planning status and choose what to handle next.',
-    placeholder: 'Ask what needs attention this week...',
+    placeholder: 'Ask MajlisMate',
     quick: ['What should I do next?', 'Summarize my planning status', 'What is urgent?']
   },
   checklist: {
     title: 'Checklist assistant',
     description: 'Create, organize, and prioritize wedding tasks for this menu.',
-    placeholder: 'Ask MajlisMate.',
+    placeholder: 'Ask MajlisMate',
     quick: ['Create final week checklist', 'Prioritize incomplete tasks', 'Add vendor follow-up tasks']
   },
   calendar: {
     title: 'Calendar assistant',
     description: 'Schedule appointments and plan timely wedding follow-ups.',
-    placeholder: 'Ask to schedule a wedding appointment...',
+    placeholder: 'Ask MajlisMate',
     quick: ['Add appointment tomorrow at 3pm for vendor follow-up', 'What should I schedule next?', 'Plan vendor confirmation week']
   },
   budget: {
     title: 'Budget assistant',
     description: 'Review spending, payment progress, and possible missing costs.',
-    placeholder: 'Ask about budget categories, overages, or payment planning...',
+    placeholder: 'Ask MajlisMate',
     quick: ['Review my budget', 'Suggest payment priorities', 'What might be missing?']
   },
   rsvp: {
     title: 'RSVP assistant',
     description: 'Prepare guest follow-ups and translate replies into headcount decisions.',
-    placeholder: 'Ask about guest follow-up or caterer headcount...',
+    placeholder: 'Ask MajlisMate',
     quick: ['Draft RSVP reminder', 'Summarize guest status', 'What headcount should I confirm?']
   },
   vendors: {
     title: 'Vendor assistant',
     description: 'Shortlist vendors, prepare questions, and draft outreach messages.',
-    placeholder: 'Ask for vendor questions, shortlist help, or message drafts...',
+    placeholder: 'Ask MajlisMate',
     quick: ['Draft message to a caterer', 'What should I ask a photographer?', 'Compare saved vendors']
   }
 };

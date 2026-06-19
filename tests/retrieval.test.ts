@@ -20,6 +20,30 @@ describe('retrieveContext', () => {
     const docs = retrieveContext('xxx yyy zzz', 5);
     expect(docs).toEqual([]);
   });
+
+  it('expands domain synonyms so "kos" reaches budget docs', () => {
+    const docs = retrieveContext('kos kahwin', 4);
+    expect(docs.length).toBeGreaterThan(0);
+    const joined = docs.map((d) => `${d.title} ${d.content}`).join(' ').toLowerCase();
+    expect(joined).toMatch(/budget|bajet|kos|cost/);
+  });
+
+  it('retrieves English docs from a Malay query (jurugambar -> photographer)', () => {
+    const docs = retrieveContext('jurugambar', 4);
+    expect(docs.length).toBeGreaterThan(0);
+  });
+
+  it('matches affix variants via partial matching ("checklists" -> checklist doc)', () => {
+    const docs = retrieveContext('checklists', 4);
+    expect(docs.map((d) => d.id)).toContain('wedding-checklist');
+  });
+
+  it('finds nikah/legal procedure from Malay health phrasing (ujian darah sebelum nikah)', () => {
+    const docs = retrieveContext('ujian darah sebelum nikah', 4);
+    expect(docs.length).toBeGreaterThan(0);
+    const joined = docs.map((d) => `${d.title} ${d.category}`).join(' ').toLowerCase();
+    expect(joined).toMatch(/legal-procedure|nikah|perkahwinan/);
+  });
 });
 
 describe('formatContext', () => {

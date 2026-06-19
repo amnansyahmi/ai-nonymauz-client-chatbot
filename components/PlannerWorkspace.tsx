@@ -12,7 +12,8 @@ import {
   vendorDirectory
 } from './planner/data';
 import ChatWidget from './ChatWidget';
-import { useLiveVoice } from './planner/hooks/useLiveVoice';
+import { useLiveVoice, type VoiceExchange } from './planner/hooks/useLiveVoice';
+import { usePlannerActions, type AmbiguousAction } from './planner/hooks/usePlannerActions';
 import LiveVoiceSheet from './planner/components/LiveVoiceSheet';
 import { askStream } from '../lib/chatStream';
 import MenuAssistant, {
@@ -79,10 +80,8 @@ import {
   parseMoneyAmount,
   parsePlannerSetup,
   parseSseEvents,
-  rsvpLabel,
   safeJsonParse,
   sortAppointments,
-  statusLabel,
   wantsAppointment,
   wantsBudgetSuggestion,
   wantsChecklist,
@@ -90,6 +89,15 @@ import {
   wantsPlannerSetup,
   wantsVendorMessage
 } from './planner/utils';
+import {
+  buildAppointmentIcs,
+  buildBudgetCsv,
+  buildCalendarIcs,
+  buildGuestsCsv,
+  icsFilename,
+  parseGuestsCsv
+} from './planner/exporters';
+import { derivePlannerContext } from './planner/plannerContext';
 
 function toSurveyAnswers(profile: PlannerProfile): SurveyAnswers {
   return {
@@ -219,21 +227,6 @@ type ChatSession = {
   messages: Message[];
 };
 
-type DisambiguationCandidate = { id: string; label: string; sublabel?: string };
-
-type AmbiguousAction = {
-  action: PlannerAction;
-  /** Localized "Which X did you mean?" prompt. */
-  question: string;
-  candidates: DisambiguationCandidate[];
-};
-
-type DisambiguationState = {
-  queue: AmbiguousAction[];
-  /** Run once the whole queue is resolved (e.g. mark a chat message applied). */
-  onComplete: () => void;
-};
-
 export default function PlannerWorkspace() {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -306,7 +299,19 @@ export default function PlannerWorkspace() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [disambiguation, setDisambiguation] = useState<DisambiguationState | null>(null);
+  const {
+    disambiguation,
+    runActionsWithDisambiguation,
+    applyMessageActions,
+    resolveDisambiguation,
+    dismissMessageActions
+  } = usePlannerActions({
+    language,
+    applyAction: applyPlannerAction,
+    resolveAmbiguity,
+    setMessages,
+    setStatusMessage
+  });
   const [dismissedReminders, setDismissedReminders] = useState<string[]>([]);
   const [isLiveVoiceOpen, setIsLiveVoiceOpen] = useState(false);
   const [vendorMessageTarget, setVendorMessageTarget] = useState<Vendor | null>(null);
@@ -763,86 +768,15 @@ export default function PlannerWorkspace() {
   }
 
   function buildPlannerContext() {
-    const openChecklistForContext = checklistItems
-      .filter((item) => !(item.completed || item.status === 'done'))
-      .map((item) => {
-        const text = item.textMs || item.text;
-        const status = item.status || 'not-started';
-        const d = item.deadline ? daysUntil(item.deadline) : null;
-        const when = d !== null
-          ? d < 0 ? `overdue ${Math.abs(d)} hari`
-          : d === 0 ? 'due HARI INI'
-          : d <= 7 ? `due dalam ${d} hari`
-          : d <= 30 ? `due dalam ${d} hari`
-          : `due ${item.deadline}`
-          : 'tiada tarikh';
-        const phase = item.phase ? ` [${item.phase}]` : '';
-        const score = (d !== null ? (d < 0 ? d - 1000 : d) : 9999) + (status === 'in-progress' ? -0.5 : 0);
-        return { text, status, d, when, phase, score };
-      })
-      .sort((a, b) => a.score - b.score)
-      .slice(0, 20);
-
-    const overdueCount = openChecklistForContext.filter((i) => i.d !== null && i.d < 0).length;
-    const weekCount = openChecklistForContext.filter((i) => i.d !== null && i.d !== null && i.d >= 0 && i.d <= 7).length;
-    const itemLines = openChecklistForContext
-      .map((i) => `• ${i.text}${i.phase} — ${i.status}, ${i.when}`)
-      .join('\n');
-
-    const checklistSummary = `${completedCount}/${checklistItems.length} selesai | ${overdueCount} overdue | ${weekCount} due minggu ini\nTask terbuka (ikut keutamaan):\n${itemLines}`;
-
-    // Compact "planner state summary" — a digest the AI reads before replying so
-    // it can reason about urgency, budget risk, guest status, and shortlist
-    // without re-deriving from the raw lists. Written language-neutral; the AI
-    // translates as needed.
-    const daysLeft = plannerProfile.majlisDate ? daysUntil(plannerProfile.majlisDate) : null;
-
-    const totalPlanned = budgetItems.reduce((sum, item) => sum + (item.planned || 0), 0);
-    const totalPaid = budgetItems.reduce((sum, item) => sum + (item.paid || 0), 0);
-    const budgetCap = plannerProfile.totalBudget || 0;
-    const budgetRisk = budgetCap > 0
-      ? totalPlanned > budgetCap
-        ? `RISIKO: planned ${money(totalPlanned)} melebihi bajet ${money(budgetCap)}`
-        : `OK: planned ${money(totalPlanned)}/${money(budgetCap)} (${Math.round((totalPlanned / budgetCap) * 100)}%), paid ${money(totalPaid)}`
-      : 'bajet belum diset';
-
-    const confirmedPax = guests.filter((g) => g.status === 'confirmed').reduce((sum, g) => sum + (g.pax || 1), 0);
-    const pendingGuests = guests.filter((g) => g.status === 'pending').length;
-    const declinedGuests = guests.filter((g) => g.status === 'declined').length;
-    const guestStatus = guests.length > 0
-      ? `${confirmedPax} pax confirm, ${pendingGuests} pending, ${declinedGuests} decline${plannerProfile.guestTarget ? ` (target ${plannerProfile.guestTarget})` : ''}`
-      : plannerProfile.guestTarget ? `belum ada senarai tetamu (target ${plannerProfile.guestTarget})` : 'belum ada tetamu / target';
-
-    const shortlist = savedVendors
-      .map((id) => vendorDirectory.find((vendor) => vendor.id === id)?.name)
-      .filter((name): name is string => Boolean(name));
-    const vendorShortlist = shortlist.length > 0 ? shortlist.join(', ') : 'belum ada shortlist vendor';
-
-    const urgentTasks = openChecklistForContext.filter((i) => i.d !== null && i.d <= 14).slice(0, 5).map((i) => `${i.text} (${i.when})`);
-    const urgentLine = urgentTasks.length > 0 ? urgentTasks.join('; ') : 'tiada task mendesak';
-
-    const stateSummary = [
-      `Tarikh majlis: ${plannerProfile.majlisDate || 'belum set'}${daysLeft !== null ? ` (${daysLeft} hari lagi)` : ''}`,
-      `Negeri: ${plannerProfile.negeri || 'belum set'}`,
-      `Task mendesak (<=14 hari): ${urgentLine}`,
-      `Bajet: ${budgetRisk}`,
-      `Tetamu: ${guestStatus}`,
-      `Shortlist vendor: ${vendorShortlist}`
-    ].join('\n');
-
-    return {
-      majlisDate: plannerProfile.majlisDate,
-      groomName: plannerProfile.groomName,
-      brideName: plannerProfile.brideName,
-      negeri: plannerProfile.negeri,
-      totalBudget: plannerProfile.totalBudget,
-      guestTarget: plannerProfile.guestTarget,
-      daysLeft: daysLeft ?? undefined,
-      stateSummary: stateSummary.slice(0, 1500),
-      checklistSummary: checklistSummary.slice(0, 3500),
-      budgetSummary: budgetItems.map((item) => `${item.category}: planned ${money(item.planned)}, actual ${money(item.actual)}, paid ${money(item.paid)}`).slice(0, 10),
-      upcomingAppointments: appointments.filter((appointment) => appointment.date >= dateKey(new Date())).sort(sortAppointments).slice(0, 5)
-    };
+    return derivePlannerContext({
+      profile: plannerProfile,
+      checklistItems,
+      budgetItems,
+      guests,
+      savedVendors,
+      appointments,
+      completedCount
+    });
   }
 
   async function ask(question: string, targetTab?: MenuAssistantTab, opts?: { suppressTabSwitch?: boolean }): Promise<string | null> {
@@ -1432,20 +1366,33 @@ export default function PlannerWorkspace() {
     const newId = `act-${Date.now()}-${salt}`;
     switch (action.type) {
       case 'add_checklist_item': {
-        setChecklistItems((current) => [
-          ...current,
-          {
-            id: `${newId}-${current.length}`,
-            text: action.text,
-            textMs: language === 'ms' ? action.text : undefined,
-            textEn: language === 'en' ? action.text : undefined,
-            completed: false,
-            status: 'not-started',
-            phase: action.phase || copy.custom,
-            deadline: action.deadline
-          }
-        ]);
-        addActivity(`AI action: checklist item added (${action.text}).`);
+        const incomingKey = checklistKey(action.text);
+        const matchesIncoming = (item: ChecklistItem) =>
+          checklistKey(item.text) === incomingKey || checklistKey(getItemText(item)) === incomingKey;
+        const alreadyOnList = checklistItems.some(matchesIncoming);
+        setChecklistItems((current) => {
+          // Skip if an item with the same (normalized) text already exists, so
+          // re-asking or re-tapping never creates a duplicate task.
+          if (current.some(matchesIncoming)) return current;
+          return [
+            ...current,
+            {
+              id: `${newId}-${current.length}`,
+              text: action.text,
+              textMs: language === 'ms' ? action.text : undefined,
+              textEn: language === 'en' ? action.text : undefined,
+              completed: false,
+              status: 'not-started',
+              phase: action.phase || copy.custom,
+              deadline: action.deadline
+            }
+          ];
+        });
+        addActivity(
+          alreadyOnList
+            ? `AI action: checklist item already on list (${action.text}).`
+            : `AI action: checklist item added (${action.text}).`
+        );
         break;
       }
       case 'add_budget_item': {
@@ -1640,64 +1587,8 @@ export default function PlannerWorkspace() {
     return null;
   }
 
-  // Shared core for applying a batch of AI actions. Applies unambiguous ones
-  // immediately and queues anything that matches multiple items for the
-  // disambiguation picker. onComplete runs once nothing is left to confirm.
-  // Used by both the text chat panel and the live-voice sheet.
-  function runActionsWithDisambiguation(actions: PlannerAction[], onComplete: () => void) {
-    const ambiguous: AmbiguousAction[] = [];
-    const ready: PlannerAction[] = [];
-    for (const action of actions) {
-      const amb = resolveAmbiguity(action);
-      if (amb) ambiguous.push(amb);
-      else ready.push(action);
-    }
-
-    ready.forEach((action, index) => applyPlannerAction(action, index));
-
-    if (ambiguous.length > 0) {
-      setDisambiguation({ queue: ambiguous, onComplete });
-      setStatusMessage(
-        ready.length > 0
-          ? language === 'ms' ? 'Sebahagian ditambah — sahkan yang berbaki.' : 'Some added — confirm the rest.'
-          : language === 'ms' ? 'Sahkan pilihan dahulu.' : 'Please confirm your choice.'
-      );
-      return;
-    }
-
-    onComplete();
-  }
-
-  function applyMessageActions(messageIndex: number, actions: PlannerAction[]) {
-    runActionsWithDisambiguation(actions, () => {
-      setMessages((current) =>
-        current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'applied' } : message))
-      );
-      setStatusMessage(language === 'ms' ? 'Ditambah ke planner.' : 'Added to your planner.');
-    });
-  }
-
-  // Resolve the head of the disambiguation queue. targetId = the chosen item;
-  // null = skip this one. When the queue empties, run the completion callback.
-  function resolveDisambiguation(targetId: string | null) {
-    if (!disambiguation) return;
-    const [head, ...rest] = disambiguation.queue;
-    if (head && targetId) applyPlannerAction(head.action, 0, targetId);
-
-    if (rest.length > 0) {
-      setDisambiguation({ queue: rest, onComplete: disambiguation.onComplete });
-      return;
-    }
-
-    disambiguation.onComplete();
-    setDisambiguation(null);
-  }
-
-  function dismissMessageActions(messageIndex: number) {
-    setMessages((current) =>
-      current.map((message, index) => (index === messageIndex ? { ...message, actionsState: 'dismissed' } : message))
-    );
-  }
+  // The disambiguation lifecycle (runActionsWithDisambiguation, applyMessageActions,
+  // resolveDisambiguation, dismissMessageActions) lives in usePlannerActions above.
 
   // User tapped a clarify quick-reply chip: collapse the chips and send the
   // chosen answer as the next message so the AI can now act on it.
@@ -1826,56 +1717,7 @@ export default function PlannerWorkspace() {
   }
 
   function addAppointmentToPhoneCalendar(appointment: Appointment) {
-    const escapeIcs = (value: string | undefined) =>
-      (value || '')
-        .replace(/\\/g, '\\\\')
-        .replace(/\n/g, '\\n')
-        .replace(/,/g, '\\,')
-        .replace(/;/g, '\\;');
-    const compactDate = appointment.date.replace(/-/g, '');
-    const timeMatch = appointment.time?.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
-    const createdAt = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-    const description = [
-      appointment.note,
-      appointment.vendor ? `Vendor: ${appointment.vendor}` : '',
-      appointment.status ? `Status: ${appointment.status}` : ''
-    ].filter(Boolean).join('\n');
-
-    let dateLines = '';
-
-    if (timeMatch) {
-      const start = new Date(`${appointment.date}T${appointment.time}:00`);
-      const end = new Date(start.getTime() + 60 * 60 * 1000);
-      const toLocalIcs = (date: Date) => {
-        const pad = (value: number) => String(value).padStart(2, '0');
-        return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
-      };
-      dateLines = `DTSTART:${toLocalIcs(start)}\nDTEND:${toLocalIcs(end)}`;
-    } else {
-      const end = new Date(`${appointment.date}T00:00:00`);
-      end.setDate(end.getDate() + 1);
-      dateLines = `DTSTART;VALUE=DATE:${compactDate}\nDTEND;VALUE=DATE:${dateKey(end).replace(/-/g, '')}`;
-    }
-
-    const calendarText = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//MajlisMate//Wedding Planner//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'BEGIN:VEVENT',
-      `UID:${appointment.id}@majlismate.local`,
-      `DTSTAMP:${createdAt}`,
-      dateLines,
-      `SUMMARY:${escapeIcs(appointment.title)}`,
-      appointment.location ? `LOCATION:${escapeIcs(appointment.location)}` : '',
-      description ? `DESCRIPTION:${escapeIcs(description)}` : '',
-      'END:VEVENT',
-      'END:VCALENDAR'
-    ].filter(Boolean).join('\n');
-
-    const safeName = appointment.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'appointment';
-    downloadTextFile(`majlismate-${safeName}.ics`, calendarText, 'text/calendar;charset=utf-8');
+    downloadTextFile(`majlismate-${icsFilename(appointment.title)}.ics`, buildAppointmentIcs(appointment), 'text/calendar;charset=utf-8');
     setStatusMessage('Calendar file created. Open it on your phone to add the appointment.');
   }
 
@@ -1895,118 +1737,23 @@ export default function PlannerWorkspace() {
       setStatusMessage('No appointments to export yet.');
       return;
     }
-
-    const escapeIcs = (value: string | undefined) =>
-      (value || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
-    const createdAt = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-    const toLocalIcs = (date: Date) => {
-      const pad = (value: number) => String(value).padStart(2, '0');
-      return `${date.getFullYear()}${pad(date.getMonth() + 1)}${pad(date.getDate())}T${pad(date.getHours())}${pad(date.getMinutes())}00`;
-    };
-    const events = allEvents.map((appointment) => {
-      const compactDate = appointment.date.replace(/-/g, '');
-      const timeMatch = appointment.time?.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
-      let dateLines = '';
-      if (timeMatch) {
-        const start = new Date(`${appointment.date}T${appointment.time}:00`);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
-        dateLines = `DTSTART:${toLocalIcs(start)}\nDTEND:${toLocalIcs(end)}`;
-      } else {
-        const end = new Date(`${appointment.date}T00:00:00`);
-        end.setDate(end.getDate() + 1);
-        dateLines = `DTSTART;VALUE=DATE:${compactDate}\nDTEND;VALUE=DATE:${dateKey(end).replace(/-/g, '')}`;
-      }
-      return [
-        'BEGIN:VEVENT',
-        `UID:${appointment.id}@majlismate.local`,
-        `DTSTAMP:${createdAt}`,
-        dateLines,
-        `SUMMARY:${escapeIcs(appointment.title)}`,
-        appointment.location ? `LOCATION:${escapeIcs(appointment.location)}` : '',
-        appointment.note ? `DESCRIPTION:${escapeIcs(appointment.note)}` : '',
-        'END:VEVENT'
-      ].filter(Boolean).join('\n');
-    });
-
-    downloadTextFile('majlismate-calendar.ics', ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MajlisMate//Wedding Planner//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...events, 'END:VCALENDAR'].join('\n'), 'text/calendar;charset=utf-8');
+    downloadTextFile('majlismate-calendar.ics', buildCalendarIcs(allEvents), 'text/calendar;charset=utf-8');
     setStatusMessage('Calendar file created for all appointments.');
   }
 
   function exportGuestsCsv() {
-    const rows = [
-      ['name', 'phone', 'group', 'pax', 'status'],
-      ...guests.map((guest) => [guest.name, guest.phone, guest.group, String(guest.pax), rsvpLabel(guest.status)])
-    ];
-    const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
-    downloadTextFile('majlismate-guests.csv', csv, 'text/csv');
+    downloadTextFile('majlismate-guests.csv', buildGuestsCsv(guests), 'text/csv');
   }
 
   function importGuestsCsv(file: File | undefined) {
     if (!file) return;
-
-    const parseCsvLine = (line: string) => {
-      const cells: string[] = [];
-      let current = '';
-      let isQuoted = false;
-      for (let index = 0; index < line.length; index += 1) {
-        const char = line[index];
-        const nextChar = line[index + 1];
-        if (char === '"' && isQuoted && nextChar === '"') {
-          current += '"';
-          index += 1;
-        } else if (char === '"') {
-          isQuoted = !isQuoted;
-        } else if (char === ',' && !isQuoted) {
-          cells.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      cells.push(current.trim());
-      return cells;
-    };
-
     const reader = new FileReader();
     reader.onload = () => {
-      const lines = String(reader.result || '')
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-      if (lines.length === 0) {
-        setStatusMessage('No guest rows found in that CSV.');
-        return;
-      }
-
-      const firstRow = parseCsvLine(lines[0]).map((cell) => cell.toLowerCase());
-      const hasHeader = firstRow.some((cell) => ['name', 'phone', 'group', 'pax', 'status'].includes(cell));
-      const dataLines = hasHeader ? lines.slice(1) : lines;
-      const importedGuests = dataLines
-        .map((line, index) => {
-          const [name, phone = '', group = 'Kawan-kawan', pax = '1', status = 'pending'] = parseCsvLine(line);
-          const normalizedStatus = status.toLowerCase();
-          const guestStatus: Guest['status'] =
-            normalizedStatus.includes('confirm') || normalizedStatus.includes('hadir')
-              ? 'confirmed'
-              : normalizedStatus.includes('decline') || normalizedStatus.includes('tidak')
-                ? 'declined'
-                : 'pending';
-          return {
-            id: `${Date.now()}-${index}`,
-            name: name?.trim(),
-            phone: phone.trim(),
-            group: group.trim() || 'Kawan-kawan',
-            pax: Math.max(Number(pax) || 1, 1),
-            status: guestStatus
-          };
-        })
-        .filter((guest): guest is Guest => Boolean(guest.name));
-
+      const importedGuests = parseGuestsCsv(String(reader.result || ''));
       if (importedGuests.length === 0) {
         setStatusMessage('No valid guest names found in that CSV.');
         return;
       }
-
       setGuests((current) => [...current, ...importedGuests]);
       setStatusMessage(`${importedGuests.length} guest${importedGuests.length === 1 ? '' : 's'} imported.`);
     };
@@ -2014,19 +1761,7 @@ export default function PlannerWorkspace() {
   }
 
   function exportBudgetCsv() {
-    const rows = [
-      ['category', 'planned', 'actual', 'paid', 'status', 'note'],
-      ...budgetItems.map((item) => [
-        item.category,
-        String(item.planned),
-        String(item.actual),
-        String(item.paid),
-        statusLabel(item.status),
-        item.note
-      ])
-    ];
-    const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
-    downloadTextFile('majlismate-budget.csv', csv, 'text/csv');
+    downloadTextFile('majlismate-budget.csv', buildBudgetCsv(budgetItems), 'text/csv');
   }
 
   function printChecklist() {
@@ -2228,7 +1963,7 @@ export default function PlannerWorkspace() {
       note: 'wedding planning dari hati untuk hati',
       welcome: 'hi, i MajlisMate',
       welcomeText: 'cerita kat i pasal wedding you - i tolong susun checklist, bajet, tetamu, semua. update i je bila ada progress',
-      placeholder: 'Tanya MajlisMate',
+      placeholder: 'Ask MajlisMate',
       checklistEyebrow: 'Checklist interaktif',
       done: 'selesai',
       allItems: 'Semua checklist',
@@ -2320,30 +2055,45 @@ export default function PlannerWorkspace() {
         };
       }
 
-      const recentMessages = messages.slice(-6).map(({ role, content }) => ({ role, content }));
-      if (recentMessages[recentMessages.length - 1]?.content !== trimmed) {
-        recentMessages.push({ role: 'user', content: trimmed });
-      }
+      // Build multi-turn context from the VOICE conversation itself (each prior
+      // spoken exchange becomes a user/assistant pair) so follow-up questions
+      // like "yang mana lebih murah?" stay coherent. Falls back to nothing on
+      // the first turn.
+      const recentMessages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> = voiceHistoryRef.current
+        .slice(-4)
+        .flatMap((exchange) => [
+          { role: 'user' as const, content: exchange.user },
+          { role: 'assistant' as const, content: exchange.assistant }
+        ]);
+      recentMessages.push({ role: 'user', content: trimmed });
       // Use the same rich context as text chat so voice gets the planner state
       // summary (days left, urgent tasks, budget risk, guest status, shortlist).
       const plannerContext = buildPlannerContext();
 
       // Conversation memory is captured by <MemoryIndicator> and persisted.
       return askStream({
-        messages: recentMessages as Array<{ role: 'user' | 'assistant' | 'system'; content: string }>,
+        messages: recentMessages,
         language,
         plannerContext,
         voiceMode: opts?.voiceMode ?? false
       });
     },
-    [messages, plannerProfile, appointments, checklistItems, budgetItems, guests, savedVendors, language, copy.welcome]
+    [plannerProfile, appointments, checklistItems, budgetItems, guests, savedVendors, language, copy.welcome]
   );
+
+  // Mirror the live-voice conversation history into a ref so askVoiceStream
+  // (defined above the hook) can read the latest turns without a circular dep.
+  const voiceHistoryRef = useRef<VoiceExchange[]>([]);
 
   const liveVoice = useLiveVoice({ language, ask: askVoiceStream });
 
   useEffect(() => {
     void liveVoice.phase;
   }, [liveVoice.phase]);
+
+  useEffect(() => {
+    voiceHistoryRef.current = liveVoice.history;
+  }, [liveVoice.history]);
 
   const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
     ? copy.defaultTemplate
@@ -2713,13 +2463,6 @@ export default function PlannerWorkspace() {
               ? [language === 'ms' ? 'Buat appointment vendor minggu ini' : 'Schedule a vendor appointment this week', language === 'ms' ? 'Apa perlu confirm dengan vendor?' : 'What should I confirm with the vendor?']
               : [];
   void commandSuggestions;
-  const mobileNavItems: Array<{ tab: ActiveTab; label: string; icon: Parameters<typeof MenuIcon>[0]['name'] }> = [
-    { tab: 'chat', label: copy.chat, icon: 'chat' },
-    { tab: 'checklist', label: copy.checklist, icon: 'checklist' },
-    { tab: 'calendar', label: copy.calendar, icon: 'calendar' },
-    { tab: 'budget', label: language === 'ms' ? 'bajet' : 'budget', icon: 'budget' },
-    { tab: 'vendors', label: copy.vendors, icon: 'vendors' }
-  ];
   const sidebarMenuLabels: Record<ActiveTab, string> = {
     dashboard: copy.dashboard,
     chat: copy.chat,
@@ -4485,40 +4228,20 @@ export default function PlannerWorkspace() {
             </div>
           </div>
         ) : null}
-        <nav className="mobile-bottom-nav" aria-label="Mobile planner navigation">
-          {mobileNavItems.map((item) => (
-            <button
-              key={item.tab}
-              type="button"
-              className={activeTab === item.tab ? 'active' : ''}
-              onClick={() => selectTab(item.tab)}
-            >
-              <MenuIcon name={item.icon} />
-              <span>{item.label}</span>
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`mobile-live-btn${liveVoice.phase !== 'idle' ? ' is-active' : ''}`}
-            onClick={() => setIsLiveVoiceOpen(true)}
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" y1="19" x2="12" y2="23" />
-              <line x1="8" y1="23" x2="16" y2="23" />
-            </svg>
-            <span>Live</span>
-          </button>
-        </nav>
       </div>
 
 
-      <MobileBottomNav
-        activeTab={activeTab as MobileTab}
-        onChange={function handleMobileNavChange(tab) { setActiveTab(tab); }}
-        language={language}
-      />
+      {!isSidebarOpen && !isCommandOpen && !isSettingsOpen && !isContextAssistantOpen && !disambiguation ? (
+        <MobileBottomNav
+          activeTab={activeTab as MobileTab}
+          onChange={function handleMobileNavChange(tab) {
+            setActiveTab(tab);
+            setIsSidebarOpen(false);
+            setIsContextAssistantOpen(false);
+          }}
+          language={language}
+        />
+      ) : null}
       <SetupWizardModal
         isReady={checklistProfileReady}
         language={language}
