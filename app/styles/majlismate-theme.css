@@ -44,29 +44,31 @@
 }
 
 :root[data-theme='dark'] {
-  --mm-bg: #181615;
-  --mm-bg-soft: #211f1d;
-  --mm-surface: #242220;
-  --mm-surface-subtle: #2d2a27;
-  --mm-surface-muted: #38342f;
-  --mm-text: #f6f2ec;
-  --mm-text-muted: #c9beb3;
-  --mm-text-soft: #968b80;
-  --mm-brand: #f6f2ec;
+  /* Warm charcoal palette (brown undertone) to match the warm light theme and
+     the design system — not cool neutral grey. */
+  --mm-bg: #15110d;
+  --mm-bg-soft: #1d1814;
+  --mm-surface: #221b15;
+  --mm-surface-subtle: #2a2219;
+  --mm-surface-muted: #332a20;
+  --mm-text: #f1ece3;
+  --mm-text-muted: #b3a899;
+  --mm-text-soft: #80766a;
+  --mm-brand: #f1ece3;
   --mm-brand-strong: #ffffff;
-  --mm-brand-soft: #38342f;
-  --mm-on-brand: #171717;
-  --mm-accent: #d29a83;
-  --mm-accent-strong: #e1b09e;
-  --mm-accent-soft: #3d2e29;
-  --mm-gold: #d29a83;
-  --mm-green: #5ec4a7;
-  --mm-red: #ff8a80;
-  --mm-border: #403a35;
-  --mm-border-strong: #5b524b;
-  --mm-focus: 0 0 0 3px rgba(210, 154, 131, 0.24);
-  --mm-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.26);
-  --mm-shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.38);
+  --mm-brand-soft: #332a20;
+  --mm-on-brand: #15110d;
+  --mm-accent: #e2967a;
+  --mm-accent-strong: #f0a890;
+  --mm-accent-soft: #2d201a;
+  --mm-gold: #e2967a;
+  --mm-green: #30d158;
+  --mm-red: #ff453a;
+  --mm-border: #342b21;
+  --mm-border-strong: #443a2d;
+  --mm-focus: 0 0 0 3px rgba(226, 150, 122, 0.28);
+  --mm-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.38);
+  --mm-shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.55);
 }
 
 body {

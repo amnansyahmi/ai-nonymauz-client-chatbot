@@ -14,9 +14,6 @@ function readStoredTheme(): Theme {
   } catch {
     // Ignore storage errors (private mode, quota, etc.)
   }
-  if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
   return 'light';
 }
 

@@ -53,6 +53,7 @@ export const storageKeys = {
   budgetDraft: 'majlismate.budgetDraft',
   guests: 'majlismate.guests',
   guestDraft: 'majlismate.guestDraft',
+  rsvpFormUrl: 'majlismate.rsvpFormUrl',
   savedVendors: 'majlismate.savedVendors',
   activity: 'majlismate.activity',
   language: 'majlismate.language'
@@ -63,6 +64,8 @@ export const defaultPlannerProfile: PlannerProfile = {
   groomName: '',
   brideName: '',
   majlisDate: '',
+  majlisTime: '',
+  venueName: '',
   negeri: 'Selangor',
   totalBudget: 30000,
   guestTarget: 300,

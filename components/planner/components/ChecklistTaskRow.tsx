@@ -4,6 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import type { AppLanguage, ChecklistItem } from '../types';
 
 type Priority = { className: string; label: string };
+type TaskStatus = 'not-started' | 'in-progress' | 'done';
+
+// Minimalist tap-cycle: one control walks empty -> in-progress -> done -> empty.
+const NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
+  'not-started': 'in-progress',
+  'in-progress': 'done',
+  done: 'not-started'
+};
 
 function NoteIcon() {
   return (
@@ -52,9 +60,10 @@ type Props = {
   isSelected?: boolean;
   getItemText: (item: ChecklistItem, lang?: AppLanguage) => string;
   getItemPhase: (item: ChecklistItem, lang?: AppLanguage) => string;
+  /** Localized task-category label (empty string = no badge). */
+  categoryLabel?: string;
   getPriority: (item: ChecklistItem) => Priority;
   getStatus: (item: ChecklistItem) => 'not-started' | 'in-progress' | 'done';
-  onToggle: () => void;
   onRemove: () => void;
   onUpdateStatus: (status: 'not-started' | 'in-progress' | 'done') => void;
   onUpdateText: (text: string) => void;
@@ -100,9 +109,9 @@ export default function ChecklistTaskRow({
   isSelected,
   getItemText,
   getItemPhase,
+  categoryLabel,
   getPriority,
   getStatus,
-  onToggle,
   onRemove,
   onUpdateStatus,
   onUpdateText,
@@ -215,11 +224,20 @@ export default function ChecklistTaskRow({
             type="button"
             className="checklist-task-toggle"
             role="checkbox"
-            aria-checked={item.completed}
-            aria-label={`${item.completed ? 'Mark incomplete' : 'Mark done'}: ${getItemText(item)}`}
-            onClick={onToggle}
+            data-status={status}
+            aria-checked={status === 'done' ? 'true' : status === 'in-progress' ? 'mixed' : 'false'}
+            aria-label={`${
+              status === 'done'
+                ? language === 'ms' ? 'Selesai' : 'Done'
+                : status === 'in-progress'
+                  ? language === 'ms' ? 'Sedang diurus' : 'In progress'
+                  : language === 'ms' ? 'Belum mula' : 'Not started'
+            }: ${getItemText(item)}`}
+            onClick={() => onUpdateStatus(NEXT_STATUS[status])}
           >
-            <span className="visually-hidden">{item.completed ? 'Done' : 'Not done'}</span>
+            <span className="visually-hidden">
+              {status === 'done' ? 'Done' : status === 'in-progress' ? 'In progress' : 'Not done'}
+            </span>
           </button>
         )}
         <span className="checklist-task-check" aria-hidden="true" />
@@ -262,6 +280,9 @@ export default function ChecklistTaskRow({
             <small className="checklist-task-alt">{getItemText(item, otherLanguage)}</small>
           ) : null}
           <small className="checklist-task-meta">
+            {categoryLabel ? (
+              <span className="checklist-category-badge">{categoryLabel}</span>
+            ) : null}
             {getItemPhase(item) || copyLabels.custom}
             {' · '}
             <button
@@ -318,18 +339,6 @@ export default function ChecklistTaskRow({
       </button>
 
       <div className="checklist-row-actions">
-        <label className={`checklist-status-select status-${status}`}>
-          <span className="visually-hidden">{language === 'ms' ? 'Status task' : 'Task status'}</span>
-          <span className="checklist-status-dot" aria-hidden="true" />
-          <select
-            value={status}
-            onChange={(e) => onUpdateStatus(e.target.value as 'not-started' | 'in-progress' | 'done')}
-          >
-            <option value="not-started">{copyLabels.notStarted}</option>
-            <option value="in-progress">{copyLabels.inProgress}</option>
-            <option value="done">{copyLabels.done}</option>
-          </select>
-        </label>
         <button
           type="button"
           className={`checklist-note-btn${item.note ? ' has-note' : ''}`}

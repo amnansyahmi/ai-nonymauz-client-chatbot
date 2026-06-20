@@ -1,0 +1,387 @@
+/* =====================================================================
+   COMPREHENSIVE DARK SWEEP
+   The app is light-first: globals.css hardcodes ~200 #fff/#171717
+   surfaces. This maps each family onto theme tokens so every planner
+   surface is dark. Loaded after dark.css.
+   The marketing preview funnel is intentionally excluded — data-theme
+   is only set on app surfaces, so the preview and drafting styles stay light.
+   Primary CTAs keep their accent styling from dark.css — broad
+   `.panel button` selectors are deliberately avoided here.
+   ===================================================================== */
+
+/* 1 — Page-level surfaces */
+:root[data-theme='dark'] .planner-workspace,
+:root[data-theme='dark'] .planner-content,
+:root[data-theme='dark'] .planner-topbar,
+:root[data-theme='dark'] .workspace-titlebar,
+:root[data-theme='dark'] .assistant-stage,
+:root[data-theme='dark'] .planner-sidebar,
+:root[data-theme='dark'] .phone-screen {
+  background: var(--bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+}
+
+/* 2 — Raised panels & cards */
+:root[data-theme='dark'] .planner-panel,
+:root[data-theme='dark'] .checklist-panel,
+:root[data-theme='dark'] .calendar-panel,
+:root[data-theme='dark'] .dashboard-panel,
+:root[data-theme='dark'] .budget-command-center,
+:root[data-theme='dark'] .guest-command-center,
+:root[data-theme='dark'] .today-command-center,
+:root[data-theme='dark'] .planner-panel-header,
+:root[data-theme='dark'] .checklist-summary,
+:root[data-theme='dark'] .calendar-toolbar,
+:root[data-theme='dark'] .wedding-profile-card,
+:root[data-theme='dark'] .planner-section,
+:root[data-theme='dark'] .metric-card,
+:root[data-theme='dark'] .budget-primary-card,
+:root[data-theme='dark'] .budget-add-card,
+:root[data-theme='dark'] .budget-add-modern,
+:root[data-theme='dark'] .budget-insight-card,
+:root[data-theme='dark'] .budget-row-card,
+:root[data-theme='dark'] .budget-suggestion-card,
+:root[data-theme='dark'] .guest-add-card,
+:root[data-theme='dark'] .guest-insight-card,
+:root[data-theme='dark'] .guest-row-card,
+:root[data-theme='dark'] .guest-focus-grid article,
+:root[data-theme='dark'] .checklist-side-card,
+:root[data-theme='dark'] .checklist-quick-add,
+:root[data-theme='dark'] .checklist-stat-row article,
+:root[data-theme='dark'] .checklist-phase-group,
+:root[data-theme='dark'] .checklist-category-group,
+:root[data-theme='dark'] .checklist-task-list,
+:root[data-theme='dark'] .checklist-control-surface,
+:root[data-theme='dark'] .vendor-card,
+:root[data-theme='dark'] .vendor-map-panel,
+:root[data-theme='dark'] .vendor-map-info,
+:root[data-theme='dark'] .vendor-detail-body article,
+:root[data-theme='dark'] .agenda-card,
+:root[data-theme='dark'] .day-agenda,
+:root[data-theme='dark'] .appointment-list,
+:root[data-theme='dark'] .appointment-confirm-card,
+:root[data-theme='dark'] .calendar-overview-row article,
+:root[data-theme='dark'] .today-card-grid article,
+:root[data-theme='dark'] .couple-profile-card,
+:root[data-theme='dark'] .risk-alerts,
+:root[data-theme='dark'] .sidebar-note,
+:root[data-theme='dark'] .command-palette,
+:root[data-theme='dark'] .disambiguation-modal,
+:root[data-theme='dark'] .onboarding-panel,
+:root[data-theme='dark'] .pwa-banner,
+:root[data-theme='dark'] .mobile-bottom-nav {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .checklist-side-card.subtle,
+:root[data-theme='dark'] .budget-primary-card .progress-track {
+  background: var(--bg-2) !important;
+}
+
+/* 3 — Drawers / overlays & their headers */
+:root[data-theme='dark'] .planner-assistant-rail,
+:root[data-theme='dark'] .planner-assistant-rail.assistant-drawer,
+:root[data-theme='dark'] .chat-history-drawer,
+:root[data-theme='dark'] .vendor-detail-drawer,
+:root[data-theme='dark'] .settings-drawer,
+:root[data-theme='dark'] .menu-assistant,
+:root[data-theme='dark'] .menu-assistant-copy,
+:root[data-theme='dark'] .menu-assistant-messages,
+:root[data-theme='dark'] .assistant-drawer .menu-assistant,
+:root[data-theme='dark'] .assistant-drawer .menu-assistant-copy,
+:root[data-theme='dark'] .assistant-drawer .menu-assistant-messages {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .settings-drawer-header,
+:root[data-theme='dark'] .vendor-detail-header,
+:root[data-theme='dark'] .assistant-drawer-header,
+:root[data-theme='dark'] .chat-history-header {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+/* 4 — Forms, inputs & selects */
+:root[data-theme='dark'] .planner-form,
+:root[data-theme='dark'] .checklist-form,
+:root[data-theme='dark'] .appointment-form,
+:root[data-theme='dark'] .filter-row,
+:root[data-theme='dark'] .profile-fields,
+:root[data-theme='dark'] .settings-section,
+:root[data-theme='dark'] .budget-edit-panel,
+:root[data-theme='dark'] .guest-edit-panel {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .budget-edit-panel input,
+:root[data-theme='dark'] .budget-edit-panel select,
+:root[data-theme='dark'] .budget-add-modern input,
+:root[data-theme='dark'] .guest-edit-panel input,
+:root[data-theme='dark'] .guest-edit-panel select,
+:root[data-theme='dark'] .guest-add-card input,
+:root[data-theme='dark'] .guest-add-card select,
+:root[data-theme='dark'] .checklist-quick-add input,
+:root[data-theme='dark'] .checklist-date-input,
+:root[data-theme='dark'] .settings-section input,
+:root[data-theme='dark'] .settings-section select,
+:root[data-theme='dark'] .profile-fields input,
+:root[data-theme='dark'] .profile-fields select,
+:root[data-theme='dark'] .vendor-filter-bar select,
+:root[data-theme='dark'] .sidebar-date input,
+:root[data-theme='dark'] .command-palette input,
+:root[data-theme='dark'] .menu-assistant-form input,
+:root[data-theme='dark'] .assistant-drawer .menu-assistant-form input {
+  background: var(--bg-2) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .sidebar-date input::placeholder,
+:root[data-theme='dark'] .command-palette input::placeholder,
+:root[data-theme='dark'] .menu-assistant-form input::placeholder {
+  color: var(--muted) !important;
+}
+
+/* 5 — Toolbars (segmented tabs keep their existing dark.css treatment) */
+:root[data-theme='dark'] .checklist-toolbelt,
+:root[data-theme='dark'] .budget-toolbar,
+:root[data-theme='dark'] .guest-toolbar {
+  background: transparent !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .checklist-status-toggle button.active {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+}
+
+/* 6 — Utility buttons / pills / action links (NOT primary CTAs) */
+:root[data-theme='dark'] .checklist-export-actions button,
+:root[data-theme='dark'] .checklist-template-row button,
+:root[data-theme='dark'] .checklist-row-actions button,
+:root[data-theme='dark'] .checklist-side-actions button,
+:root[data-theme='dark'] .checklist-filter-pills button,
+:root[data-theme='dark'] .checklist-phase-strip button,
+:root[data-theme='dark'] .template-strip button,
+:root[data-theme='dark'] .checklist-category-group > button,
+:root[data-theme='dark'] .agenda-actions a,
+:root[data-theme='dark'] .vendor-actions a,
+:root[data-theme='dark'] .budget-hero-actions button,
+:root[data-theme='dark'] .guest-hero-modern button,
+:root[data-theme='dark'] .guest-header-actions button,
+:root[data-theme='dark'] .settings-action-grid button,
+:root[data-theme='dark'] .vendor-detail-actions button,
+:root[data-theme='dark'] .vendor-detail-actions a,
+:root[data-theme='dark'] .vendor-map-actions a,
+:root[data-theme='dark'] .workspace-command-button,
+:root[data-theme='dark'] .workspace-checklist-shortcut,
+:root[data-theme='dark'] .calendar-suggestion-strip button,
+:root[data-theme='dark'] .budget-suggestion-list button,
+:root[data-theme='dark'] .command-results button,
+:root[data-theme='dark'] .menu-assistant-actions button,
+:root[data-theme='dark'] .composer-suggestions button {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .checklist-export-actions button:hover,
+:root[data-theme='dark'] .checklist-row-actions button:hover,
+:root[data-theme='dark'] .budget-hero-actions button:hover,
+:root[data-theme='dark'] .guest-header-actions button:hover,
+:root[data-theme='dark'] .settings-action-grid button:hover,
+:root[data-theme='dark'] .calendar-suggestion-strip button:hover,
+:root[data-theme='dark'] .budget-suggestion-list button:hover,
+:root[data-theme='dark'] .command-results button:hover,
+:root[data-theme='dark'] .composer-suggestions button:hover {
+  background: var(--bg-2) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+/* 7 — Clickable list rows + hover */
+:root[data-theme='dark'] .budget-row-summary,
+:root[data-theme='dark'] .guest-row-summary,
+:root[data-theme='dark'] .checklist-task-row {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .budget-row-summary:hover,
+:root[data-theme='dark'] .budget-row-summary:focus-visible,
+:root[data-theme='dark'] .guest-row-summary:hover,
+:root[data-theme='dark'] .guest-row-summary:focus-visible {
+  background: var(--bg-2) !important;
+}
+
+:root[data-theme='dark'] .checklist-task-row.done {
+  background: var(--bg-2) !important;
+}
+
+/* 8 — Calendar grid & cells */
+:root[data-theme='dark'] .calendar-grid,
+:root[data-theme='dark'] .calendar-panel .calendar-grid {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .calendar-day,
+:root[data-theme='dark'] .calendar-panel .calendar-day {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .calendar-day.muted {
+  color: var(--muted) !important;
+}
+
+:root[data-theme='dark'] .calendar-day:hover,
+:root[data-theme='dark'] .calendar-day:focus-visible,
+:root[data-theme='dark'] .calendar-panel .calendar-day:hover,
+:root[data-theme='dark'] .calendar-panel .calendar-day:focus-visible {
+  background: var(--bg-2) !important;
+}
+
+:root[data-theme='dark'] .calendar-day.today,
+:root[data-theme='dark'] .calendar-panel .calendar-day.today {
+  background: var(--mm-accent-soft) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme='dark'] .calendar-day.selected,
+:root[data-theme='dark'] .calendar-panel .calendar-day.selected,
+:root[data-theme='dark'] .calendar-day.selected:hover,
+:root[data-theme='dark'] .calendar-panel .calendar-day.selected:hover {
+  background: var(--accent) !important;
+  color: #15110d !important;
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme='dark'] .calendar-weekday,
+:root[data-theme='dark'] .calendar-panel .calendar-weekday {
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+
+:root[data-theme='dark'] .agenda-card.wedding,
+:root[data-theme='dark'] .mobile-agenda-card.wedding {
+  background: var(--mm-accent-soft) !important;
+  border-color: var(--accent) !important;
+}
+
+/* 9 — Chat bubbles & inline code */
+:root[data-theme='dark'] .bubble {
+  background: var(--card) !important;
+  color: var(--ink) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .message.user .bubble {
+  background: var(--accent) !important;
+  color: #15110d !important;
+  border-color: var(--accent) !important;
+}
+
+:root[data-theme='dark'] .message.user .bubble .md-inline-code,
+:root[data-theme='dark'] .message.user .bubble .md-pre {
+  background: rgba(0, 0, 0, 0.22) !important;
+  color: #15110d !important;
+}
+
+/* 10 — Empty states */
+:root[data-theme='dark'] .empty-state,
+:root[data-theme='dark'] .action-empty,
+:root[data-theme='dark'] .checklist-empty-modern,
+:root[data-theme='dark'] .mobile-agenda-empty {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+}
+
+/* 11 — Checklist phase header (hardcoded #fafafa inside phase groups) */
+:root[data-theme='dark'] .checklist-phase-header {
+  background: var(--bg-2) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .checklist-task-row:hover {
+  background: var(--bg-2) !important;
+}
+
+:root[data-theme='dark'] .mini-progress {
+  background: var(--border) !important;
+}
+
+:root[data-theme='dark'] .mini-progress span {
+  background: var(--accent) !important;
+}
+
+/* 12 — Category filter chips (uses --mm-surface token; force explicit dark override) */
+:root[data-theme='dark'] .checklist-category-filter button {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--muted) !important;
+}
+
+:root[data-theme='dark'] .checklist-category-filter button:hover {
+  background: var(--bg-2) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+:root[data-theme='dark'] .checklist-category-filter button.active {
+  background: var(--mm-accent-soft) !important;
+  border-color: var(--mm-accent) !important;
+  color: var(--mm-accent-strong) !important;
+}
+
+/* 13 — Vendor filter bar */
+:root[data-theme='dark'] .vendor-filter-bar {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .vendor-filter-bar input,
+:root[data-theme='dark'] .vendor-filter-bar select {
+  background: var(--bg-2) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+/* 14 — Guest & budget primary/utility action buttons (hardcoded #fff / #171717) */
+:root[data-theme='dark'] .guest-header-actions button,
+:root[data-theme='dark'] .budget-hero-actions button {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .guest-header-actions .primary-action,
+:root[data-theme='dark'] .budget-hero-actions .primary-action {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #15110d !important;
+}
+
+:root[data-theme='dark'] .guest-header-actions .primary-action:hover,
+:root[data-theme='dark'] .budget-hero-actions .primary-action:hover {
+  opacity: 0.88;
+}
+
+/* 15 — Planner panel utility-action buttons (uses --mm-surface, force dark) */
+:root[data-theme='dark'] .planner-panel button.utility-action,
+:root[data-theme='dark'] .planner-panel a.utility-action {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}

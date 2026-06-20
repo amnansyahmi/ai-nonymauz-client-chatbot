@@ -1,6 +1,14 @@
-import { useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
-import type { ActivityItem, AppLanguage, Appointment, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
+import { useEffect, useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
+import type { ActivityItem, AppLanguage, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
+import {
+  buildRsvpInviteMessage,
+  buildWhatsAppShareUrl,
+  isValidFormUrl,
+  normalizeFormUrl
+} from '../../lib/planner/rsvpShare';
+import { buildRsvpPageUrl } from '../../lib/planner/rsvpLink';
+import type { WeeklyBriefing as Briefing, BriefingTone } from '../../lib/planner/weeklyBriefing';
 
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
@@ -15,15 +23,14 @@ type DashboardPanelProps = {
   pendingGuests: number;
   declinedGuests: number;
   createDefaultChecklist: () => void;
-  urgentChecklist: Array<{ id: string; text: string; deadline?: string; phase?: string }>;
-  fallbackUrgent: string[];
   activity: ActivityItem[];
-  nextAppointment?: Appointment;
-  budgetAlert: string;
-  planningPhase: string;
-  smartReminders: string[];
   onAskToday: () => void;
   language?: AppLanguage;
+  briefing: Briefing;
+  isSpeaking: boolean;
+  canSpeak: boolean;
+  onSpeak: () => void;
+  onStopSpeak: () => void;
 };
 
 const dashboardCopy = {
@@ -120,140 +127,177 @@ export function DashboardPanel({
   pendingGuests,
   declinedGuests,
   createDefaultChecklist,
-  urgentChecklist,
-  fallbackUrgent,
   activity,
-  nextAppointment,
-  budgetAlert,
-  planningPhase,
-  smartReminders,
   onAskToday,
-  language = 'ms'
+  language = 'ms',
+  briefing,
+  isSpeaking,
+  canSpeak,
+  onSpeak,
+  onStopSpeak
 }: DashboardPanelProps) {
   const t = dashboardCopy[language];
-  const locale = language === 'ms' ? 'ms-MY' : 'en-MY';
+  const isMs = language === 'ms';
+  const locale = isMs ? 'ms-MY' : 'en-MY';
+
+  // Live ticking clock for the countdown tile — keeps the delightful
+  // seconds-level countdown without a separate oversized card.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const target = plannerProfile.majlisDate ? new Date(`${plannerProfile.majlisDate}T08:00:00`) : null;
+  const validTarget = target && !Number.isNaN(target.getTime()) ? target : null;
+  let clock: { h: string; m: string; s: string } | null = null;
+  if (validTarget && now) {
+    const diff = validTarget.getTime() - now.getTime();
+    if (diff > 0) {
+      clock = {
+        h: String(Math.floor((diff / 3_600_000) % 24)).padStart(2, '0'),
+        m: String(Math.floor((diff / 60_000) % 60)).padStart(2, '0'),
+        s: String(Math.floor((diff / 1000) % 60)).padStart(2, '0')
+      };
+    }
+  }
+  const weddingDateLabel = validTarget
+    ? validTarget.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
+    : t.setDateHint;
+
+  const hasChecklist = totalChecklistItems > 0;
+
   return (
-    <div className="dashboard-panel">
-      <section className="today-command-center" aria-label={t.todayTitle}>
-        <div className="today-hero-copy">
-          <p className="eyebrow">{t.todayEyebrow}</p>
-          <h3>{t.todayTitle}</h3>
-          <p>{t.todayLead}</p>
+    <div className="mm-dash">
+      <header className="mm-dash__header">
+        <div className="mm-dash__intro">
+          <span className="mm-dash__eyebrow">{t.todayEyebrow}</span>
+          <h2 className="mm-dash__greeting">{briefing.greeting}</h2>
+          <p className="mm-dash__headline">{briefing.headline}</p>
         </div>
-        <button type="button" onClick={onAskToday}>{t.askToday}</button>
-        <div className="today-card-grid">
-          <article>
-            <span>{t.nextTask}</span>
-            <strong>{urgentChecklist[0]?.text || fallbackUrgent[0] || t.nextTaskNone}</strong>
-            <p>{urgentChecklist[0]?.deadline ? t.due(urgentChecklist[0].deadline) : urgentChecklist[0]?.phase || t.recommendedNow}</p>
-          </article>
-          <article>
-            <span>{t.nextAppointment}</span>
-            <strong>{nextAppointment ? nextAppointment.title : t.noAppointment}</strong>
-            <p>{nextAppointment ? `${nextAppointment.date}${nextAppointment.time ? t.at(nextAppointment.time) : ''}` : t.noAppointmentHint}</p>
-          </article>
-          <article>
-            <span>{t.budgetSignal}</span>
-            <strong>{budgetAlert}</strong>
-            <p>{t.budgetHint}</p>
-          </article>
-          <article>
-            <span>{t.planningPhaseLabel}</span>
-            <strong>{planningPhase}</strong>
-            <p>{plannerProfile.majlisDate || t.setDateHint}</p>
-          </article>
+        <div className="mm-dash__actions">
+          {canSpeak ? (
+            isSpeaking ? (
+              <button type="button" className="mm-dash__btn" onClick={onStopSpeak}>
+                <span className="mm-dash__pulse" aria-hidden="true" />
+                {isMs ? 'Berhenti' : 'Stop'}
+              </button>
+            ) : (
+              <button type="button" className="mm-dash__btn" onClick={onSpeak}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M11 5 6 9H2v6h4l5 4z" />
+                  <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
+                </svg>
+                {isMs ? 'Dengar' : 'Listen'}
+              </button>
+            )
+          ) : null}
+          <button type="button" className="mm-dash__btn mm-dash__btn--primary" onClick={onAskToday}>
+            {t.askToday}
+          </button>
         </div>
-      </section>
+      </header>
 
-      <section className="planner-section reminder-section">
-        <div className="section-row">
-          <div>
-            <p className="eyebrow">{t.smartEyebrow}</p>
-            <h3>{t.smartTitle}</h3>
-          </div>
-        </div>
-        <ul className="action-list reminder-list">
-          {smartReminders.map((reminder) => (
-            <li key={reminder}>
-              <strong>{reminder}</strong>
-              <span>{t.smartSub}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <div className="mm-dash__stats">
+        <article className="mm-stat mm-stat--accent">
+          <span className="mm-stat__label">{t.countdown}</span>
+          <span className="mm-stat__value">
+            {daysLeft === null ? '—' : daysLeft >= 0 ? daysLeft : 0}
+            <em>{daysLeft === null ? t.setDate : daysLeft >= 0 ? (isMs ? 'hari' : 'days') : t.majlisPassed}</em>
+          </span>
+          {clock ? <span className="mm-stat__clock">{clock.h}:{clock.m}:{clock.s}</span> : null}
+          <span className="mm-stat__meta">{weddingDateLabel}</span>
+        </article>
 
-      <div className="dashboard-grid">
-        <article className="metric-card hero-metric">
-          <span>{t.countdown}</span>
-          <strong>{daysLeft === null ? t.setDate : daysLeft >= 0 ? t.days(daysLeft) : t.majlisPassed}</strong>
-          <p>{plannerProfile.majlisDate || t.countdownHint}</p>
+        <article className="mm-stat">
+          <span className="mm-stat__label">{t.progress}</span>
+          <span className="mm-stat__value">{planningProgress}<em>%</em></span>
+          <div className="mm-stat__bar"><span style={{ width: `${planningProgress}%` }} /></div>
+          <span className="mm-stat__meta">{t.itemsDone(completedCount, totalChecklistItems)}</span>
         </article>
-        <article className="metric-card">
-          <span>{t.progress}</span>
-          <strong>{planningProgress}%</strong>
-          <div className="progress-track"><span style={{ width: `${planningProgress}%` }} /></div>
-          <p>{t.itemsDone(completedCount, totalChecklistItems)}</p>
+
+        <article className="mm-stat">
+          <span className="mm-stat__label">{t.budget}</span>
+          <span className="mm-stat__value mm-stat__value--money">{money(totalPaid)}</span>
+          <span className="mm-stat__meta">{t.budgetMeta(money(totalPlanned), money(totalActual))}</span>
         </article>
-        <article className="metric-card">
-          <span>{t.budget}</span>
-          <strong>{money(totalPaid)}</strong>
-          <p>{t.budgetMeta(money(totalPlanned), money(totalActual))}</p>
-        </article>
-        <article className="metric-card">
-          <span>{t.rsvp}</span>
-          <strong>{confirmedGuests}</strong>
-          <p>{t.rsvpMeta(pendingGuests, declinedGuests)}</p>
+
+        <article className="mm-stat">
+          <span className="mm-stat__label">{t.rsvp}</span>
+          <span className="mm-stat__value">{confirmedGuests}<em>{isMs ? 'sah' : 'going'}</em></span>
+          <span className="mm-stat__meta">{t.rsvpMeta(pendingGuests, declinedGuests)}</span>
         </article>
       </div>
 
-      <div className="planner-columns">
-        <section className="planner-section">
-          <div className="section-row">
-            <div>
-              <p className="eyebrow">{t.urgentEyebrow}</p>
-              <h3>{t.urgentTitle}</h3>
-            </div>
-            <button type="button" onClick={createDefaultChecklist}>{t.generateChecklist}</button>
-          </div>
-          <ul className="action-list">
-            {urgentChecklist.length > 0
-              ? urgentChecklist.map((item) => (
-                  <li key={item.id}>
-                    <strong>{item.text}</strong>
-                    <span>{item.deadline ? t.due(item.deadline) : item.phase || t.planning}</span>
-                  </li>
-                ))
-              : fallbackUrgent.map((item) => (
-                  <li key={item}>
-                    <strong>{item}</strong>
-                    <span>{t.recommendedNow}</span>
-                  </li>
-                ))}
+      <div className="mm-dash__cols">
+        <section className="mm-dash__card mm-dash__focus">
+          <header className="mm-dash__card-head">
+            <h3>{t.todayTitle}</h3>
+            {!hasChecklist ? (
+              <button type="button" className="mm-dash__link" onClick={createDefaultChecklist}>
+                {t.generateChecklist}
+              </button>
+            ) : null}
+          </header>
+          <ul className="mm-focus-list">
+            {briefing.items.map((item) => (
+              <li key={item.key} className={`mm-focus-item tone-${item.tone}`}>
+                <span className="mm-focus-item__icon" aria-hidden="true">
+                  <ToneIcon tone={item.tone} />
+                </span>
+                <span className="mm-focus-item__text">{item.text}</span>
+              </li>
+            ))}
           </ul>
         </section>
 
-        <section className="planner-section">
-          <div className="section-row">
-            <div>
-              <p className="eyebrow">{t.activityEyebrow}</p>
-              <h3>{t.activityTitle}</h3>
-            </div>
-          </div>
+        <section className="mm-dash__card">
+          <header className="mm-dash__card-head">
+            <h3>{t.activityTitle}</h3>
+          </header>
           {activity.length > 0 ? (
-            <ul className="activity-list">
-              {activity.slice(0, 5).map((item) => (
+            <ul className="mm-activity-list">
+              {activity.slice(0, 6).map((item) => (
                 <li key={item.id}>
-                  <span>{new Date(item.time).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })}</span>
-                  <strong>{item.text}</strong>
+                  <span className="mm-activity__time">
+                    {new Date(item.time).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })}
+                  </span>
+                  <span className="mm-activity__text">{item.text}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="empty-state">{t.activityEmpty}</p>
+            <p className="mm-dash__empty">{t.activityEmpty}</p>
           )}
         </section>
       </div>
     </div>
+  );
+}
+
+function ToneIcon({ tone }: { tone: BriefingTone }) {
+  if (tone === 'urgent') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 9v4M12 17h.01" />
+        <path d="M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z" />
+      </svg>
+    );
+  }
+  if (tone === 'good') {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <path d="m9 11 3 3L22 4" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4M12 8h.01" />
+    </svg>
   );
 }
 
@@ -651,6 +695,15 @@ type RsvpPanelProps = {
   confirmedGuests: number;
   pendingGuests: number;
   declinedGuests: number;
+  language: AppLanguage;
+  coupleNames: string;
+  weddingDate: string;
+  venue: string;
+  time: string;
+  location: string;
+  contact: string;
+  rsvpFormUrl: string;
+  onChangeRsvpFormUrl: (url: string) => void;
 };
 
 export function RsvpPanel({
@@ -664,12 +717,41 @@ export function RsvpPanel({
   importGuestsCsv,
   confirmedGuests,
   pendingGuests,
-  declinedGuests
+  declinedGuests,
+  language,
+  coupleNames,
+  weddingDate,
+  venue,
+  time,
+  location,
+  contact,
+  rsvpFormUrl,
+  onChangeRsvpFormUrl
 }: RsvpPanelProps) {
   const [guestView, setGuestView] = useState<'all' | 'pending' | 'confirmed' | 'declined'>('all');
   const [expandedGuestId, setExpandedGuestId] = useState<string | null>(null);
   const [isGuestAddOpen, setIsGuestAddOpen] = useState(false);
+  const [isRsvpShareOpen, setIsRsvpShareOpen] = useState(false);
+  const [isOwnFormOpen, setIsOwnFormOpen] = useState(false);
+  const [rsvpUrlDraft, setRsvpUrlDraft] = useState(rsvpFormUrl);
+  const [rsvpCopied, setRsvpCopied] = useState(false);
+  // Resolved on the client only, to avoid an SSR/CSR hydration mismatch.
+  const [origin, setOrigin] = useState('');
+  useEffect(() => setOrigin(window.location.origin), []);
   const guestImportRef = useRef<HTMLInputElement | null>(null);
+  // Native in-app RSVP page is the default share target; a couple's own hosted
+  // form (if set) overrides it.
+  const nativeRsvpUrl = buildRsvpPageUrl(origin, {
+    couple: coupleNames,
+    date: weddingDate,
+    time,
+    venue,
+    location,
+    contact,
+    lang: language
+  });
+  const effectiveRsvpUrl = rsvpFormUrl.trim() ? normalizeFormUrl(rsvpFormUrl) : nativeRsvpUrl;
+  const usingOwnForm = Boolean(rsvpFormUrl.trim());
   const totalPax = guests.reduce((sum, guest) => sum + guest.pax, 0);
   const guestGroups = Array.from(new Set(guests.map((guest) => guest.group).filter(Boolean)));
   const filteredGuests = guests.filter((guest) => guestView === 'all' || guest.status === guestView);
@@ -696,6 +778,17 @@ export function RsvpPanel({
         </div>
         <div className="guest-header-actions">
           <button type="button" className="primary-action" onClick={() => setIsGuestAddOpen(true)}>Add guest</button>
+          <button
+            type="button"
+            className="utility-action"
+            onClick={() => {
+              setRsvpUrlDraft(rsvpFormUrl);
+              setIsRsvpShareOpen((open) => !open);
+            }}
+            aria-expanded={isRsvpShareOpen}
+          >
+            {language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}
+          </button>
           <button type="button" className="utility-action" onClick={() => guestImportRef.current?.click()}>Import CSV</button>
           <button type="button" className="utility-action" onClick={exportGuestsCsv} disabled={guests.length === 0}>Export CSV</button>
           <input
@@ -710,6 +803,99 @@ export function RsvpPanel({
           />
         </div>
       </div>
+
+      {isRsvpShareOpen ? (
+        <div className="rsvp-share-card">
+          <div className="rsvp-share-head">
+            <div>
+              <strong>{language === 'ms' ? 'Pautan RSVP anda' : 'Your RSVP link'}</strong>
+              <p>
+                {usingOwnForm
+                  ? language === 'ms'
+                    ? 'Menggunakan borang anda sendiri. Kongsi pautan dengan tetamu; import respons melalui "Import CSV".'
+                    : 'Using your own form. Share the link with guests; import responses via "Import CSV".'
+                  : language === 'ms'
+                    ? 'Halaman RSVP siap sedia dari butiran majlis anda. Kongsi dengan tetamu — jawapan mereka dihantar kepada anda melalui WhatsApp.'
+                    : 'A ready-made RSVP page from your wedding details. Share it with guests — their replies come to you via WhatsApp.'}
+              </p>
+            </div>
+            <button type="button" className="rsvp-share-close" aria-label={language === 'ms' ? 'Tutup' : 'Close'} onClick={() => setIsRsvpShareOpen(false)}>×</button>
+          </div>
+
+          <div className="rsvp-link-display" title={effectiveRsvpUrl}>{effectiveRsvpUrl || '…'}</div>
+
+          <div className="rsvp-share-actions">
+            <a className="utility-action" href={effectiveRsvpUrl || '#'} target="_blank" rel="noopener noreferrer">
+              {language === 'ms' ? 'Buka' : 'Open'}
+            </a>
+            <button
+              type="button"
+              className="utility-action"
+              disabled={!effectiveRsvpUrl}
+              onClick={() => {
+                navigator.clipboard?.writeText(effectiveRsvpUrl).then(() => {
+                  setRsvpCopied(true);
+                  window.setTimeout(() => setRsvpCopied(false), 1800);
+                });
+              }}
+            >
+              {rsvpCopied ? (language === 'ms' ? 'Disalin ✓' : 'Copied ✓') : (language === 'ms' ? 'Salin pautan' : 'Copy link')}
+            </button>
+            <a
+              className="primary-action"
+              href={buildWhatsAppShareUrl(buildRsvpInviteMessage({ coupleNames, weddingDate, venue, formUrl: effectiveRsvpUrl, language }))}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {language === 'ms' ? 'Kongsi WhatsApp' : 'Share on WhatsApp'}
+            </a>
+          </div>
+
+          <button
+            type="button"
+            className="rsvp-ownform-toggle"
+            aria-expanded={isOwnFormOpen}
+            onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsOwnFormOpen((open) => !open); }}
+          >
+            {language === 'ms' ? 'Guna borang sendiri (pilihan)' : 'Use your own form (optional)'}
+          </button>
+
+          {isOwnFormOpen ? (
+            <>
+              <div className="rsvp-share-row">
+                <input
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://forms.gle/..."
+                  value={rsvpUrlDraft}
+                  onChange={(event) => setRsvpUrlDraft(event.target.value)}
+                  aria-label={language === 'ms' ? 'Pautan borang RSVP' : 'RSVP form link'}
+                />
+                <button
+                  type="button"
+                  className="primary-action"
+                  disabled={!isValidFormUrl(rsvpUrlDraft) || normalizeFormUrl(rsvpUrlDraft) === rsvpFormUrl}
+                  onClick={() => onChangeRsvpFormUrl(normalizeFormUrl(rsvpUrlDraft))}
+                >
+                  {language === 'ms' ? 'Simpan' : 'Save'}
+                </button>
+              </div>
+              {rsvpUrlDraft.trim() && !isValidFormUrl(rsvpUrlDraft) ? (
+                <p className="rsvp-share-error">{language === 'ms' ? 'Pautan tidak sah.' : 'That link looks invalid.'}</p>
+              ) : null}
+              {usingOwnForm ? (
+                <button
+                  type="button"
+                  className="rsvp-ownform-toggle"
+                  onClick={() => { onChangeRsvpFormUrl(''); setRsvpUrlDraft(''); }}
+                >
+                  {language === 'ms' ? 'Kembali ke halaman lalai' : 'Back to the default page'}
+                </button>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="guest-focus-grid" aria-label="Guest headcount summary">
         <article className="guest-focus-card">

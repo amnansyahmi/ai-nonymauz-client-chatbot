@@ -28,7 +28,8 @@ export const plannerContextSchema = z
         })
       )
       .max(20)
-      .optional()
+      .optional(),
+    memoryContext: z.string().max(2000).optional()
   })
   .partial();
 
