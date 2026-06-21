@@ -51,6 +51,7 @@ import type {
 } from './planner/types';
 
 import ProactiveSuggestionCard from './ai/ProactiveSuggestionCard';
+import DatePicker from './ui/DatePicker';
 import MobileBottomNav, { type MobileTab } from './mobile/MobileBottomNav';
 import {
   generateSuggestions as generateProactiveSuggestions,
@@ -1951,24 +1952,7 @@ export default function PlannerWorkspace() {
       if (!item.deadline) return true;
       const due = daysUntil(item.deadline);
       return due === null || due <= 21;
-    })
-    .slice(0, 5);
-  const fallbackUrgent =
-    daysLeft === null
-      ? ['Complete onboarding so MajlisMate.ai can calculate deadlines.']
-      : daysLeft > 365
-        ? ['Confirm tarikh, apply nikah, and start venue research.']
-        : daysLeft > 270
-          ? ['Book jurufoto, survey baju pengantin, and shortlist venue.']
-          : daysLeft > 180
-            ? ['Tempah katerer, book andaman, and lock main vendors.']
-            : daysLeft > 90
-              ? ['Settle hantaran, tempah cenderahati, and prepare invitation plan.']
-              : daysLeft > 30
-                ? ['Hantar jemputan, set RSVP deadline, and confirm guest groups.']
-                : daysLeft > 7
-                  ? ['Confirm all vendors and give headcount to caterer.']
-                  : ['Final briefing, confirm parking, and prepare day-of items.'];
+    });
   const checklistPhases = Array.from(new Set(checklistItems.map((item) => item.phase).filter(Boolean))) as string[];
   const vendorCategories = Array.from(new Set(vendorDirectory.map((vendor) => vendor.category)));
   const vendorStates = Array.from(new Set(vendorDirectory.map((vendor) => vendor.negeri)));
@@ -2362,28 +2346,6 @@ export default function PlannerWorkspace() {
     },
     language
   );
-  const budgetAlert =
-    overBudgetItems.length > 0
-      ? `${overBudgetItems.length} over budget`
-      : remainingToPay > 0
-        ? `${money(remainingToPay)} to pay`
-        : totalActual > 0
-          ? 'On track'
-          : 'Ready to plan';
-  const planningPhase =
-    daysLeft === null
-      ? 'Setup phase'
-      : daysLeft > 365
-        ? 'Early planning'
-        : daysLeft > 180
-          ? 'Booking phase'
-          : daysLeft > 90
-            ? 'Preparation phase'
-            : daysLeft > 30
-              ? 'Confirmation phase'
-              : daysLeft >= 0
-                ? 'Final countdown'
-                : 'Post-wedding';
   const smartReminders = [
     urgentChecklistCount > 0 ? `${urgentChecklistCount} urgent checklist item${urgentChecklistCount === 1 ? '' : 's'} need attention` : '',
     soonChecklistCount > 0 ? `${soonChecklistCount} checklist item${soonChecklistCount === 1 ? '' : 's'} coming soon` : '',
@@ -2482,13 +2444,6 @@ export default function PlannerWorkspace() {
   const coupleMeta =
     plannerProfile.majlisDate ||
     (plannerProfile.negeri ? `${plannerProfile.negeri} - ${plannerProfile.guestTarget} pax` : `${plannerProfile.guestTarget} pax`);
-  const sidebarDateLabel = plannerProfile.majlisDate
-    ? new Date(`${plannerProfile.majlisDate}T00:00:00`).toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    })
-    : language === 'ms' ? 'Belum ditetapkan' : 'Not set yet';
   const selectTab = (tab: ActiveTab) => {
     if (tab === 'chat') {
       startFreshChat({ silent: true });
@@ -2740,19 +2695,16 @@ export default function PlannerWorkspace() {
               ×
             </button>
           </div>
-          <label className="sidebar-date">
+          <div className="sidebar-date">
             <span>{copy.weddingDate}</span>
-            <span className="sidebar-date-control">
-              <strong>{sidebarDateLabel}</strong>
-              <small>{language === 'ms' ? 'Tap untuk tukar tarikh' : 'Tap to change date'}</small>
-              <input
-                type="date"
-                value={plannerProfile.majlisDate}
-                onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }))}
-                aria-label={copy.weddingDate}
-              />
-            </span>
-          </label>
+            <DatePicker
+              value={plannerProfile.majlisDate}
+              onChange={(v) => setPlannerProfile((current) => ({ ...current, majlisDate: v }))}
+              language={language}
+              ariaLabel={copy.weddingDate}
+              placeholder={language === 'ms' ? 'Pilih tarikh majlis' : 'Pick your wedding date'}
+            />
+          </div>
           <nav className="planner-menu" role="tablist" aria-label="Planner menu">
             <button
               type="button"
@@ -2951,7 +2903,7 @@ export default function PlannerWorkspace() {
             </div>
           </div>
           {activeTab === 'dashboard' ? (
-        <>
+        <div className="dashboard-scroll">
         {upcomingReminders.length > 0 ? (
           <div className="reminder-strip" role="region" aria-label={language === 'ms' ? 'Peringatan appointment' : 'Appointment reminders'}>
             {upcomingReminders.map((appointment) => {
@@ -3022,6 +2974,8 @@ export default function PlannerWorkspace() {
           pendingGuests={pendingGuests}
           declinedGuests={declinedGuests}
           createDefaultChecklist={createDefaultChecklist}
+          urgentChecklist={urgentChecklist}
+          onViewAllTasks={() => setActiveTab('checklist')}
           activity={activity}
           language={language}
           onAskToday={() => {
@@ -3043,7 +2997,7 @@ export default function PlannerWorkspace() {
           />
         ) : null}
 
-        </>
+        </div>
       ) : activeTab === 'chat' ? (
         <div className={`main-chat-panel ${messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? 'empty-chat' : 'active-chat'}`}>
           <div className="chat-welcome">
@@ -3935,21 +3889,20 @@ export default function PlannerWorkspace() {
                   aria-label="Appointment title"
                 />
                 <div className="appointment-form-row">
-                  <span className="appointment-native-field date">
-                    <input
-                      type="date"
-                      value={appointmentDraft.date}
-                      onChange={(event) => {
-                        setAppointmentDraft((current) => ({ ...current, date: event.target.value }));
-                        setSelectedDate(event.target.value);
-                        if (event.target.value) {
-                          const nextDate = new Date(`${event.target.value}T00:00:00`);
-                          setCalendarMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
-                        }
-                      }}
-                      aria-label="Appointment date"
-                    />
-                  </span>
+                  <DatePicker
+                    value={appointmentDraft.date}
+                    onChange={(v) => {
+                      setAppointmentDraft((current) => ({ ...current, date: v }));
+                      setSelectedDate(v);
+                      if (v) {
+                        const nextDate = new Date(`${v}T00:00:00`);
+                        setCalendarMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+                      }
+                    }}
+                    language={language}
+                    ariaLabel="Appointment date"
+                    placeholder={language === 'ms' ? 'Tarikh appointment' : 'Appointment date'}
+                  />
                   <span className="appointment-native-field time">
                     <input
                       type="time"
@@ -4207,17 +4160,18 @@ export default function PlannerWorkspace() {
                   <div className="settings-two-column">
                     <label>
                       Wedding date
-                      <input
-                        type="date"
+                      <DatePicker
                         value={plannerProfile.majlisDate}
-                        onChange={(event) => {
-                          setPlannerProfile((current) => ({ ...current, majlisDate: event.target.value }));
-                          if (event.target.value) {
-                            const weddingDate = new Date(`${event.target.value}T00:00:00`);
+                        onChange={(v) => {
+                          setPlannerProfile((current) => ({ ...current, majlisDate: v }));
+                          if (v) {
+                            const weddingDate = new Date(`${v}T00:00:00`);
                             setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
-                            setSelectedDate(event.target.value);
+                            setSelectedDate(v);
                           }
                         }}
+                        language={language}
+                        ariaLabel="Wedding date"
                       />
                     </label>
                     <label>

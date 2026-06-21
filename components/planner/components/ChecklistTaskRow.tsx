@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { AppLanguage, ChecklistItem } from '../types';
+import DatePicker from '../../ui/DatePicker';
 
 type Priority = { className: string; label: string };
 type TaskStatus = 'not-started' | 'in-progress' | 'done';
@@ -126,7 +127,6 @@ export default function ChecklistTaskRow({
   const [editText, setEditText] = useState('');
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteText, setNoteText] = useState(item.note || '');
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const editInputRef = useRef<HTMLInputElement>(null);
   const noteRef = useRef<HTMLTextAreaElement>(null);
@@ -285,14 +285,14 @@ export default function ChecklistTaskRow({
             ) : null}
             {getItemPhase(item) || copyLabels.custom}
             {' · '}
-            <button
-              type="button"
-              className="checklist-date-trigger"
-              onClick={() => setDatePickerOpen((v) => !v)}
-              title={language === 'ms' ? 'Tukar tarikh' : 'Change deadline'}
-            >
-              {dueLabel}
-            </button>
+            <DatePicker
+              variant="inline"
+              value={item.deadline || ''}
+              onChange={(v) => onUpdateDeadline(v)}
+              language={language}
+              triggerLabel={dueLabel}
+              ariaLabel={language === 'ms' ? 'Tukar tarikh akhir' : 'Change deadline'}
+            />
             {!item.deadline && majlisDate ? (
               <button
                 type="button"
@@ -305,18 +305,6 @@ export default function ChecklistTaskRow({
               </button>
             ) : null}
           </small>
-          {datePickerOpen ? (
-            <input
-              type="date"
-              className="checklist-date-input"
-              value={item.deadline || ''}
-              onChange={(e) => {
-                onUpdateDeadline(e.target.value);
-                setDatePickerOpen(false);
-              }}
-              onBlur={() => setDatePickerOpen(false)}
-            />
-          ) : null}
           {item.note ? (
             <small className="checklist-note-preview" onClick={() => setNotesOpen(true)}>
               {item.note}
@@ -325,18 +313,16 @@ export default function ChecklistTaskRow({
         </span>
       </div>
 
-      <button
-        type="button"
+      <span
         className={`priority-chip ${priority.className}`}
-        onClick={() => setDatePickerOpen((v) => !v)}
         title={
           language === 'ms'
-            ? 'Keutamaan ikut tarikh akhir — klik untuk tukar tarikh'
-            : 'Priority follows the deadline — click to change the date'
+            ? 'Keutamaan ikut tarikh akhir'
+            : 'Priority follows the deadline'
         }
       >
         {priority.label}
-      </button>
+      </span>
 
       <div className="checklist-row-actions">
         <button

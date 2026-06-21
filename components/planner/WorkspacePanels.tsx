@@ -23,6 +23,8 @@ type DashboardPanelProps = {
   pendingGuests: number;
   declinedGuests: number;
   createDefaultChecklist: () => void;
+  urgentChecklist: Array<{ id: string; text: string; deadline?: string; phase?: string }>;
+  onViewAllTasks: () => void;
   activity: ActivityItem[];
   onAskToday: () => void;
   language?: AppLanguage;
@@ -127,6 +129,8 @@ export function DashboardPanel({
   pendingGuests,
   declinedGuests,
   createDefaultChecklist,
+  urgentChecklist,
+  onViewAllTasks,
   activity,
   onAskToday,
   language = 'ms',
@@ -206,7 +210,13 @@ export function DashboardPanel({
             {daysLeft === null ? '—' : daysLeft >= 0 ? daysLeft : 0}
             <em>{daysLeft === null ? t.setDate : daysLeft >= 0 ? (isMs ? 'hari' : 'days') : t.majlisPassed}</em>
           </span>
-          {clock ? <span className="mm-stat__clock">{clock.h}:{clock.m}:{clock.s}</span> : null}
+          {clock ? (
+            <span className="mm-stat__clock" title={isMs ? 'Masa berbaki ke hari majlis' : 'Time left until the big day'}>
+              <span><b>{clock.h}</b>{isMs ? 'j' : 'h'}</span>
+              <span><b>{clock.m}</b>m</span>
+              <span><b>{clock.s}</b>s</span>
+            </span>
+          ) : null}
           <span className="mm-stat__meta">{weddingDateLabel}</span>
         </article>
 
@@ -233,23 +243,45 @@ export function DashboardPanel({
       <div className="mm-dash__cols">
         <section className="mm-dash__card mm-dash__focus">
           <header className="mm-dash__card-head">
-            <h3>{t.todayTitle}</h3>
+            <h3>{t.urgentTitle}</h3>
             {!hasChecklist ? (
               <button type="button" className="mm-dash__link" onClick={createDefaultChecklist}>
                 {t.generateChecklist}
               </button>
+            ) : urgentChecklist.length > 5 ? (
+              <button type="button" className="mm-dash__link" onClick={onViewAllTasks}>
+                {isMs ? `Lihat semua (${urgentChecklist.length})` : `View all (${urgentChecklist.length})`}
+              </button>
             ) : null}
           </header>
-          <ul className="mm-focus-list">
-            {briefing.items.map((item) => (
-              <li key={item.key} className={`mm-focus-item tone-${item.tone}`}>
-                <span className="mm-focus-item__icon" aria-hidden="true">
-                  <ToneIcon tone={item.tone} />
-                </span>
-                <span className="mm-focus-item__text">{item.text}</span>
-              </li>
-            ))}
-          </ul>
+          {urgentChecklist.length > 0 ? (
+            <ul className="mm-focus-list">
+              {urgentChecklist.slice(0, 5).map((item) => (
+                <li key={item.id} className="mm-focus-item tone-urgent">
+                  <span className="mm-focus-item__icon" aria-hidden="true">
+                    <ToneIcon tone="urgent" />
+                  </span>
+                  <span className="mm-focus-item__text">
+                    {item.text}
+                    <small className="mm-focus-item__meta">
+                      {item.deadline ? t.due(item.deadline) : item.phase || t.recommendedNow}
+                    </small>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="mm-focus-list">
+              {briefing.items.map((item) => (
+                <li key={item.key} className={`mm-focus-item tone-${item.tone}`}>
+                  <span className="mm-focus-item__icon" aria-hidden="true">
+                    <ToneIcon tone={item.tone} />
+                  </span>
+                  <span className="mm-focus-item__text">{item.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="mm-dash__card">

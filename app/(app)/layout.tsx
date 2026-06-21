@@ -14,6 +14,7 @@ import '../styles/ai-features.css';
 import '../styles/majlismate-theme.css';
 import '../styles/dark-sweep.css';
 import '../styles/dashboard.css';
+import '../styles/datepicker.css';
 
 /**
  * Layout for the actual application surfaces (/chat, /embed, ...).

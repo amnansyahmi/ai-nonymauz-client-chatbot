@@ -8996,6 +8996,8 @@ button,
   .planner-content {
     width: 100% !important;
     max-width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     min-height: 100dvh;
     padding: 0 0 calc(86px + env(safe-area-inset-bottom, 0px)) !important;
     overflow-x: hidden;
@@ -9672,17 +9674,20 @@ button,
 
   .mobile-bottom-nav {
     position: fixed !important;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     z-index: 65;
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr);
-    min-height: calc(58px + env(safe-area-inset-bottom, 0px));
-    border-top: 1px solid #e8e8e8;
-    background: rgba(255, 255, 255, 0.96);
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-    backdrop-filter: blur(16px);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    min-height: 0;
+    border: 1px solid var(--mm-border);
+    border-radius: 22px;
+    background: var(--mm-surface);
+    padding: 5px;
+    box-shadow: 0 12px 36px rgba(36, 28, 24, 0.16);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
   }
 
   .mobile-bottom-nav button {
