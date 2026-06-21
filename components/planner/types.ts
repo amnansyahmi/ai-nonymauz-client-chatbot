@@ -29,6 +29,8 @@ export type ChecklistItem = {
   phaseMs?: string;
   phaseEn?: string;
   status?: 'not-started' | 'in-progress' | 'done';
+  /** Task category id (see lib/planner/checklistCategories). Secondary filter axis; phase/month stays primary. */
+  category?: string;
   deadline?: string;
   monthBucket?: string;
   monthBucketMs?: string;
@@ -43,6 +45,10 @@ export type PlannerProfile = {
   groomName: string;
   brideName: string;
   majlisDate: string;
+  /** Free-text event time, e.g. "10:00 pagi - 4:00 petang". Shown on the RSVP page. */
+  majlisTime?: string;
+  /** Venue name, e.g. "Dewan Seksyen 21". Shown on the RSVP page. */
+  venueName?: string;
   negeri: string;
   brideOriginState?: string;
   groomOriginState?: string;

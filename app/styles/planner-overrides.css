@@ -4674,6 +4674,13 @@ body,
   box-shadow: inset 0 0 0 5px #ffffff !important;
 }
 
+/* In-progress: half-filled accent circle. One tap-cycle control, no dropdown. */
+.checklist-task-toggle[aria-checked="mixed"] {
+  border-color: var(--mm-accent) !important;
+  background: linear-gradient(90deg, var(--mm-accent) 0 50%, #ffffff 50% 100%) !important;
+  box-shadow: none !important;
+}
+
 .checklist-task-toggle:hover,
 .checklist-task-toggle:focus-visible {
   border-color: #171717 !important;

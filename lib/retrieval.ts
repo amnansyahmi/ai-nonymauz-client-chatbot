@@ -65,16 +65,48 @@ function tokenize(text: string): string[] {
     .filter((word) => word.length > 2 && !STOPWORDS.has(word));
 }
 
-/** Expand query tokens with their domain synonyms (weighted lower than originals). */
-function expandQueryTerms(terms: string[]): { term: string; weight: number }[] {
-  const expanded = new Map<string, number>();
-  for (const term of terms) {
-    expanded.set(term, Math.max(expanded.get(term) ?? 0, 1));
-    for (const synonym of SYNONYM_INDEX.get(term) ?? []) {
-      expanded.set(synonym, Math.max(expanded.get(synonym) ?? 0, 0.6));
-    }
+// Inverse document frequency: how many docs each token appears in. Ubiquitous
+// terms in a wedding corpus ("wedding", "perkahwinan") get downweighted so rare,
+// specific terms ("kos", "bajet") drive ranking. Keeps retrieval robust as the
+// corpus grows. Computed once at module load.
+const TOTAL_DOCS = bundle.documents.length;
+const DOC_FREQUENCY: Map<string, number> = (() => {
+  const df = new Map<string, number>();
+  for (const doc of bundle.documents) {
+    const unique = new Set(tokenize(`${doc.title} ${doc.category} ${doc.content}`));
+    for (const token of unique) df.set(token, (df.get(token) ?? 0) + 1);
   }
-  return [...expanded.entries()].map(([term, weight]) => ({ term, weight }));
+  return df;
+})();
+
+function idf(term: string): number {
+  const df = DOC_FREQUENCY.get(term) ?? 0;
+  // Smoothed; always >= 1 so a match never scores zero, but rarer terms score higher.
+  return Math.log((TOTAL_DOCS + 1) / (df + 1)) + 1;
+}
+
+type QueryConcept = { term: string; weight: number }[];
+
+/**
+ * Group each distinct query token with its domain synonyms (weighted lower than
+ * the original). Scoring takes the BEST match within a concept, then sums across
+ * concepts — so one query term's large synonym set can't monopolise ranking by
+ * stacking many partial hits (e.g. "kahwin" → perkahwinan+nikah+akad+wedding)
+ * and starving another concept in the query ("kos").
+ */
+function buildQueryConcepts(terms: string[]): QueryConcept[] {
+  const concepts: QueryConcept[] = [];
+  const seen = new Set<string>();
+  for (const term of terms) {
+    if (seen.has(term)) continue;
+    seen.add(term);
+    const members = new Map<string, number>([[term, 1]]);
+    for (const synonym of SYNONYM_INDEX.get(term) ?? []) {
+      members.set(synonym, Math.max(members.get(synonym) ?? 0, 0.6));
+    }
+    concepts.push([...members.entries()].map(([t, w]) => ({ term: t, weight: w })));
+  }
+  return concepts;
 }
 
 /** Partial match for agglutinative Malay: "tunang" ⊂ "pertunangan", "foto" ⊂ "fotografi". */
@@ -104,7 +136,7 @@ export function retrieveContext(question: string, maxDocs = 4): KnowledgeDoc[] {
     return docs.slice(0, maxDocs);
   }
 
-  const weightedTerms = expandQueryTerms(queryTerms);
+  const concepts = buildQueryConcepts(queryTerms);
 
   return docs
     .map((doc) => {
@@ -114,18 +146,24 @@ export function retrieveContext(question: string, maxDocs = 4): KnowledgeDoc[] {
         termFrequency.set(term, (termFrequency.get(term) || 0) + 1);
       }
 
+      // Best match per concept, summed across concepts (not summed per synonym).
       let score = 0;
-      for (const { term, weight } of weightedTerms) {
-        const exact = termFrequency.get(term) || 0;
-        if (exact > 0) {
-          score += weight * (1 + Math.log(exact));
-          continue;
+      for (const concept of concepts) {
+        let best = 0;
+        for (const { term, weight } of concept) {
+          const rarity = idf(term);
+          const exact = termFrequency.get(term) || 0;
+          let contribution = 0;
+          if (exact > 0) {
+            contribution = weight * rarity * (1 + Math.log(exact));
+          } else {
+            // Fall back to partial (affix) matching at a reduced weight.
+            const partial = partialMatchCount(term, termFrequency);
+            if (partial > 0) contribution = weight * rarity * 0.4 * (1 + Math.log(partial));
+          }
+          if (contribution > best) best = contribution;
         }
-        // Fall back to partial (affix) matching at a reduced weight.
-        const partial = partialMatchCount(term, termFrequency);
-        if (partial > 0) {
-          score += weight * 0.4 * (1 + Math.log(partial));
-        }
+        score += best;
       }
 
       return { doc, score };

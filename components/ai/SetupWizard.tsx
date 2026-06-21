@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { BudgetItem, ChecklistItem, PlannerProfile } from '../planner/types';
 import { generatePersonalizedChecklist, type SurveyAnswers } from '../../lib/planner/checklistGenerator';
 import { generateBudgetBreakdown } from '../../lib/planner/budgetGenerator';
+import DatePicker from '../ui/DatePicker';
 
 export type SetupCompletePayload = {
   items: ChecklistItem[];
@@ -228,7 +229,14 @@ export default function SetupWizard({
         {step === 1 ? (
           <label className="setup-wizard__field">
             <span>{isMs ? 'Tarikh majlis' : 'Wedding date'}</span>
-            <input type="date" min={new Date().toISOString().slice(0, 10)} value={draft.weddingDate} onChange={(e) => setField('weddingDate', e.target.value)} />
+            <DatePicker
+              value={draft.weddingDate}
+              onChange={(v) => setField('weddingDate', v)}
+              language={isMs ? 'ms' : 'en'}
+              min={new Date().toISOString().slice(0, 10)}
+              ariaLabel={isMs ? 'Tarikh majlis' : 'Wedding date'}
+              placeholder={isMs ? 'Pilih tarikh majlis' : 'Pick your wedding date'}
+            />
             <small>{isMs ? 'Kami akan susun checklist ikut tarikh ini.' : 'We will arrange your checklist around this date.'}</small>
           </label>
         ) : null}

@@ -1,6 +1,7 @@
 import type { ChecklistItem } from '../../components/planner/types';
 import { formatMonthLabel, getMonthBucketFromDeadline } from './monthBuckets';
 import { baseChunks } from './checklist-knowledge/_registry';
+import { categorizeTask } from './checklistCategories';
 
 export type SurveyAnswers = {
   weddingDate: string;
@@ -223,6 +224,7 @@ export function generatePersonalizedChecklist(
         phase: phase.phase,
         phaseEn: phase.phaseEn,
         status: 'not-started',
+        category: categorizeTask(item.text),
         deadline,
         monthBucket: bucketKey ?? undefined,
         monthBucketMs: bucketKey ? formatMonthLabel(bucketKey, 'ms') : undefined,

@@ -1,31 +1,37 @@
 'use client';
 
 import { useTheme } from '../../hooks/useTheme';
-import { MoonIcon, SunIcon } from './icons';
 
 type ThemeToggleProps = {
-  label?: string;
+  language?: 'ms' | 'en';
 };
 
-export default function ThemeToggle({ label = 'Toggle theme' }: ThemeToggleProps) {
-  const { theme, toggle, hydrated } = useTheme();
+export default function ThemeToggle({ language = 'ms' }: ThemeToggleProps) {
+  const { theme, setTheme, hydrated } = useTheme();
 
   return (
-    <button
-      type="button"
-      className="theme-toggle"
-      onClick={toggle}
-      aria-label={label}
-      title={label}
-      data-event="toggle_theme"
-    >
-      {!hydrated ? (
-        <SunIcon size={18} />
-      ) : theme === 'dark' ? (
-        <SunIcon size={18} />
-      ) : (
-        <MoonIcon size={18} />
-      )}
-    </button>
+    <div className="settings-language-row">
+      <span>{language === 'ms' ? 'Mod gelap' : 'Dark mode'}</span>
+      <div className="language-toggle compact" aria-label="Theme">
+        <button
+          type="button"
+          className={hydrated && theme === 'light' ? 'active' : ''}
+          onClick={() => setTheme('light')}
+          aria-pressed={theme === 'light'}
+          title={language === 'ms' ? 'Cahaya' : 'Light'}
+        >
+          ☀️
+        </button>
+        <button
+          type="button"
+          className={hydrated && theme === 'dark' ? 'active' : ''}
+          onClick={() => setTheme('dark')}
+          aria-pressed={theme === 'dark'}
+          title={language === 'ms' ? 'Gelap' : 'Dark'}
+        >
+          🌙
+        </button>
+      </div>
+    </div>
   );
 }

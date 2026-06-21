@@ -81,7 +81,7 @@ export default function LandingPage() {
           <Link href="#features">{/* ms */}Ciri-ciri</Link>
           <Link href="#pricing">{/* ms */}Harga</Link>
           <Link href="#faq">{/* ms */}Soalan</Link>
-          <Link href="/chat" className="landing__nav-cta">
+          <Link href="/preview" className="landing__nav-cta">
             {PLANS[1].ctaMs}
           </Link>
         </nav>
@@ -100,7 +100,7 @@ export default function LandingPage() {
             WhatsApp — semua dalam satu aplikasi mudah.
           </p>
           <div className="landing__hero-actions">
-            <Link href="/chat" className="primary-action landing__hero-primary">
+            <Link href="/preview" className="primary-action landing__hero-primary">
               {/* ms */}Cuba percuma sekarang
             </Link>
             <Link href="#pricing" className="utility-action">
@@ -252,7 +252,7 @@ export default function LandingPage() {
           Anda boleh upgrade bila-bila.
         </p>
         <div className="landing__cta-actions">
-          <Link href="/chat" className="primary-action">
+          <Link href="/preview" className="primary-action">
             {/* ms */}Cuba percuma sekarang
           </Link>
           <Link href="/checkout?plan=sehari-hari" className="utility-action">
