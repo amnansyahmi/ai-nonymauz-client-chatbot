@@ -14,6 +14,7 @@ import '../styles/ai-features.css';
 import '../styles/majlismate-theme.css';
 import '../styles/dark-sweep.css';
 import '../styles/dashboard.css';
+import '../styles/checklist.css';
 import '../styles/datepicker.css';
 
 /**

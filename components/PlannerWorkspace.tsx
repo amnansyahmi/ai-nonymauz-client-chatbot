@@ -261,6 +261,7 @@ export default function PlannerWorkspace() {
   // phase/month timeline; does not affect AI context or other panels.
   const [checklistCategoryFilter, setChecklistCategoryFilter] = useState<ChecklistCategoryId | null>(null);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
   const [isEditingChecklistTitle, setIsEditingChecklistTitle] = useState(false);
@@ -1018,7 +1019,9 @@ export default function PlannerWorkspace() {
       }
 
       if (shouldCreateChecklist) {
-        const generatedItems = checklistFromAnswer(fullAnswer);
+        // Parse the cleaned reply (action/clarify blocks removed) so machine
+        // markers like <<<MM_CLARIFY never leak in as checklist items.
+        const generatedItems = checklistFromAnswer(stripClarifyBlock(stripActionBlock(fullAnswer)));
         setChecklistItems((generatedItems.length > 0 ? generatedItems : fallbackChecklist(trimmed)).map((item) => ({ ...item, status: 'not-started' })));
         addActivity('AI generated a checklist.');
       }
@@ -2149,12 +2152,6 @@ export default function PlannerWorkspace() {
     if (due !== null && due <= 45) return { className: 'soon', label: language === 'ms' ? 'Soon' : 'Soon' };
     return { className: 'later', label: language === 'ms' ? 'Later' : 'Later' };
   };
-  const checklistStatusOptions = [
-    { value: 'all', label: copy.allItems, count: checklistItems.length },
-    { value: 'not-started', label: copy.notStarted, count: checklistItems.filter((item) => (item.status || (item.completed ? 'done' : 'not-started')) === 'not-started').length },
-    { value: 'in-progress', label: copy.inProgress, count: checklistItems.filter((item) => (item.status || (item.completed ? 'done' : 'not-started')) === 'in-progress').length },
-    { value: 'done', label: copy.doneStatus, count: completedCount }
-  ];
   const urgentChecklistCount = checklistItems.filter((item) => getChecklistPriority(item).className === 'urgent').length;
   const soonChecklistCount = checklistItems.filter((item) => getChecklistPriority(item).className === 'soon').length;
   const dueThisMonthChecklistCount = checklistItems.filter((item) => {
@@ -3041,13 +3038,13 @@ export default function PlannerWorkspace() {
           />
         </div>
       ) : activeTab === 'checklist' ? (
-        <div className="checklist-panel checklist-command-center">
-          <div className="checklist-hero">
-            <div>
-              <p className="eyebrow">{language === 'ms' ? 'Checklist planner' : 'Checklist planner'}</p>
+        <div className="checklist-panel mm-checklist">
+          <header className="mm-cl__header">
+            <div className="mm-cl__heading">
+              <span className="mm-cl__eyebrow">{language === 'ms' ? 'Checklist majlis' : 'Wedding checklist'}</span>
               {isEditingChecklistTitle ? (
                 <input
-                  className="checklist-title-input"
+                  className="mm-cl__title-input"
                   value={checklistTitleDraft}
                   onChange={(e) => setChecklistTitleDraft(e.target.value)}
                   onBlur={() => {
@@ -3067,116 +3064,101 @@ export default function PlannerWorkspace() {
                   aria-label={language === 'ms' ? 'Nama checklist' : 'Checklist name'}
                 />
               ) : (
-                <h3
-                  className="checklist-title-editable"
+                <h2
+                  className="mm-cl__title"
                   title={language === 'ms' ? 'Klik untuk tukar nama' : 'Click to rename'}
                   onClick={() => { setChecklistTitleDraft(displayChecklistTitle); setIsEditingChecklistTitle(true); }}
                 >
                   {displayChecklistTitle}
-                  <span className="checklist-title-edit-hint" aria-hidden="true">✏️</span>
-                </h3>
+                  <span className="mm-cl__title-edit" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                  </span>
+                </h2>
               )}
-              <p>
-                {language === 'ms'
-                  ? 'Ikut timeline ikut fasa — dari 6 bulan sebelum sampai hari nikah. Selesaikan setiap fasa satu per satu.'
-                  : 'Follow the phase-by-phase timeline — from 6 months out to the wedding day. Clear each phase one at a time.'}
-              </p>
             </div>
-            <div className="checklist-hero-progress">
-              {daysLeft !== null && daysLeft >= 0 ? (
-                <span className="checklist-hero-countdown">
-                  {daysLeft} {language === 'ms' ? 'hari lagi' : 'days to go'}
-                </span>
-              ) : null}
-              <strong>{scopedProgress}%</strong>
-              <span>
-                {scopedCompletedCount}/{scopedTotalCount} {copy.done}
-                {checklistCategoryFilter ? ` · ${getCategoryLabel(checklistCategoryFilter, language)}` : ''}
-              </span>
-              <div className="checklist-progress-line" aria-label={`${scopedCompletedCount} of ${scopedTotalCount} checklist items done`}>
-                <span style={{ width: `${scopedProgress}%` }} />
+            {checklistItems.length > 0 ? (
+              <div className="mm-cl__progress" aria-label={`${scopedCompletedCount} of ${scopedTotalCount} checklist items done`}>
+                <div className="mm-cl__progress-meta">
+                  <strong>{scopedProgress}%</strong>
+                  <span>
+                    {scopedCompletedCount}/{scopedTotalCount} {copy.done}
+                    {daysLeft !== null && daysLeft >= 0 ? ` · ${daysLeft} ${language === 'ms' ? 'hari lagi' : 'days left'}` : ''}
+                    {checklistCategoryFilter ? ` · ${getCategoryLabel(checklistCategoryFilter, language)}` : ''}
+                  </span>
+                </div>
+                <div className="mm-cl__bar"><span style={{ width: `${scopedProgress}%` }} /></div>
+              </div>
+            ) : null}
+          </header>
+
+          {checklistItems.length > 0 ? (
+            <div className="mm-cl__toolbar">
+              <div className="mm-cl__views" role="tablist" aria-label="Checklist views">
+                {checklistViewOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={checklistView === option.value}
+                    className={checklistView === option.value ? 'is-active' : ''}
+                    onClick={() => setChecklistView(option.value)}
+                  >
+                    {option.label}
+                    <span className="mm-cl__view-count">{option.count}</span>
+                  </button>
+                ))}
+              </div>
+              <div className="mm-cl__tools">
+                <button
+                  type="button"
+                  className={`mm-cl__add${quickAddOpen ? ' is-open' : ''}`}
+                  aria-expanded={quickAddOpen}
+                  onClick={() => setQuickAddOpen((v) => !v)}
+                >
+                  <span className="mm-cl__add-plus" aria-hidden="true">+</span>
+                  <span className="mm-cl__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
+                </button>
+                <details className="mm-cl__menu">
+                  <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+                  </summary>
+                  <div className="mm-cl__menu-pop">
+                    <button type="button" onClick={() => setSetupOpen(true)}>
+                      <span aria-hidden="true">✨</span>
+                      {checklistItems.length > 0 ? (language === 'ms' ? 'Jana semula ikut majlis' : 'Regenerate from setup') : (language === 'ms' ? 'Jana ikut majlis' : 'Generate from wedding')}
+                    </button>
+                    <button type="button" onClick={() => { setChecklistSelectMode((v) => !v); setSelectedChecklistIds(new Set()); }}>
+                      {checklistSelectMode ? (language === 'ms' ? 'Selesai pilih' : 'Done selecting') : (language === 'ms' ? 'Pilih item' : 'Select items')}
+                    </button>
+                    <hr />
+                    <button type="button" onClick={copyChecklist}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
+                    <button type="button" onClick={() => exportChecklist('txt')}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
+                    <button type="button" onClick={() => exportChecklist('json')}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
+                    <button type="button" onClick={printChecklist}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
+                  </div>
+                </details>
               </div>
             </div>
-          </div>
+          ) : null}
 
-          <div className="checklist-stat-row" aria-label="Checklist health summary">
-            <article>
-              <span>{language === 'ms' ? 'Seterusnya' : 'Next actions'}</span>
-              <strong>{scopedNextChecklistItems.length}</strong>
-              <p>{language === 'ms' ? 'perlu perhatian' : 'need attention'}</p>
-            </article>
-            <article>
-              <span>{language === 'ms' ? 'Urgent' : 'Urgent'}</span>
-              <strong>{urgentChecklistCount}</strong>
-              <p>{language === 'ms' ? 'due dekat' : 'close deadlines'}</p>
-            </article>
-            <article>
-              <span>{language === 'ms' ? 'Bulan ini' : 'This month'}</span>
-              <strong>{dueThisMonthChecklistCount}</strong>
-              <p>{language === 'ms' ? 'belum selesai' : 'still open'}</p>
-            </article>
-            <article>
-              <span>{language === 'ms' ? 'Sedang diurus' : 'In progress'}</span>
-              <strong>{checklistStatusOptions.find((option) => option.value === 'in-progress')?.count || 0}</strong>
-              <p>{language === 'ms' ? 'aktif sekarang' : 'active now'}</p>
-            </article>
-          </div>
-
-          <div className="checklist-toolbelt">
-            <div className="checklist-view-tabs" role="tablist" aria-label="Checklist views">
-              {checklistViewOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={checklistView === option.value}
-                  className={checklistView === option.value ? 'active' : ''}
-                  onClick={() => setChecklistView(option.value)}
-                >
-                  {option.label}
-                  <span>{option.count}</span>
-                </button>
-              ))}
-            </div>
-            <div className="checklist-export-actions">
-              {checklistItems.length > 0 ? (
-                <button
-                  type="button"
-                  className={`checklist-select-mode-btn${checklistSelectMode ? ' active' : ''}`}
-                  aria-pressed={checklistSelectMode}
-                  onClick={() => {
-                    setChecklistSelectMode((v) => !v);
-                    setSelectedChecklistIds(new Set());
-                  }}
-                >
-                  <svg className="checklist-select-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="2" />
-                    <path d="M8 12.5l2.5 2.5L16 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {checklistSelectMode
-                    ? (language === 'ms' ? 'Selesai pilih' : 'Done')
-                    : (language === 'ms' ? 'Pilih item' : 'Select')}
-                </button>
-              ) : null}
-              <details className="checklist-export-menu">
-                <summary aria-label={language === 'ms' ? 'Eksport checklist' : 'Export checklist'}>
-                  {language === 'ms' ? 'Eksport' : 'Export'}
-                </summary>
-                <div>
-                  <button type="button" onClick={copyChecklist} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
-                  <button type="button" onClick={() => exportChecklist('txt')} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
-                  <button type="button" onClick={() => exportChecklist('json')} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
-                  <button type="button" onClick={printChecklist} disabled={checklistItems.length === 0}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
-                </div>
-              </details>
-            </div>
-          </div>
+          {quickAddOpen && checklistItems.length > 0 ? (
+            <form className="mm-cl__quickadd" onSubmit={addChecklistItem}>
+              <input
+                autoFocus
+                value={newChecklistItem}
+                onChange={(event) => setNewChecklistItem(event.target.value)}
+                placeholder={copy.addItem}
+                aria-label="New checklist item"
+              />
+              <button type="submit" disabled={newChecklistItem.trim().length === 0}>{copy.add}</button>
+            </form>
+          ) : null}
 
           {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
-            <div className="checklist-category-filter" role="group" aria-label={language === 'ms' ? 'Tapis ikut kategori' : 'Filter by category'}>
+            <div className="mm-cl__chips" role="group" aria-label={language === 'ms' ? 'Tapis ikut kategori' : 'Filter by category'}>
               <button
                 type="button"
-                className={checklistCategoryFilter === null ? 'active' : ''}
+                className={checklistCategoryFilter === null ? 'is-active' : ''}
                 aria-pressed={checklistCategoryFilter === null}
                 onClick={() => setChecklistCategoryFilter(null)}
               >
@@ -3187,7 +3169,7 @@ export default function PlannerWorkspace() {
                 <button
                   key={chip.id}
                   type="button"
-                  className={checklistCategoryFilter === chip.id ? 'active' : ''}
+                  className={checklistCategoryFilter === chip.id ? 'is-active' : ''}
                   aria-pressed={checklistCategoryFilter === chip.id}
                   onClick={() => setChecklistCategoryFilter((current) => (current === chip.id ? null : chip.id))}
                 >
@@ -3199,34 +3181,21 @@ export default function PlannerWorkspace() {
           ) : null}
 
           {checklistSelectMode && selectedChecklistIds.size > 0 ? (
-            <div className="checklist-bulk-bar">
-              <span>
-                {selectedChecklistIds.size} {language === 'ms' ? 'dipilih' : 'selected'}
-              </span>
-              <button type="button" className="checklist-bulk-done" onClick={bulkMarkChecklistDone}>
+            <div className="mm-cl__bulk">
+              <span>{selectedChecklistIds.size} {language === 'ms' ? 'dipilih' : 'selected'}</span>
+              <button type="button" className="mm-cl__bulk-done" onClick={bulkMarkChecklistDone}>
                 {language === 'ms' ? '✓ Tandakan selesai' : '✓ Mark done'}
               </button>
-              <button type="button" className="checklist-bulk-delete" onClick={bulkRemoveChecklist}>
+              <button type="button" className="mm-cl__bulk-delete" onClick={bulkRemoveChecklist}>
                 {language === 'ms' ? 'Buang' : 'Delete'}
               </button>
             </div>
           ) : null}
 
-          <div className="checklist-template-row" aria-label="Checklist generator">
-            <span>{language === 'ms' ? 'Checklist peribadi' : 'Personalized checklist'}</span>
-            <button type="button" className="checklist-generate-btn" onClick={() => setSetupOpen(true)}>
-              <span aria-hidden="true">✨</span>
-              {checklistItems.length > 0
-                ? (language === 'ms' ? 'Jana semula ikut majlis' : 'Regenerate from setup')
-                : (language === 'ms' ? 'Jana checklist ikut majlis anda' : 'Generate from your wedding')}
-            </button>
-          </div>
-
           {loading && checklistItems.length === 0 ? <p className="typing">{copy.creating}</p> : null}
 
           {checklistItems.length > 0 ? (
-            <div className="checklist-workspace-grid">
-              <section className="checklist-main-list">
+            <div className="mm-cl__list">
                 {checklistView === 'next' ? (
                   <>
                     <div className="checklist-section-heading">
@@ -3344,86 +3313,55 @@ export default function PlannerWorkspace() {
                     )}
                   </>
                 ) : null}
-              </section>
-
-              <aside className="checklist-side-panel" aria-label="Checklist assistant">
-                <div className="checklist-side-card">
-                  <span>{language === 'ms' ? 'Cadangan AI' : 'AI suggestions'}</span>
-                  <strong>{scopedNextChecklistItems[0] ? getItemText(scopedNextChecklistItems[0]) : language === 'ms' ? 'Bina checklist pertama' : 'Create your first checklist'}</strong>
-                  <p>
-                    {scopedNextChecklistItems[0]
-                      ? (language === 'ms' ? 'Task ini paling sesuai dibuat sekarang berdasarkan deadline dan status.' : 'This is the best next task based on deadline and status.')
-                      : (language === 'ms' ? 'Jana checklist peribadi melalui wizard, atau minta AI bina ikut tarikh majlis.' : 'Generate a personalized checklist with the wizard, or ask AI to build one from your wedding date.')}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('chat');
-                      setInput(checklistNextPrompt);
-                    }}
-                  >
-                    {language === 'ms' ? 'Bantu task ini' : 'Help with this task'}
-                  </button>
-                </div>
 
                 {recommendedMissingItems.length > 0 ? (
-                  <div className="checklist-recommend-card">
-                    <span>{language === 'ms' ? 'Cadangan untuk ditambah' : 'Recommended to add'}</span>
-                    <p>
-                      {language === 'ms'
-                        ? 'Berdasarkan majlis anda, task ini biasa diperlukan tapi belum ada dalam checklist.'
-                        : 'Based on your wedding, these are commonly needed but not yet on your checklist.'}
-                    </p>
-                    <ul>
-                      {recommendedMissingItems.map((item) => (
-                        <li key={item.id}>
-                          <div className="checklist-recommend-text">
-                            <strong>{getItemText(item)}</strong>
-                            {item.phase ? <small>{getItemPhase(item)}</small> : null}
-                          </div>
-                          <button
-                            type="button"
-                            className="checklist-recommend-add"
-                            onClick={() => addRecommendedItem(item)}
-                            aria-label={language === 'ms' ? `Tambah ${getItemText(item)}` : `Add ${getItemText(item)}`}
-                          >
-                            +
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      type="button"
-                      className="checklist-recommend-ai"
-                      onClick={() => {
-                        setActiveTab('chat');
-                        setInput(
-                          language === 'ms'
-                            ? 'Bagi lagi idea task checklist yang saya mungkin terlepas untuk majlis saya'
-                            : 'Suggest more checklist tasks I might have missed for my wedding'
-                        );
-                      }}
-                    >
-                      {language === 'ms' ? 'Tanya AI untuk lebih idea' : 'Ask AI for more ideas'}
-                    </button>
-                  </div>
+                  <details className="mm-cl__recommend">
+                    <summary>
+                      <span className="mm-cl__recommend-title">{language === 'ms' ? 'Cadangan untuk ditambah' : 'Recommended to add'}</span>
+                      <span className="mm-cl__recommend-count">{recommendedMissingItems.length}</span>
+                      <span className="mm-cl__recommend-caret" aria-hidden="true" />
+                    </summary>
+                    <div className="mm-cl__recommend-body">
+                      <p>
+                        {language === 'ms'
+                          ? 'Berdasarkan majlis anda, task ini biasa diperlukan tapi belum ada dalam checklist.'
+                          : 'Based on your wedding, these are commonly needed but not yet on your checklist.'}
+                      </p>
+                      <ul>
+                        {recommendedMissingItems.map((item) => (
+                          <li key={item.id}>
+                            <div className="mm-cl__recommend-text">
+                              <strong>{getItemText(item)}</strong>
+                              {item.phase ? <small>{getItemPhase(item)}</small> : null}
+                            </div>
+                            <button
+                              type="button"
+                              className="mm-cl__recommend-add"
+                              onClick={() => addRecommendedItem(item)}
+                              aria-label={language === 'ms' ? `Tambah ${getItemText(item)}` : `Add ${getItemText(item)}`}
+                            >
+                              +
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        className="mm-cl__recommend-ai"
+                        onClick={() => {
+                          setActiveTab('chat');
+                          setInput(
+                            language === 'ms'
+                              ? 'Apa lagi tugasan penting yang saya mungkin terlepas untuk majlis saya? Cadangkan untuk saya tambah.'
+                              : 'What important tasks might I have missed for my wedding? Suggest some I can add.'
+                          );
+                        }}
+                      >
+                        {language === 'ms' ? 'Tanya AI untuk lebih idea' : 'Ask AI for more ideas'}
+                      </button>
+                    </div>
+                  </details>
                 ) : null}
-
-                <form className="checklist-form checklist-quick-add" onSubmit={addChecklistItem}>
-                  <label>
-                    <span>{language === 'ms' ? 'Tambah task cepat' : 'Quick add task'}</span>
-                    <input
-                      value={newChecklistItem}
-                      onChange={(event) => setNewChecklistItem(event.target.value)}
-                      placeholder={copy.addItem}
-                      aria-label="New checklist item"
-                    />
-                  </label>
-                  <button type="submit" disabled={newChecklistItem.trim().length === 0}>
-                    {copy.add}
-                  </button>
-                </form>
-              </aside>
             </div>
           ) : !loading ? (
             <div className="checklist-empty-modern">
