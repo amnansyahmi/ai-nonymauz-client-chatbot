@@ -1,13 +1,13 @@
-import ChatWidget from '../../components/ChatWidget';
+import PlannerWorkspace from '../../../components/PlannerWorkspace';
 
 export const metadata = {
-  title: 'Chat | AI-nonymauz Client Chatbot'
+  title: 'Chat | MajlisMate.ai'
 };
 
 export default function ChatPage() {
   return (
     <main className="embed-page">
-      <ChatWidget />
+      <PlannerWorkspace />
     </main>
   );
 }

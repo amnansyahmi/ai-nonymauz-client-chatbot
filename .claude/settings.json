@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx next *)",
+      "Bash(node -e \"const fs = require\\('fs'\\); const c = fs.readFileSync\\('components/PlannerWorkspace.tsx','utf8'\\); const lines = c.split\\('\\\\n'\\); for\\(let i=lines.length-30;i<lines.length;i++\\) console.log\\(i+1, lines[i]\\);\")",
+      "WebFetch(domain:www.malaysia.gov.my)",
+      "Bash(node -e \"const k = require\\('./data/knowledge.json'\\); console.log\\('Documents:', k.documents.length, '| Last updated:', k.lastUpdated\\)\")",
+      "Bash(npx vitest *)",
+      "PowerShell(npx tsc --noEmit 2>&1)",
+      "PowerShell(npx tsc --noEmit; Write-Output \"EXITCODE=$LASTEXITCODE\")",
+      "Bash(node -e \"const k=require\\('./data/knowledge.json'\\); console.log\\('docs:', k.documents.length\\); k.documents.slice\\(0,12\\).forEach\\(d=>console.log\\('-',d.id,'|',d.title,'|',d.category\\)\\)\")",
+      "Bash(grep -nE \"export function|return \\\\{|^  const \\\\[|^    [a-zA-Z]+,$\" components/planner/hooks/useChecklist.ts)"
+    ]
+  }
+}

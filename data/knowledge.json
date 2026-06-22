@@ -1,48 +1,186 @@
 {
-  "clientName": "DemoCare Sdn Bhd",
-  "lastUpdated": "2026-06-07",
+  "clientName": "MajlisMate.ai",
+  "lastUpdated": "2026-06-16",
   "documents": [
     {
-      "id": "company-overview",
-      "title": "Company Overview",
+      "id": "majlis-overview",
+      "title": "MajlisMate.ai Overview",
       "category": "company",
-      "content": "DemoCare Sdn Bhd is a sample SME service company. We provide customer support, product consultation, installation booking, warranty assistance, and after-sales service for customers in Malaysia. Operating hours are Monday to Friday, 9:00 AM to 6:00 PM, excluding Malaysia public holidays."
+      "content": "MajlisMate.ai is an AI wedding planning assistant for couples, families, and wedding vendors. It helps with wedding checklists, majlis timelines, guest planning, vendor preparation, budget planning, ceremony and reception ideas, appointment scheduling, and bilingual English/Malay wedding planning guidance."
     },
     {
-      "id": "contact-support",
-      "title": "Contact and Escalation",
-      "category": "support",
-      "content": "Customers can contact support at support@example.com. For urgent issues, customers should include their full name, phone number, order number, product model, issue description, and photos if relevant. Critical cases should be escalated to the support manager within 2 working hours."
+      "id": "planning-scope",
+      "title": "Wedding Planning Scope",
+      "category": "scope",
+      "content": "MajlisMate.ai should answer only wedding and event-planning topics, including nikah, sanding, reception, engagement ceremony, vendor booking, decor, catering, photography, invitation planning, guest list, RSVP, seating, budget, event timeline, task checklist, and appointment scheduling. For unrelated topics, politely say it can only help with wedding planning."
     },
     {
-      "id": "warranty-policy",
-      "title": "Warranty Policy",
-      "category": "policy",
-      "content": "Standard warranty is 12 months from invoice date. Warranty covers manufacturing defects only. Warranty does not cover misuse, accidental damage, water damage, unauthorized repair, missing proof of purchase, or damage caused by power surge. Customers must provide invoice or order number before warranty validation."
+      "id": "wedding-checklist",
+      "title": "Wedding Checklist Guidance",
+      "category": "planning",
+      "content": "A wedding checklist can include budget confirmation, guest count, venue shortlist, nikah or ceremony requirements, catering, decor, attire, photographer, videographer, makeup artist, invitation design, RSVP tracking, seating plan, transport, event timeline, payment deadlines, and final vendor confirmation."
     },
     {
-      "id": "refund-policy",
-      "title": "Refund and Return Policy",
-      "category": "policy",
-      "content": "Return requests must be submitted within 7 calendar days from delivery date. Items must be unused, in original packaging, and include all accessories. Refund processing normally takes 7 to 14 working days after approval. Shipping fees are non-refundable unless the return is caused by our mistake."
+      "id": "appointment-scheduling",
+      "title": "Appointment Scheduling",
+      "category": "calendar",
+      "content": "MajlisMate.ai can help create wedding-related appointments such as venue viewing, fitting session, food tasting, vendor meeting, photography consultation, makeup trial, family discussion, rehearsal, and final coordination meeting. Ask for date, time, vendor or task name, location, and notes if missing."
     },
     {
-      "id": "installation-booking",
-      "title": "Installation Booking SOP",
-      "category": "sop",
-      "content": "For installation booking, collect customer name, address, preferred date, preferred time slot, product model, order number, and phone number. Available time slots are morning 9 AM to 1 PM or afternoon 2 PM to 6 PM. Booking confirmation must be sent by email or WhatsApp. Rescheduling requires at least 24 hours notice."
+      "id": "budget-planning",
+      "title": "Budget Planning",
+      "category": "planning",
+      "content": "For wedding budget planning, help the couple list major categories such as venue, catering, decor, attire, photography, videography, makeup, invitation, gifts, entertainment, transport, contingency, and vendor deposits. Do not invent exact vendor prices unless the user provides them."
     },
     {
-      "id": "pricing-faq",
-      "title": "Pricing FAQ",
+      "id": "timeline-planning",
+      "title": "Wedding Timeline Planning",
+      "category": "planning",
+      "content": "A wedding timeline should include preparation, vendor arrival, makeup and attire, family photos, ceremony or nikah, guest arrival, reception entrance, meal service, speeches, cake cutting, photography sessions, vendor teardown, and final payment or handover checks."
+    },
+    {
+      "id": "vendor-faq",
+      "title": "Vendor FAQ",
       "category": "faq",
-      "content": "The chatbot should not invent prices. If the customer asks for pricing and the price is not listed in the knowledge base, ask the customer to contact sales or provide their requirements so the sales team can quote accurately."
+      "content": "When helping with vendors, suggest questions the couple should ask, such as availability, package inclusions, payment schedule, cancellation policy, setup timing, overtime fee, portfolio examples, venue restrictions, backup plans, and contact person on the event day."
     },
     {
-      "id": "human-handover",
-      "title": "Human Handover Rules",
-      "category": "sop",
-      "content": "Handover to a human when the customer is angry, asks for legal action, reports safety risk, requests refund approval, needs a custom quotation, provides sensitive personal data, or asks for something not covered by the knowledge base. The assistant should be polite, summarize the case, and ask for contact details if needed."
+      "id": "boundaries",
+      "title": "Advice Boundaries",
+      "category": "policy",
+      "content": "MajlisMate.ai can provide planning guidance, templates, checklists, and suggested questions. It should not provide legal, medical, financial, religious rulings, or binding contract advice. For those topics, suggest consulting the relevant professional or authority."
+    },
+    {
+      "id": "prosedur-perkahwinan-islam-malaysia",
+      "title": "Prosedur Perkahwinan Islam Malaysia (Official Government Procedure)",
+      "category": "legal-procedure",
+      "content": "Source: Malaysia.gov.my (official government portal, last updated March 2026). The official Islamic marriage procedure in Malaysia for Muslim couples has three mandatory steps:\n\nStep 1 — Kursus Pra-Perkahwinan Islam (Pre-Marriage Course): Wajib dihadiri oleh bakal pengantin (mandatory for all prospective spouses). Some exemptions apply based on applicant status and requirements of each state Islamic department. Application and registration is done through the SPPIM online portal at sppim.gov.my. The course covers rights and responsibilities in marriage, family law, and Islamic marriage guidance.\n\nStep 2 — Permohonan Kebenaran Berkahwin (Application for Marriage Permission): Couples must apply for an official marriage permission letter (surat kebenaran berkahwin) either online via the SPPIM portal or in person at the state Pejabat Agama Islam (Islamic Religious Office). Each state in Malaysia has different procedures, forms, and requirements — couples must check with their respective state Islamic department. The permission letter is valid for 90 days from the date of issuance (90 hari dari tarikh dikeluarkan). All required supporting documents must be submitted and approved before the permission is granted.\n\nStep 3 — Akad Nikah (Marriage Solemnization): The nikah ceremony is conducted by an authorized marriage officer (jurunikah bertauliah) appointed by the state Islamic authority, based on the marriage permission that was obtained. After the ceremony is completed, the couple receives the marriage certificate (sijil nikah) from the jurunikah or from the Pejabat Agama Islam.\n\nImportant notes: Procedures and fees differ by state. Couples should contact their respective Pejabat Agama Islam Daerah (PAID) early. For enquiries, contact Jabatan Digital Negara (JDN) at 603-8000 8000 or mygovernment@malaysia.gov.my. Always refer to the official SPPIM portal (sppim.gov.my) for the latest forms and updates."
+    },
+    {
+      "id": "sppim-kursus-pra-kahwin",
+      "title": "SPPIM — Kursus Pra-Perkahwinan dan Pendaftaran Nikah Online",
+      "category": "legal-procedure",
+      "content": "SPPIM (Sistem Pengurusan Perkahwinan Islam Malaysia) is the official online system for Malaysian Islamic marriage administration at sppim.gov.my. Through SPPIM, couples can: (1) register and attend the mandatory Kursus Pra-Perkahwinan Islam online; (2) apply for the Surat Kebenaran Berkahwin (marriage permission) online; (3) track application status. The Kursus Pra-Perkahwinan Islam is a government-mandated course that all Muslim couples in Malaysia must complete before getting married. Exemptions may apply for widows, widowers, or divorcees depending on state rules. The kebenaran berkahwin (marriage permission) obtained via SPPIM is valid for 90 days. Couples should complete the kursus and apply for permission at least 3 to 6 months before their intended nikah date to allow sufficient processing time."
+    },
+    {
+      "id": "nikah-dokumen-keperluan",
+      "title": "Dokumen Diperlukan untuk Nikah Islam Malaysia",
+      "category": "legal-procedure",
+      "content": "For Islamic marriage registration in Malaysia, typical required documents include: (1) MyKad (identity card) for both bride and groom; (2) Birth certificate (salinan sijil kelahiran); (3) Certificate of completion of Kursus Pra-Perkahwinan Islam (sijil kursus); (4) Surat Kebenaran Berkahwin from the state Pejabat Agama; (5) If previously married: divorce certificate (sijil cerai) or spouse's death certificate (sijil kematian); (6) For wali (guardian) of bride: wali's MyKad; (7) For cases requiring wali hakim: supporting documents as required by the Pejabat Agama. Requirements and exact document lists differ by state — always verify with the relevant state Jabatan Agama Islam (JAI) or Majlis Agama Islam Negeri (MAIN). For cross-state marriages (merentas negeri), additional permissions may be needed from both states."
+    },
+    {
+      "id": "vendor-pricing-guide",
+      "title": "Vendor Pricing Ranges (Malaysia 2025-2026)",
+      "category": "pricing",
+      "content": "Typical Malaysian wedding vendor pricing ranges (actual prices vary by location, season, and package): Venue rental: RM2,000-RM15,000+ depending on hotel, hall, or restaurant. Catering per pax: RM30-RM80 for standard, RM80-RM200 for premium. Photography half-day: RM1,500-RM4,000, full-day RM3,000-RM8,000. Videography: RM2,000-RM6,000. MUA (makeup artist): RM500-RM2,500. Pelamin/decor: RM2,000-RM10,000. Baju pengantin rental: RM500-RM3,000. DJ/entertainment: RM800-RM3,000. MC: RM500-RM2,000. Always get written quotations and compare at least 3 vendors per category."
+    },
+    {
+      "id": "adat-perkahwinan-melayu",
+      "title": "Adat Perkahwinan Melayu — Common Customs and Differences",
+      "category": "cultural",
+      "content": "Malay wedding customs (adat) vary significantly across Malaysian states. Common elements include: merisik (introductory visit by groom's family), meminang (formal proposal), bertunang (engagement), hantaran (gift exchange between families), akad nikah (solemnisation), and bersanding (reception). Adat Perpatih (Negeri Sembilan) follows matrilineal traditions with 'anak berpeluk' and 'berinai'. Adat Temenggung (most other states) follows patrilineal customs. Hantaran (duit hantaran/dowry) amounts vary: Johor RM300-RM1,000, Kelantan RM1,000-RM7,000, Selangor RM500-RM3,000. Always discuss hantaran expectations with both families early."
+    },
+    {
+      "id": "budget-breakdown-guide",
+      "title": "Budget Breakdown by Wedding Size",
+      "category": "pricing",
+      "content": "Suggested budget allocation for Malaysian weddings: For 50-100 guests (budget RM15,000-RM30,000): venue 25%, catering 30%, photography 12%, attire 10%, decor 10%, miscellaneous 13%. For 100-200 guests (budget RM30,000-RM60,000): venue 25%, catering 30%, photography 10%, attire 8%, decor 12%, entertainment 5%, miscellaneous 10%. For 200-500 guests (budget RM60,000-RM150,000): venue 20%, catering 30%, photography 8%, attire 7%, decor 15%, entertainment 8%, coordination 5%, miscellaneous 7%. Always keep 5-10% contingency for unexpected costs."
+    },
+    {
+      "id": "catering-guide",
+      "title": "Wedding Catering Guide — Menu, Tasting, and Logistics",
+      "category": "vendor",
+      "content": "Wedding catering tips for Malaysian weddings: (1) Book food tasting 3-6 months before the wedding. (2) Standard Malay wedding buffet includes 4-6 lauk (dishes), rice, drinks, and dessert. Premium includes 8-12 lauk with live cooking stations. (3) Confirm headcount 1 week before — most caterers require minimum 48 hours notice for changes. (4) Ask about: food waste handling, leftover packaging for guests, children's portions, VIP table special menu, dietary accommodation (vegetarian/halal certification). (5) Common add-ons: welcome drinks (RM3-8/pax), live Satay station (RM500-1,500), ice cream station (RM300-800)."
+    },
+    {
+      "id": "photography-guide",
+      "title": "Wedding Photography — What to Ask and Expect",
+      "category": "vendor",
+      "content": "Wedding photography guide: (1) Ask about: hours of coverage, number of photographers, turnaround time (typically 2-8 weeks), deliverables (digital files, prints, album), editing style (light/bright vs moody/warm), backup photographer policy. (2) Popular styles in Malaysia: editorial (magazine-style), documentary (candid storytelling), traditional (posed family shots). (3) Must-have shot list: getting ready, bridal attire details, family portraits, akad nikah moment, bersanding entrance, candid guest reactions, vendor group shot. (4) Drone photography adds RM500-1,500. (5) Same-day edit (SDE) video: RM1,000-3,000 additional."
+    },
+    {
+      "id": "rsvp-management",
+      "title": "RSVP and Guest List Management",
+      "category": "planning",
+      "content": "RSVP management tips: (1) Send invitations 4-6 weeks before the wedding for local guests, 8-12 weeks for outstation guests. (2) Set RSVP deadline 1-2 weeks before final headcount deadline. (3) Track responses in groups: bride's family, groom's family, bride's friends, groom's friends, colleagues. (4) Typical no-show rate in Malaysia: 10-20% of confirmed guests. (5) Over-invite by 10-15% if expecting declines. (6) WhatsApp follow-up is common and acceptable. (7) For destination/outstation weddings, ask about accommodation needs early."
+    },
+    {
+      "id": "pelamin-guide",
+      "title": "Pelamin (Wedding Dais) — Styles and Budget",
+      "category": "vendor",
+      "content": "Pelamin (wedding dais) guide: (1) Types: minimalis/modern (clean lines, single color), tradisional (full floral, warm tones), grand/luxury (multi-tiered, crystal, fresh flowers). (2) Price range: RM1,500-3,000 (simple fabric), RM3,000-6,000 (moderate decor), RM6,000-15,000+ (premium with fresh flowers). (3) Includes: pelamin backdrop, pelamin seat/sofa, hand bouquet, bunga manggar, table decor for VIP. (4) Fresh flowers add 30-50% to cost vs artificial. (5) Book 3-6 months ahead for popular decorators. (6) Ask about: setup/teardown time, venue restrictions on fixtures, weather contingency for outdoor pelamin."
+    },
+    {
+      "id": "transport-logistics",
+      "title": "Wedding Day Transport and Logistics",
+      "category": "planning",
+      "content": "Wedding transport tips: (1) Bridal car rental: RM300-800 for standard sedan, RM800-2,000 for luxury (Mercedes/BMW), RM1,500-4,000 for premium (Rolls Royce/vintage). (2) Decor on car: RM100-300. (3) Transport for outstation family: consider chartering a van (RM500-1,000/day). (4) Parking arrangements at venue: confirm with venue management, assign parking volunteers for 100+ pax weddings. (5) E-hailing coordination for guests: share venue pin via WhatsApp group. (6) For multi-location weddings (nikah at masjid, sanding at hall): allow 30-60 min buffer between venues."
+    },
+    {
+      "id": "hantaran-guide",
+      "title": "Hantaran (Gift Exchange) — Customs and Ideas",
+      "category": "cultural",
+      "content": "Hantaran (gift exchange between families) guide: (1) Traditional hantaran items: sirih junjung, bunga telur, kuih-muih, buah-buahan, pakaian, minyak wangi. (2) Modern hantaran: branded items, electronics, personalized gifts, experience vouchers. (3) Number of hantaran trays: typically odd numbers (7, 9, 11, 13) — varies by family preference. (4) Duit hantaran (monetary dowry): amount should be agreed between both families during merisik/meminang. (5) Hantaran presentation: use 'talam' (tray) or modern boxes, decorate with ribbons and flowers. (6) Return hantaran (balasan): the bride's family returns a portion or equivalent value."
+    },
+    {
+      "id": "wedding-entertainment",
+      "title": "Wedding Entertainment Options",
+      "category": "vendor",
+      "content": "Entertainment options for Malaysian weddings: (1) DJ: RM800-2,500 — provides sound system, playlist, and MC duties. (2) Live band: RM2,000-6,000 — 3-5 piece band for reception ambiance. (3) Kompang group: RM500-1,500 — traditional drummers for entrance ceremony. (4) Silat表演: RM300-800 — cultural martial arts performance. (5) Photo booth: RM500-1,500 — props, instant prints, digital copies. (6) LED screen rental: RM800-2,000 — for photo/video montage. (7) Karaoke setup: RM300-600 — for after-party. Match entertainment to wedding theme and budget."
+    },
+    {
+      "id": "non-muslim-wedding",
+      "title": "Non-Muslim Wedding Guidelines (Buddhist, Hindu, Christian)",
+      "category": "cultural",
+      "content": "Non-Muslim wedding considerations in Malaysia: (1) Buddhist: may include tea ceremony (minum teh), solemnisation at temple or home, vegetarian meal option. (2) Hindu: typically 3-day celebration (Mehndi, Sangeet, wedding), temple ceremony with fire rituals, elaborate attire. (3) Christian: church ceremony with pastor, white dress tradition, reception at hotel/hall. (4) Civil ceremony: can be done at JPN office, minimal documentation (IC, passport, birth certificate, single status declaration). (5) Multi-faith weddings: coordinate timing with both religious authorities, consider separate ceremonies. (6) All weddings in Malaysia must comply with respective religious/regional requirements."
+    },
+    {
+      "id": "wedding-mistakes-common",
+      "title": "Common Wedding Planning Mistakes to Avoid",
+      "category": "planning",
+      "content": "Common wedding planning mistakes in Malaysia: (1) Not booking popular vendors early — photographers and MUA book up 6-12 months ahead. (2) Underestimating catering costs — always add 10-15% buffer for unexpected guests. (3) Forgetting contingency budget — keep 5-10% for last-minute needs. (4) Over-inviting — larger guest count = higher cost per head. (5) Not confirming vendor details in writing — always get contracts. (6) Ignoring weather for outdoor weddings — have a backup plan (canopy/tent). (7) Rushing the RSVP process — start tracking 4-6 weeks before. (8) Not assigning day-of coordinator — assign someone to manage vendor arrivals and schedule."
+    },
+    {
+      "id": "seating-arrangement",
+      "title": "Wedding Seating Plan and Table Arrangement",
+      "category": "planning",
+      "content": "Seating plan guidance for Malaysian weddings: (1) VIP table (meja pengantin): bride and groom, parents, grandparents, tok kadi, best man/mak andam. (2) Family tables: separate sections for bride's and groom's families. (3) Standard table: 10 pax per round table (hotel style), 8-12 pax for rectangular. (4) Common groupings: family, university friends, work colleagues, neighborhood. (5) Seating chart display: print alphabetically by guest name with table number. (6) Consider: elderly guests near entrance, children's table separate, VIPs near stage. (7) For buffet style: arrange tables to avoid long queues, multiple buffet stations for 200+ guests."
+    },
+    {
+      "id": "wedding-day-timeline",
+      "title": "Typical Wedding Day Timeline (Sanding/Reception)",
+      "category": "planning",
+      "content": "Typical Malaysian sanding/reception timeline: 7:00AM — Venue setup begins, vendor arrivals. 9:00AM — Bridal team arrives for makeup (MUA starts). 12:00PM — Family photos (before guests arrive). 1:00PM — VIP guests arrive, welcome drinks. 1:30PM — Bersanding entrance (akad-style or walking entrance). 2:00PM — Speeches and ceremonies (tepung tawar if applicable). 2:30PM — Buffet opens, guests eat. 3:00PM — Photo session with guests (table by table). 4:00PM — Cake cutting, bouquet toss. 4:30PM — Thank you speech, door gifts distribution. 5:00PM — Guests depart, vendor teardown. Adjust timing for evening receptions (start 6PM-7PM)."
+    },
+    {
+      "id": "wedding-attire-guide",
+      "title": "Wedding Attire — Baju Pengantin Options",
+      "category": "vendor",
+      "content": "Wedding attire guide for Malaysian weddings: (1) Baju Melayu pengantin: traditional with samping, tanjak/tengkolok, songkok. (2) Baju kurung pengantin: classic Malay bridal wear with embroidery. (3) Baju kebaya: fitted, elegant, popular for sanding. (4) Rental vs custom: rental RM500-3,000, custom RM1,500-8,000+. (5) Fitting schedule: first fitting 3-6 months before, final fitting 2-4 weeks before. (6) Accessories:pendingant, selendang, kasut/butas, perhiasan. (7) Multiple outfit changes: common for sanding (2-3 looks — nikah outfit, sanding outfit, casual send-off). (8) Book early for popular designers — some have 6-month waiting lists."
+    },
+    {
+      "id": "insurance-wedding",
+      "title": "Wedding Insurance and Vendor Payment Protection",
+      "category": "planning",
+      "content": "Wedding payment protection tips: (1) Pay deposits (30-50%) only after signing a written contract/agreement. (2) Keep all receipts and payment records. (3) Final payment should be made after service delivery, not before. (4) For large amounts (RM5,000+), consider using bank transfer instead of cash for traceability. (5) Wedding insurance (available from some Malaysian insurers): covers vendor no-shows, venue issues, extreme weather — typically RM200-500 for basic coverage. (6) Cancellation policy: always check vendor's cancellation terms before booking. (7) If vendor goes bankrupt before the wedding, document all payments and report to KPDN (consumer protection)."
+    },
+    {
+      "id": "multi-cultural-wedding",
+      "title": "Multi-Cultural and Fusion Wedding Planning",
+      "category": "cultural",
+      "content": "Planning a multi-cultural or fusion wedding in Malaysia: (1) Common combinations: Malay-Chinese, Malay-Indian, Chinese-Indian. (2) Key considerations: separate solemnisation ceremonies for different religions, coordinating two families' customs, bilingual MC (BM + English or dialect). (3) Menu: offer variety to accommodate different dietary requirements (halal section, vegetarian section). (4) Attire: plan for outfit changes to honor both cultures. (5) Timeline: may need 2 separate events or one extended event. (6) Communication: brief both families on each other's customs to avoid misunderstandings. (7) Respect both families' wishes — compromise is key."
+    },
+    {
+      "id": "post-wedding-tasks",
+      "title": "Post-Wedding Tasks and Follow-ups",
+      "category": "planning",
+      "content": "Post-wedding task list: (1) Within 7 days: settle remaining vendor payments, return rented items (baju, pelamin, equipment). (2) Within 2 weeks: collect photos/videos from photographer/videographer (confirm timeline). (3) Within 1 month: update IC status at JPN (for Muslim couples — bring sijil nikah), update bank/insurance records. (4) Within 3 months: send thank-you cards/gifts to helpers and key vendors. (5) Backup all wedding photos to cloud storage. (6) Write vendor reviews (helps other couples). (7) Financial reconciliation: compare actual spending vs budget, document for future reference."
+    },
+    {
+      "id": "wedding-glossary",
+      "title": "Malay Wedding Terms Glossary",
+      "category": "reference",
+      "content": "Malay wedding terminology: Merisik — introductory visit by groom's family to bride's family. Meminang — formal marriage proposal. Bertunang — engagement ceremony. Hantaran — gift exchange and dowry. Mas kahwin — bride's mahr/dowry (mandatory in Islam). Akad nikah — marriage solemnisation ceremony. Bersanding — wedding reception/sitting-in-state ceremony. Tepung tawar — blessing ceremony with flour and water. Inai — henna application ceremony. Kompang — traditional hand drum ensemble. Cucuk sanggul — hair pinning ceremony. Mandi bunga — floral bath pre-wedding ritual. Kalung bemban — garland exchange. Sirih junjung — betel leaf arrangement gift."
     }
   ]
 }

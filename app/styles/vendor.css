@@ -1,0 +1,270 @@
+/* =============================================================
+ * Vendor page — minimalist redesign
+ * header → filter toolbar → vendor card grid.
+ * Themed via --mm-* tokens (light/dark). Loaded last to win.
+ * ============================================================= */
+
+.mm-vendor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mm-vendor > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ---- Header ------------------------------------------------- */
+.mm-vd__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mm-vd__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mm-vd__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-text-soft);
+}
+
+.mm-vd__title {
+  margin: 0;
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--mm-text);
+}
+
+.mm-vd__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mm-vd__stats span {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  color: var(--mm-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mm-vd__stats .is-compare {
+  background: var(--mm-accent-soft);
+  color: var(--mm-accent-strong);
+}
+
+/* ---- Filter toolbar ---------------------------------------- */
+.mm-vd__filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mm-vd__filter select {
+  min-height: 40px;
+  padding: 0 32px 0 13px;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  background: var(--mm-surface);
+  color: var(--mm-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mm-vd__filter select:focus {
+  outline: none;
+  border-color: var(--mm-accent);
+  box-shadow: var(--mm-focus);
+}
+
+.mm-vd__count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--mm-text-muted);
+}
+
+.mm-vd__maps {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 15px;
+  border: 1px solid var(--mm-border);
+  border-radius: 999px;
+  background: var(--mm-surface);
+  color: var(--mm-text);
+  font-size: 0.83rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mm-vd__maps:hover {
+  background: var(--mm-surface-subtle);
+  border-color: var(--mm-border-strong);
+}
+
+/* ---- Vendor card grid -------------------------------------- */
+.mm-vendor .vendor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.mm-vendor .vendor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: var(--mm-radius-card) !important;
+  background: var(--mm-surface) !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mm-vendor .vendor-card:hover {
+  border-color: var(--mm-border-strong) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--mm-shadow-soft);
+}
+
+.mm-vendor .vendor-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mm-vendor .vendor-top strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+.mm-vendor .vendor-top span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--mm-text-muted);
+}
+
+.mm-vendor .vendor-rating {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--mm-accent-soft);
+  color: var(--mm-accent-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.mm-vendor .vendor-card > p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--mm-text-muted);
+}
+
+.mm-vendor .vendor-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.8rem;
+  color: var(--mm-text-soft);
+}
+
+/* ---- Card actions (trimmed, standardized) ------------------ */
+.mm-vendor .mm-vd__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.mm-vendor .mm-vd__actions button {
+  min-height: 0 !important;
+  padding: 7px 13px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.8rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-vendor .mm-vd__actions button:hover {
+  border-color: var(--mm-border-strong) !important;
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-vendor .mm-vd__actions button.primary {
+  border-color: var(--mm-brand) !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand) !important;
+}
+
+.mm-vendor .mm-vd__actions button.is-saved {
+  border-color: var(--mm-accent) !important;
+  background: var(--mm-accent-soft) !important;
+  color: var(--mm-accent-strong) !important;
+}
+
+/* ---- Import button (filter) -------------------------------- */
+.mm-vendor .mm-vd__import {
+  min-height: 40px !important;
+  padding: 0 15px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.83rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-vendor .mm-vd__import:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed;
+}
+
+/* ---- Responsive -------------------------------------------- */
+@media (max-width: 720px) {
+  .mm-vd__header {
+    align-items: flex-start;
+  }
+  .mm-vd__filter select {
+    flex: 1 1 calc(50% - 4px);
+  }
+  .mm-vd__maps {
+    margin-left: 0;
+    flex: 1;
+    justify-content: center;
+  }
+  .mm-vendor .vendor-grid {
+    grid-template-columns: 1fr;
+  }
+}

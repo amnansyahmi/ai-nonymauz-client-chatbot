@@ -1,0 +1,639 @@
+/* =============================================================
+ * Budget page — minimalist single-column redesign
+ * header → stat strip → toolbar → list → collapsible insights.
+ * Themed via --mm-* tokens (light/dark). Loaded last to win.
+ * ============================================================= */
+
+.mm-budget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mm-budget > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ---- Header ------------------------------------------------- */
+.mm-bg__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.mm-bg__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.mm-bg__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-text-soft);
+}
+
+.mm-bg__amount {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--mm-text);
+}
+
+.mm-bg__amount em {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--mm-text-muted);
+}
+
+.mm-bg__health {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  color: var(--mm-text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.mm-bg__health.is-warn {
+  background: color-mix(in srgb, var(--mm-red) 14%, transparent);
+  color: var(--mm-red);
+}
+
+.mm-bg__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 0 1 300px;
+  min-width: 200px;
+}
+
+.mm-bg__progress-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.mm-bg__progress-meta strong {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--mm-text);
+}
+
+.mm-bg__progress-meta span {
+  font-size: 0.82rem;
+  color: var(--mm-text-muted);
+}
+
+.mm-bg__bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  overflow: hidden;
+}
+
+.mm-bg__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--mm-green), color-mix(in srgb, var(--mm-green) 70%, #000));
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Stat strip -------------------------------------------- */
+.mm-bg__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.mm-bg__stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card);
+  background: var(--mm-surface);
+  min-width: 0;
+}
+
+.mm-bg__stats span {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mm-text-soft);
+}
+
+.mm-bg__stats strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--mm-text);
+}
+
+/* ---- Toolbar ----------------------------------------------- */
+.mm-bg__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mm-bg__views {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  flex-wrap: wrap;
+}
+
+.mm-bg__view-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--mm-text-soft);
+}
+
+.mm-bg__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.mm-bg__add-plus {
+  font-size: 1rem;
+  line-height: 0;
+}
+
+.mm-bg__menu {
+  position: relative;
+}
+
+.mm-bg__menu summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--mm-border);
+  border-radius: 50%;
+  background: var(--mm-surface);
+  color: var(--mm-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mm-bg__menu summary::-webkit-details-marker { display: none; }
+
+.mm-bg__menu summary:hover,
+.mm-bg__menu[open] summary {
+  background: var(--mm-surface-muted);
+  border-color: var(--mm-border-strong);
+  color: var(--mm-text);
+}
+
+.mm-bg__menu-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--mm-border);
+  border-radius: 12px;
+  background: var(--mm-surface);
+  box-shadow: 0 16px 40px rgba(36, 28, 24, 0.18);
+}
+
+/* ---- Add form ---------------------------------------------- */
+.mm-bg__addform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card);
+  background: var(--mm-surface);
+  animation: mm-bg-slide 0.18s ease both;
+}
+
+@keyframes mm-bg-slide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mm-bg__addform-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.mm-bg__addform input {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-bg);
+  color: var(--mm-text);
+  font-size: 0.92rem;
+}
+
+.mm-bg__addform input:focus {
+  outline: none;
+  border-color: var(--mm-accent);
+  box-shadow: var(--mm-focus);
+}
+
+/* ---- List spacing (rows keep their existing styling) ------- */
+.mm-bg__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Collapsible insight panels ---------------------------- */
+.mm-bg__panel {
+  border: 1px solid var(--mm-border);
+  border-radius: 14px;
+  background: var(--mm-surface);
+  overflow: hidden;
+}
+
+.mm-bg__panel summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.mm-bg__panel summary::-webkit-details-marker { display: none; }
+
+.mm-bg__panel-title {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--mm-text);
+}
+
+.mm-bg__panel-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--mm-accent-soft);
+  color: var(--mm-accent-strong);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.mm-bg__panel-caret {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--mm-text-soft);
+  border-bottom: 2px solid var(--mm-text-soft);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.mm-bg__panel[open] .mm-bg__panel-caret {
+  transform: rotate(225deg);
+}
+
+.mm-bg__panel-body {
+  padding: 0 16px 16px;
+}
+
+.mm-bg__panel-body > p {
+  margin: 0 0 12px;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--mm-text-muted);
+}
+
+.mm-bg__panel-lead {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+.mm-bg__alloc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.mm-bg__alloc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-surface-subtle);
+}
+
+.mm-bg__alloc-row span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.mm-bg__alloc-row strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--mm-text);
+}
+
+.mm-bg__alloc-row small {
+  font-size: 0.74rem;
+  color: var(--mm-text-soft);
+}
+
+.mm-bg__alloc-row em {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--mm-accent-strong);
+  white-space: nowrap;
+}
+
+.mm-bg__suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Responsive -------------------------------------------- */
+@media (max-width: 720px) {
+  .mm-bg__header {
+    align-items: flex-start;
+  }
+  .mm-bg__progress {
+    flex-basis: 100%;
+  }
+  .mm-bg__stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mm-bg__views {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+  .mm-bg__add-label {
+    display: none;
+  }
+  .mm-budget .mm-bg__add {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    justify-content: center;
+  }
+  .mm-bg__add-plus {
+    font-size: 1.3rem;
+  }
+  .mm-bg__addform-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-bg__addform { animation: none; }
+}
+
+/* =============================================================
+ * Override the global `.planner-panel button { …!important }`
+ * theme for the redesigned controls (scoped + !important).
+ * ============================================================= */
+.mm-budget .mm-bg__views button {
+  min-height: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__views button.is-active {
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: 0 1px 3px rgba(36, 28, 24, 0.12) !important;
+}
+
+.mm-budget .mm-bg__views button.is-active .mm-bg__view-count {
+  color: var(--mm-accent-strong) !important;
+}
+
+.mm-budget .mm-bg__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0 !important;
+  padding: 8px 15px !important;
+  border: 1px solid var(--mm-brand) !important;
+  border-radius: 999px !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand) !important;
+  box-shadow: none !important;
+  font-size: 0.84rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__add.is-open {
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+.mm-budget .mm-bg__menu-pop button {
+  min-height: 0 !important;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem;
+  font-weight: 550 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__menu-pop button:hover {
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-budget .mm-bg__menu-pop button:disabled {
+  opacity: 0.45 !important;
+}
+
+.mm-budget .mm-bg__addform > button {
+  min-height: 0 !important;
+  padding: 11px !important;
+  border: 1px solid var(--mm-brand) !important;
+  border-radius: 10px !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand) !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__addform > button:disabled {
+  opacity: 0.45 !important;
+}
+
+.mm-budget .mm-bg__panel-cta {
+  min-height: 0 !important;
+  width: 100%;
+  padding: 10px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 10px !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-accent-strong) !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__panel-cta:hover {
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-budget .mm-bg__suggestions button {
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 13px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 10px !important;
+  background: var(--mm-surface-subtle) !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mm-budget .mm-bg__suggestions button:hover {
+  border-color: var(--mm-border-strong) !important;
+}
+
+.mm-budget .mm-bg__suggestions button span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.mm-budget .mm-bg__suggestions button strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.mm-budget .mm-bg__suggestions button small {
+  font-size: 0.74rem;
+  color: var(--mm-text-soft);
+}
+
+.mm-budget .mm-bg__suggestions button em {
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--mm-accent-strong);
+  white-space: nowrap;
+}
+
+/* One clean card per budget row (was reading as two stacked cards). */
+.mm-budget .budget-row-card {
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 14px !important;
+  background: var(--mm-surface) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.mm-budget .budget-row-summary {
+  background: transparent !important;
+}
+
+.mm-budget .budget-row-summary:hover,
+.mm-budget .budget-row-summary:focus-visible {
+  background: var(--mm-surface-subtle) !important;
+}
+
+/* Pay actions live inside the expanded edit panel now. */
+.mm-bg__quickpay {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mm-budget .mm-bg__pay-deposit,
+.mm-budget .mm-bg__pay-full {
+  min-height: 0 !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--mm-border) !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.82rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__pay-deposit:hover {
+  border-color: var(--mm-border-strong) !important;
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-budget .mm-bg__pay-full {
+  border-color: var(--mm-green) !important;
+  background: var(--mm-green) !important;
+  color: #fff !important;
+}

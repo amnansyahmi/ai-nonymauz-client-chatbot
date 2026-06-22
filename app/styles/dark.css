@@ -1,0 +1,551 @@
+/* Dark mode palette. Activated when <html data-theme="dark"> is set. */
+:root[data-theme='dark'] {
+  --bg: #15110d;
+  --bg-2: #1d1814;
+  --ink: #f1ece3;
+  --muted: #b3a899;
+  --accent: #e2967a;
+  --accent-dark: #c27a63;
+  --card: #221b15;
+  --border: #342b21;
+  --success: #30d158;
+  --info: #64d2ff;
+  --warning: #ffd60a;
+  --warning-bg: #2a2210;
+  --success-bg: #0f2a1a;
+  --info-bg: #0f2030;
+  --surface-warm: #1d1814;
+  --shadow: 0 28px 70px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root[data-theme='dark'] body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .app-loading,
+:root[data-theme='dark'] .app-error,
+:root[data-theme='dark'] .app-not-found,
+:root[data-theme='dark'] .chat-loading {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .skeleton-bar {
+  background: linear-gradient(90deg, var(--bg-2) 0%, var(--card) 50%, var(--bg-2) 100%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme='dark'] .skeleton-message {
+  background: linear-gradient(90deg, var(--bg-2) 0%, var(--card) 50%, var(--bg-2) 100%);
+  background-size: 200% 100%;
+}
+
+:root[data-theme='dark'] .skeleton-message--user {
+  background: linear-gradient(
+    90deg,
+    var(--accent-dark) 0%,
+    var(--accent) 50%,
+    var(--accent-dark) 100%
+  );
+  background-size: 200% 100%;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK MODE BUTTON FIXES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Base button - visible on dark backgrounds */
+:root[data-theme='dark'] button,
+:root[data-theme='dark'] .btn {
+  color: var(--ink);
+}
+
+/* Primary buttons (filled) - accent color background */
+:root[data-theme='dark'] .btn-primary,
+:root[data-theme='dark'] .hero-actions a,
+:root[data-theme='dark'] .chat-form button,
+:root[data-theme='dark'] .checklist-form button,
+:root[data-theme='dark'] .calendar-actions .primary-action,
+:root[data-theme='dark'] .sidebar-new-chat {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111113;
+}
+
+:root[data-theme='dark'] .btn-primary:hover,
+:root[data-theme='dark'] .hero-actions a:hover,
+:root[data-theme='dark'] .chat-form button:hover,
+:root[data-theme='dark'] .sidebar-new-chat:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+/* Ghost / outline buttons */
+:root[data-theme='dark'] .btn-ghost,
+:root[data-theme='dark'] .hero-actions .secondary,
+:root[data-theme='dark'] .calendar-actions button,
+:root[data-theme='dark'] .appointment-item button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .btn-ghost:hover,
+:root[data-theme='dark'] .hero-actions .secondary:hover,
+:root[data-theme='dark'] .calendar-actions button:hover,
+:root[data-theme='dark'] .appointment-item button:hover {
+  background: var(--bg-2);
+  border-color: var(--muted);
+}
+
+/* Header action buttons (top bar) */
+:root[data-theme='dark'] .header-actions button,
+:root[data-theme='dark'] .tool-actions button,
+:root[data-theme='dark'] .appointment-form button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .header-actions button:hover,
+:root[data-theme='dark'] .tool-actions button:hover,
+:root[data-theme='dark'] .appointment-form button:hover {
+  background: var(--bg-2);
+  border-color: var(--muted);
+}
+
+/* Sidebar buttons */
+:root[data-theme='dark'] .sidebar-header button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .sidebar-header button:hover {
+  background: var(--bg-2);
+}
+
+/* Language & theme toggle */
+:root[data-theme='dark'] .language-toggle {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .language-toggle button {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .language-toggle button.active {
+  background: var(--accent);
+  color: #111113;
+  box-shadow: none;
+}
+
+/* Filter chips, pills, status badges */
+:root[data-theme='dark'] .filter-chip,
+:root[data-theme='dark'] .status-pill,
+:root[data-theme='dark'] .priority-chip,
+:root[data-theme='dark'] .planner-pill,
+:root[data-theme='dark'] .quick-pill {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .filter-chip:hover,
+:root[data-theme='dark'] .status-pill:hover,
+:root[data-theme='dark'] .priority-chip:hover {
+  background: var(--bg-2);
+  border-color: var(--muted);
+}
+
+/* Tab buttons */
+:root[data-theme='dark'] .tab-bar button,
+:root[data-theme='dark'] .workspace-tab {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .tab-bar button.active,
+:root[data-theme='dark'] .workspace-tab.active,
+:root[data-theme='dark'] .tab-bar button[aria-selected="true"] {
+  color: var(--ink);
+}
+
+/* Action buttons in panels */
+:root[data-theme='dark'] .guest-header-actions button,
+:root[data-theme='dark'] .vendor-header-actions button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .guest-header-actions button:hover,
+:root[data-theme='dark'] .vendor-header-actions button:hover {
+  background: var(--bg-2);
+}
+
+/* Composer / chat input buttons */
+:root[data-theme='dark'] .composer-action {
+  color: var(--muted);
+}
+
+:root[data-theme='dark'] .composer-action:hover {
+  color: var(--ink);
+}
+
+/* Checklist generate CTA */
+:root[data-theme='dark'] .checklist-generate-btn {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #111113 !important;
+}
+
+:root[data-theme='dark'] .checklist-generate-btn:hover {
+  background: var(--accent-dark) !important;
+  border-color: var(--accent-dark) !important;
+}
+
+/* Sidebar live voice button */
+:root[data-theme='dark'] .sidebar-live-button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .sidebar-live-button:hover {
+  background: var(--bg-2);
+}
+
+/* Sidebar close button */
+:root[data-theme='dark'] .sidebar-close-button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Notification toggle */
+:root[data-theme='dark'] .notify-toggle {
+  background: var(--card);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .notify-toggle__btn {
+  background: var(--accent);
+  color: #111113;
+}
+
+:root[data-theme='dark'] .notify-toggle__btn:hover {
+  background: var(--accent-dark);
+}
+
+/* Settings form buttons */
+:root[data-theme='dark'] .settings-primary-actions button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111113;
+}
+
+:root[data-theme='dark'] .settings-primary-actions button:hover {
+  background: var(--accent-dark);
+}
+
+/* Modal / dialog buttons */
+:root[data-theme='dark'] .modal button,
+:root[data-theme='dark'] dialog button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Links that look like buttons */
+:root[data-theme='dark'] a.btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111113;
+}
+
+/* Input fields */
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] input:focus,
+:root[data-theme='dark'] select:focus,
+:root[data-theme='dark'] textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN PANEL DARK MODE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Main panel backgrounds */
+:root[data-theme='dark'] .main-chat-panel,
+:root[data-theme='dark'] .planner-panel,
+:root[data-theme='dark'] .dashboard-panel,
+:root[data-theme='dark'] .checklist-panel,
+:root[data-theme='dark'] .calendar-panel,
+:root[data-theme='dark'] .budget-panel,
+:root[data-theme='dark'] .vendors-panel,
+:root[data-theme='dark'] .guests-panel {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Chat form / composer */
+:root[data-theme='dark'] .main-chat-panel .chat-form,
+:root[data-theme='dark'] .chat-form {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form input,
+:root[data-theme='dark'] .chat-form input {
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form input::placeholder,
+:root[data-theme='dark'] .chat-form input::placeholder {
+  color: var(--muted);
+}
+
+/* Chat submit button */
+:root[data-theme='dark'] .main-chat-panel .chat-form button[type="submit"],
+:root[data-theme='dark'] .chat-submit {
+  background: var(--accent);
+  color: #111113;
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form button[type="submit"]:hover,
+:root[data-theme='dark'] .chat-submit:hover {
+  background: var(--accent-dark);
+}
+
+/* Message bubbles */
+:root[data-theme='dark'] .bubble {
+  background: var(--card);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+:root[data-theme='dark'] .message.user .bubble {
+  background: var(--accent);
+  color: #111113;
+}
+
+/* Menu assistant / AI panel */
+:root[data-theme='dark'] .menu-assistant {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Mini messages */
+:root[data-theme='dark'] .mini-message {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Template strips */
+:root[data-theme='dark'] .template-strip button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .template-strip button:hover {
+  background: var(--bg-2);
+}
+
+/* Appointment / checklist items */
+:root[data-theme='dark'] .checklist-items li,
+:root[data-theme='dark'] .appointment-item,
+:root[data-theme='dark'] .budget-item-card {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Calendar */
+:root[data-theme='dark'] .calendar-grid,
+:root[data-theme='dark'] .calendar-day,
+:root[data-theme='dark'] .day-agenda,
+:root[data-theme='dark'] .agenda-card {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Cards */
+:root[data-theme='dark'] .budget-primary-card,
+:root[data-theme='dark'] .budget-stat-card,
+:root[data-theme='dark'] .budget-add-card,
+:root[data-theme='dark'] .wedding-profile-card,
+:root[data-theme='dark'] .empty-state {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Forms */
+:root[data-theme='dark'] .planner-form,
+:root[data-theme='dark'] .appointment-form,
+:root[data-theme='dark'] .profile-fields input,
+:root[data-theme='dark'] .profile-fields select,
+:root[data-theme='dark'] .budget-add-card input,
+:root[data-theme='dark'] .budget-item-card input,
+:root[data-theme='dark'] .budget-item-card select {
+  background: var(--bg-2);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Data rows */
+:root[data-theme='dark'] .data-row {
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Starter grid (suggested prompts) */
+:root[data-theme='dark'] .starter-grid button {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .starter-grid button:hover {
+  background: var(--bg-2);
+  border-color: var(--accent);
+}
+
+/* Chat welcome */
+:root[data-theme='dark'] .chat-welcome {
+  color: var(--ink);
+}
+
+/* Workspace panels */
+:root[data-theme='dark'] .planner-content {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+:root[data-theme='dark'] .workspace-titlebar {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+/* Scrollbar */
+:root[data-theme='dark'] ::-webkit-scrollbar {
+  width: 6px;
+}
+
+:root[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+:root[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Sidebar panel background */
+:root[data-theme='dark'] .planner-sidebar {
+  background: var(--bg-2);
+  border-color: var(--border);
+}
+
+/* Couple profile */
+:root[data-theme='dark'] .couple-profile-card {
+  background: var(--bg-2);
+  border-color: var(--border);
+}
+
+/* RSVP form */
+:root[data-theme='dark'] .rsvp-form {
+  background: var(--card);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+/* Settings panel sticky footer: the light theme hardcodes a white bar + white
+   second button, which is invisible in dark mode. Restore contrast. */
+:root[data-theme='dark'] .settings-primary-actions {
+  background: rgba(34, 27, 21, 0.96) !important; /* warm dark surface */
+  border-top-color: var(--mm-border) !important;
+}
+
+:root[data-theme='dark'] .settings-primary-actions button:first-child {
+  background: var(--mm-accent) !important;
+  border-color: var(--mm-accent) !important;
+  color: #15110d !important; /* dark ink on gold for readable primary CTA */
+}
+
+:root[data-theme='dark'] .settings-primary-actions button:last-child {
+  background: transparent !important;
+  border: 1px solid var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
+}
+
+:root[data-theme='dark'] .settings-primary-actions button:last-child:disabled {
+  color: var(--mm-text-soft) !important;
+  border-color: var(--mm-border) !important;
+  opacity: 0.7 !important;
+}
+
+/* Chat / dashboard empty-state: the light theme hardcodes white panel,
+   composer, and pill backgrounds (#ffffff !important), leaving light dark-mode
+   text invisible on white. Restore dark surfaces. */
+:root[data-theme='dark'] .planner-content,
+:root[data-theme='dark'] .main-chat-panel,
+:root[data-theme='dark'] .main-chat-panel.empty-chat,
+:root[data-theme='dark'] .main-chat-panel.active-chat {
+  background: var(--bg) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form:focus-within {
+  border-color: var(--mm-border-strong) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form input,
+:root[data-theme='dark'] .main-chat-panel .chat-form .composer-input {
+  background: transparent !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel .chat-form input::placeholder,
+:root[data-theme='dark'] .main-chat-panel .chat-form .composer-input::placeholder {
+  color: var(--muted) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel.empty-chat .starter-grid button,
+:root[data-theme='dark'] .main-chat-panel.empty-chat .chat-onboarding-card button {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--ink) !important;
+}
+
+:root[data-theme='dark'] .main-chat-panel.empty-chat .starter-grid button:hover,
+:root[data-theme='dark'] .main-chat-panel.empty-chat .starter-grid button:focus-visible {
+  background: var(--bg-2) !important;
+  border-color: var(--muted) !important;
+}
