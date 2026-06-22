@@ -3,6 +3,13 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { PLANS } from '../../lib/payments/plans';
 import ScrollReveal from '../../components/marketing/ScrollReveal';
+import ScrollProgress from '../../components/marketing/ScrollProgress';
+import InteractiveHero from '../../components/marketing/InteractiveHero';
+import FloatingShapes from '../../components/marketing/FloatingShapes';
+import AnimatedCounter from '../../components/marketing/AnimatedCounter';
+import TestimonialCarousel from '../../components/marketing/TestimonialCarousel';
+import FeatureShowcase from '../../components/marketing/FeatureShowcase';
+import ConfettiLink from '../../components/marketing/ConfettiLink';
 
 export const metadata: Metadata = {
   title: 'MajlisMate.ai — Pembantu AI untuk rancang majlis kahwin',
@@ -73,6 +80,7 @@ const TRUST_SIGNALS = [
 export default function LandingPage() {
   return (
     <main id="main" className="landing">
+      <ScrollProgress />
       <header className="landing__nav">
         <Link href="/" className="landing__brand" aria-label="MajlisMate.ai home">
           <Image src="/logo-mark.svg" width={40} height={40} className="landing__brand-logo" alt="" aria-hidden="true" />
@@ -83,12 +91,13 @@ export default function LandingPage() {
           <Link href="#pricing">{/* ms */}Harga</Link>
           <Link href="#faq">{/* ms */}Soalan</Link>
           <Link href="/preview" className="landing__nav-cta">
-            {PLANS[1].ctaMs}
+            {PLANS[0].ctaMs}
           </Link>
         </nav>
       </header>
 
       <section className="landing__hero">
+        <FloatingShapes />
         <div className="landing__hero-copy">
           <span className="eyebrow">{/* ms */}Untuk bakal pengantin di Malaysia 🇲🇾</span>
           <h1>
@@ -101,9 +110,9 @@ export default function LandingPage() {
             WhatsApp — semua dalam satu aplikasi mudah.
           </p>
           <div className="landing__hero-actions">
-            <Link href="/preview" className="primary-action landing__hero-primary">
+            <ConfettiLink href="/preview" className="primary-action landing__hero-primary">
               {/* ms */}Cuba percuma sekarang
-            </Link>
+            </ConfettiLink>
             <Link href="#pricing" className="utility-action">
               {/* ms */}Lihat harga
             </Link>
@@ -117,29 +126,88 @@ export default function LandingPage() {
             ))}
           </ul>
         </div>
-        <aside className="landing__hero-card" aria-hidden="true">
-          <div className="landing__hero-window">
-            <div className="landing__hero-bar">
-              <span /> <span /> <span />
+        <InteractiveHero>
+          <aside className="landing__hero-card" aria-hidden="true">
+            <div className="landing__hero-window">
+              <div className="landing__hero-bar">
+                <span /> <span /> <span />
+              </div>
+              <div className="landing__hero-bubble landing__hero-bubble--assistant">
+                <p>Hai! Saya MajlisMate 💕</p>
+                <p>Saya boleh bantu rancang majlis kahwin kamu. Nak tanya apa?</p>
+              </div>
+              <div className="landing__hero-bubble landing__hero-bubble--user">
+                <p>Boleh tolong buatkan checklist tempahan dewan?</p>
+              </div>
+              <div className="landing__hero-typing">
+                <span className="landing__hero-typing-dot" />
+                <span className="landing__hero-typing-dot" />
+                <span className="landing__hero-typing-dot" />
+              </div>
+              <div className="landing__hero-bubble landing__hero-bubble--assistant landing__hero-bubble--delayed">
+                <p>Sure! Saya dah buatkan 12 tugasan untuk tempahan dewan kamu:</p>
+                <ul>
+                  <li>✅ Senarai 5 dewan pilihan</li>
+                  <li>✅ Banding harga & pakej</li>
+                  <li>✅ Tempahan lawatan tapak</li>
+                </ul>
+                <p>Nak saya cari vendor berdekatan?</p>
+              </div>
             </div>
-            <div className="landing__hero-bubble landing__hero-bubble--assistant">
-              <p>Hai! Saya MajlisMate 💕</p>
-              <p>Saya boleh bantu rancang majlis kahwin kamu. Nak tanya apa?</p>
+          </aside>
+        </InteractiveHero>
+      </section>
+
+      <section className="landing__stats" data-reveal>
+        <div className="landing__stats-grid">
+          <div className="landing__stat">
+            <span className="landing__stat-icon">📋</span>
+            <div className="landing__stat-value">
+              <AnimatedCounter target={50} suffix="+" />
             </div>
-            <div className="landing__hero-bubble landing__hero-bubble--user">
-              <p>Boleh tolong buatkan checklist tempahan dewan?</p>
-            </div>
-            <div className="landing__hero-bubble landing__hero-bubble--assistant">
-              <p>Sure! Saya dah buatkan 12 tugasan untuk tempahan dewan kamu:</p>
-              <ul>
-                <li>✅ Senarai 5 dewan pilihan</li>
-                <li>✅ Banding harga & pakej</li>
-                <li>✅ Tempahan lawatan tapak</li>
-              </ul>
-              <p>Nak saya cari vendor berdekatan?</p>
-            </div>
+            <p className="landing__stat-label">Senarai semak automatik</p>
           </div>
-        </aside>
+          <div className="landing__stat">
+            <span className="landing__stat-icon">💬</span>
+            <div className="landing__stat-value">BM & EN</div>
+            <p className="landing__stat-label">Bahasa Melayu & English</p>
+          </div>
+          <div className="landing__stat">
+            <span className="landing__stat-icon">⚡</span>
+            <div className="landing__stat-value">
+              <AnimatedCounter target={5} suffix=" min" />
+            </div>
+            <p className="landing__stat-label">Mula merancang</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing__steps" aria-label="Cara ia berfungsi">
+        <div className="landing__section-head" data-reveal>
+          <span className="eyebrow">{/* ms */}Cara ia berfungsi</span>
+          <h2>Tiga langkah ke majlis idaman</h2>
+        </div>
+        <div className="landing__steps-grid">
+          <div className="landing__steps-line" data-reveal aria-hidden="true" />
+          <article className="landing__step" data-reveal style={{ animationDelay: '0ms' }}>
+            <span className="landing__step-num">1</span>
+            <span className="landing__step-icon" aria-hidden="true">💬</span>
+            <h3>Cerita tentang majlis</h3>
+            <p>Beritahu tarikh, negeri, bajet dan jumlah tetamu — dalam BM atau English.</p>
+          </article>
+          <article className="landing__step" data-reveal style={{ animationDelay: '120ms' }}>
+            <span className="landing__step-num">2</span>
+            <span className="landing__step-icon" aria-hidden="true">✨</span>
+            <h3>AI susun pelan anda</h3>
+            <p>Dapat checklist, bajet dan cadangan vendor automatik dalam beberapa saat.</p>
+          </article>
+          <article className="landing__step" data-reveal style={{ animationDelay: '240ms' }}>
+            <span className="landing__step-num">3</span>
+            <span className="landing__step-icon" aria-hidden="true">🎉</span>
+            <h3>Mula urus dengan yakin</h3>
+            <p>Track progress, hantar jemputan WhatsApp, dan jimat berjam-jam masa.</p>
+          </article>
+        </div>
       </section>
 
       <section id="features" className="landing__features" aria-label="Features">
@@ -165,49 +233,56 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <section className="landing__showcase" aria-label="Lihat dalam app">
+        <div className="landing__section-head" data-reveal>
+          <span className="eyebrow">{/* ms */}Tengok sendiri</span>
+          <h2>Satu app, semua keperluan majlis</h2>
+        </div>
+        <div data-reveal>
+          <FeatureShowcase />
+        </div>
+      </section>
+
+      <section className="landing__testimonials" aria-label="Testimonials">
+        <div className="landing__section-head" data-reveal>
+          <span className="eyebrow">{/* ms */}Kata mereka</span>
+          <h2>Pasangan yang dah cuba MajlisMate</h2>
+        </div>
+        <div data-reveal>
+          <TestimonialCarousel />
+        </div>
+      </section>
+
       <section id="pricing" className="landing__pricing" aria-label="Pricing">
         <div className="landing__section-head" data-reveal>
           <span className="eyebrow">{/* ms */}Harga</span>
-          <h2>Pilih pelan yang sesuai</h2>
-          <p>Bermula percuma. Tukar atau batal bila-bila.</p>
+          <h2>Pakej lengkap, satu harga</h2>
+          <p>Semua ciri dalam satu pakej. Tiada caj tersembunyi.</p>
         </div>
-        <div className="landing__pricing-grid">
-          {PLANS.map((plan, index) => (
-            <article
-              key={plan.id}
-              className={`landing__plan-card${plan.highlighted ? ' is-highlighted' : ''}`}
-              data-reveal
-              style={{ animationDelay: `${index * 90}ms` }}
+        <div className="landing__pricing-single" data-reveal>
+          <article className="landing__plan-card landing__plan-card--single">
+            <span className="landing__plan-badge">Paling popular</span>
+            <h3>{PLANS[0].nameMs}</h3>
+            <p className="landing__plan-tagline">{PLANS[0].taglineMs}</p>
+            <div className="landing__plan-price">
+              <strong>RM {PLANS[0].priceMonthly}</strong>
+              <span>/ bulan</span>
+            </div>
+            <ul className="landing__plan-features">
+            {PLANS[0].features.map((feature) => (
+              <li key={feature.en} className="is-included">
+                <span aria-hidden="true">✓</span>
+                {feature.ms}
+              </li>
+            ))}
+            </ul>
+            <Link
+              href={`/checkout?plan=${PLANS[0].id}`}
+              className="primary-action"
             >
-              {plan.highlighted ? <span className="landing__plan-badge">Paling popular</span> : null}
-              <h3>{plan.nameMs}</h3>
-              <p className="landing__plan-tagline">{plan.taglineMs}</p>
-              <div className="landing__plan-price">
-                {plan.priceMonthly === 0 ? (
-                  <strong>Percuma</strong>
-                ) : (
-                  <>
-                    <strong>{plan.priceMonthly}</strong>
-                    <span>/ bulan</span>
-                  </>
-                )}
-              </div>
-              <ul className="landing__plan-features">
-              {plan.features.map((feature) => (
-                <li key={feature.en} className={feature.included ? 'is-included' : 'is-excluded'}>
-                  <span aria-hidden="true">{feature.included ? '✓' : '—'}</span>
-                  {feature.ms}
-                </li>
-              ))}
-              </ul>
-              <Link
-                href={plan.priceMonthly === 0 ? '/chat' : `/checkout?plan=${plan.id}`}
-                className={plan.highlighted ? 'primary-action' : 'utility-action'}
-              >
-                {plan.ctaMs}
-              </Link>
-            </article>
-          ))}
+              {PLANS[0].ctaMs}
+            </Link>
+          </article>
         </div>
       </section>
 
@@ -260,9 +335,9 @@ export default function LandingPage() {
           Anda boleh upgrade bila-bila.
         </p>
         <div className="landing__cta-actions">
-          <Link href="/preview" className="primary-action">
+          <ConfettiLink href="/preview" className="primary-action">
             {/* ms */}Cuba percuma sekarang
-          </Link>
+          </ConfettiLink>
           <Link href="/checkout?plan=sehari-hari" className="utility-action">
             {/* ms */}Langgan Sehari-hari
           </Link>

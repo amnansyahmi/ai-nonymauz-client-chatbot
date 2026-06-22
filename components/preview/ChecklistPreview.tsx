@@ -3,7 +3,7 @@
 import type { AppLanguage, ChecklistItem } from '../planner/types';
 import { getCategoryLabel } from '../../lib/planner/checklistCategories';
 
-export const MAX_VISIBLE_ITEMS = 15;
+export const MAX_VISIBLE_ITEMS = 25;
 
 type Props = {
   items: ChecklistItem[];

@@ -5,10 +5,12 @@ import { PLANS, formatRinggit } from '../../../lib/payments/plans';
 
 export const metadata: Metadata = {
   title: 'Harga — MajlisMate.ai',
-  description: 'Pilih pelan MajlisMate yang sesuai. Percuma, Sehari-hari, atau Bisnes.'
+  description: 'Pakej lengkap MajlisMate.ai untuk merancang majlis kahwin. RM 149/bulan.'
 };
 
 export default function PricingPage() {
+  const plan = PLANS[0];
+
   return (
     <main id="main" className="pricing-page">
       <header className="pricing-page__nav">
@@ -24,75 +26,59 @@ export default function PricingPage() {
 
       <section className="pricing-page__hero">
         <span className="eyebrow">{/* ms */}Harga</span>
-        <h1>Pilih pelan yang sesuai</h1>
-        <p>Bermula percuma. Tukar atau batal bila-bila. Bayaran melalui ToyyibPay.</p>
+        <h1>Pakej lengkap, satu harga</h1>
+        <p>Semua ciri dalam satu pakej. Tiada caj tersembunyi. Bayaran melalui ToyyibPay.</p>
       </section>
 
       <section className="pricing-page__grid" aria-label="Plans">
-        {PLANS.map((plan) => (
-          <article
-            key={plan.id}
-            className={`pricing-page__card${plan.highlighted ? ' is-highlighted' : ''}`}
+        <article className="pricing-page__card pricing-page__card--single">
+          <span className="landing__plan-badge">Paling popular</span>
+          <h2>{plan.nameMs}</h2>
+          <p className="pricing-page__tagline">{plan.taglineMs}</p>
+          <div className="pricing-page__price">
+            <strong>{formatRinggit(plan.priceMonthly)}</strong>
+            <span>/ bulan</span>
+          </div>
+          <ul className="pricing-page__features">
+            {plan.features.map((feature) => (
+              <li key={feature.en} className="is-included">
+                <span aria-hidden="true">✓</span>
+                {feature.ms}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href={`/checkout?plan=${plan.id}`}
+            className="primary-action"
           >
-            {plan.highlighted ? <span className="landing__plan-badge">Paling popular</span> : null}
-            <h2>{plan.nameMs}</h2>
-            <p className="pricing-page__tagline">{plan.taglineMs}</p>
-            <div className="pricing-page__price">
-              <strong>
-                {plan.priceMonthly === 0 ? 'Percuma' : formatRinggit(plan.priceMonthly)}
-              </strong>
-              {plan.priceMonthly > 0 ? <span>/ bulan</span> : null}
-            </div>
-            {plan.priceMonthly > 0 ? (
-              <p className="pricing-page__yearly">
-                atau {formatRinggit(plan.priceYearly)} / tahun{' '}
-                <small>(jimat 2 bulan)</small>
-              </p>
-            ) : null}
-            <ul className="pricing-page__features">
-              {plan.features.map((feature) => (
-                <li
-                  key={feature.en}
-                  className={feature.included ? 'is-included' : 'is-excluded'}
-                >
-                  <span aria-hidden="true">{feature.included ? '✓' : '—'}</span>
-                  {feature.ms}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href={plan.priceMonthly === 0 ? '/chat' : `/checkout?plan=${plan.id}`}
-              className={plan.highlighted ? 'primary-action' : 'utility-action'}
-            >
-              {plan.ctaMs}
-            </Link>
-          </article>
-        ))}
+            {plan.ctaMs}
+          </Link>
+        </article>
       </section>
 
       <section className="pricing-page__faq" aria-label="FAQ">
         <h2>Soalan lazim tentang harga</h2>
         <details>
-          <summary>Adakah terdapat tempoh percubaan?</summary>
+          <summary>Boleh saya batal?</summary>
           <p>
-            {/* ms */}Ya — pelan Percuma kekal selamanya. Anda boleh guna semua
-            ciri asas tanpa bayar apa-apa. Upgrade bila anda sudah bersedia.
+            {/* ms */}Boleh. Tiada kontrak. Batal dari app bila-bila dan anda
+            kekal boleh guna sehingga tamat tempoh langganan.
           </p>
         </details>
         <details>
           <summary>Bagaimana pembayaran berfungsi?</summary>
           <p>
-            {/* ms */}Kami gunakan ToyyibPay. Selepas pilih pelan dan isi butiran,
+            {/* ms */}Kami gunakan ToyyibPay. Selepas pilih pakej dan isi butiran,
             anda akan diarahkan ke ToyyibPay untuk bayar melalui FPX (bank
             online) atau Boost e-wallet. Selepas berjaya, anda akan diarahkan
             balik ke MajlisMate.
           </p>
         </details>
         <details>
-          <summary>Boleh saya batal?</summary>
+          <summary>Adakah terdapat tempoh percubaan?</summary>
           <p>
-            {/* ms */}Boleh. Tiada kontrak. Batal dari app bila-bila dan anda
-            kekal boleh guna sehingga tamat tempoh langganan.
+            {/* ms */}Ya — anda boleh cuba preview percuma sebelum melanggan.
+            Upgrade bila anda sudah bersedia.
           </p>
         </details>
       </section>

@@ -60,7 +60,6 @@ function CheckoutInner() {
   }
 
   const safePlan = plan;
-  const isFree = safePlan.priceMonthly === 0;
   const amount = priceForInterval(safePlan, form.interval);
 
   function validate(): CheckoutErrors {
@@ -84,12 +83,6 @@ function CheckoutInner() {
     const v = validate();
     setErrors(v);
     if (Object.keys(v).length > 0) return;
-
-    if (isFree) {
-      trackEvent('checkout_skip_paid', { planId: safePlan.id });
-      router.push('/chat');
-      return;
-    }
 
     setSubmitting(true);
     trackEvent('checkout_submit', { planId: safePlan.id, interval: form.interval });
@@ -149,36 +142,10 @@ function CheckoutInner() {
             bayar dengan selamat.
           </p>
 
-          {!isFree ? (
-            <fieldset className="checkout-page__field-group">
-              <legend>Pelan</legend>
-              <label className="checkout-page__radio">
-                <input
-                  type="radio"
-                  name="interval"
-                  value="bulanan"
-                  checked={form.interval === 'bulanan'}
-                  onChange={() => setForm((f) => ({ ...f, interval: 'bulanan' }))}
-                />
-                <span>
-                  Bulanan — {formatRinggit(plan.priceMonthly)}
-                </span>
-              </label>
-              <label className="checkout-page__radio">
-                <input
-                  type="radio"
-                  name="interval"
-                  value="tahunan"
-                  checked={form.interval === 'tahunan'}
-                  onChange={() => setForm((f) => ({ ...f, interval: 'tahunan' }))}
-                />
-                <span>
-                  Tahunan — {formatRinggit(plan.priceYearly)}{' '}
-                  <small>(jimat 2 bulan)</small>
-                </span>
-              </label>
-            </fieldset>
-          ) : null}
+          <div className="checkout-page__plan-display">
+            <span>Pakej</span>
+            <strong>{plan.nameMs} — {formatRinggit(plan.priceMonthly)}/bulan</strong>
+          </div>
 
           <label className="checkout-page__field">
             <span>Nama penuh</span>
@@ -246,9 +213,7 @@ function CheckoutInner() {
           <button type="submit" className="primary-action checkout-page__submit" disabled={submitting}>
             {submitting
               ? 'Sila tunggu…'
-              : isFree
-                ? 'Teruskan ke app'
-                : `Bayar ${formatRinggit(amount)} melalui ToyyibPay`}
+              : `Bayar ${formatRinggit(amount)} melalui ToyyibPay`}
           </button>
 
           <p className="checkout-page__small">
@@ -261,22 +226,15 @@ function CheckoutInner() {
         <aside className="checkout-page__summary" aria-label="Order summary">
           <h2>Ringkasan pesanan</h2>
           <div className="checkout-page__summary-row">
-            <span>Pelan</span>
+            <span>Pakej</span>
             <strong>{plan.nameMs}</strong>
           </div>
           <div className="checkout-page__summary-row">
-            <span>Tempoh</span>
-            <strong>{form.interval === 'tahunan' ? '1 tahun' : '1 bulan'}</strong>
-          </div>
-          <div className="checkout-page__summary-row">
             <span>Harga</span>
-            <strong>{isFree ? 'Percuma' : formatRinggit(amount)}</strong>
+            <strong>{formatRinggit(amount)}/bulan</strong>
           </div>
           <ul className="checkout-page__summary-features">
-              {plan.features
-                .filter((feature) => feature.included)
-                .slice(0, 5)
-                .map((feature) => (
+              {plan.features.slice(0, 5).map((feature) => (
                   <li key={feature.en}>
                     <span aria-hidden="true">✓</span>
                     {feature.ms}
