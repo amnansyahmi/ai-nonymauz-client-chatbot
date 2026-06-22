@@ -257,7 +257,9 @@ export default function ChatWidget({
     el.addEventListener('scroll', handle, { passive: true });
     handle();
     return () => el.removeEventListener('scroll', handle);
-  }, [messages]);
+    // Depend on the count (a stable primitive), not the array reference, so a
+    // caller passing a fresh array each render can't re-run this every render.
+  }, [messages.length]);
 
   function scrollToBottom() {
     messagesEndRef?.current?.scrollIntoView({ behavior: 'smooth' });

@@ -347,7 +347,69 @@ type BudgetPanelProps = {
   totalPlanned: number;
   totalActual: number;
   totalPaid: number;
+  language?: AppLanguage;
 };
+
+const budgetCopy = {
+  ms: {
+    eyebrow: 'Bajet majlis',
+    ofPlanned: (planned: string) => ` / ${planned} dirancang`,
+    paidMeta: (paid: string, left: string) => `${paid} dibayar · ${left} baki`,
+    planned: 'Dirancang',
+    paid: 'Dibayar',
+    toPay: 'Perlu bayar',
+    categories: 'Kategori',
+    add: 'Tambah',
+    more: 'Lagi pilihan',
+    applySplit: 'Guna pecahan dicadang',
+    exportCsv: 'Eksport CSV',
+    categoryPh: 'Kategori (cth. Cenderahati)',
+    plannedPh: 'Dirancang (RM)',
+    actualPh: 'Sebenar (RM)',
+    paidPh: 'Dibayar (RM)',
+    addItem: 'Tambah kategori',
+    emptyTitle: 'Tiada kategori dalam paparan ini.',
+    emptyHint: 'Tukar ke "Semua" atau tambah kategori baharu.',
+    views: { all: 'Semua', attention: 'Perlu perhatian', unpaid: 'Perlu bayar', done: 'Selesai' },
+    health: { over: (n: number) => `${n} melebihi bajet`, onTrack: 'Terkawal', ready: 'Sedia merancang' },
+    aiCheck: 'Semakan bajet AI',
+    suggestedSplit: 'Pecahan dicadang',
+    splitGuide: (base: string) => `Panduan ${base} — guna sebagai titik mula, kemudian laraskan ikut gaya dewan & jumlah tetamu.`,
+    commonCosts: 'Kos yang sering terlupa',
+    commonHint: 'Tambah bila relevan dengan majlis anda. Anda boleh edit anggaran kemudian.',
+    largest: (amt: string) => `${amt} ialah kos sebenar paling tinggi sekarang.`,
+    riskBalanced: 'Bajet nampak seimbang'
+  },
+  en: {
+    eyebrow: 'Wedding budget',
+    ofPlanned: (planned: string) => ` / ${planned} planned`,
+    paidMeta: (paid: string, left: string) => `${paid} paid · ${left} left`,
+    planned: 'Planned',
+    paid: 'Paid',
+    toPay: 'To pay',
+    categories: 'Categories',
+    add: 'Add',
+    more: 'More options',
+    applySplit: 'Apply suggested split',
+    exportCsv: 'Export CSV',
+    categoryPh: 'Category (e.g. Door gift)',
+    plannedPh: 'Planned (RM)',
+    actualPh: 'Actual (RM)',
+    paidPh: 'Paid (RM)',
+    addItem: 'Add category',
+    emptyTitle: 'No categories in this view.',
+    emptyHint: 'Switch to "All" or add a new category.',
+    views: { all: 'All', attention: 'Needs attention', unpaid: 'To pay', done: 'Done' },
+    health: { over: (n: number) => `${n} over budget`, onTrack: 'On track', ready: 'Ready to plan' },
+    aiCheck: 'AI budget check',
+    suggestedSplit: 'Suggested split',
+    splitGuide: (base: string) => `${base} guide — use as a starting point, then adjust for venue style and guest count.`,
+    commonCosts: 'Commonly forgotten costs',
+    commonHint: 'Add these when they apply to your wedding. You can edit the estimate later.',
+    largest: (amt: string) => `${amt} is currently the largest actual cost.`,
+    riskBalanced: 'Budget looks balanced'
+  }
+} as const;
 
 export function BudgetPanel({
   budgetItems,
@@ -362,23 +424,23 @@ export function BudgetPanel({
   exportBudgetCsv,
   totalPlanned,
   totalActual,
-  totalPaid
+  totalPaid,
+  language = 'ms'
 }: BudgetPanelProps) {
+  const t = budgetCopy[language];
   const [budgetView, setBudgetView] = useState<'all' | 'attention' | 'unpaid' | 'done'>('all');
   const [expandedBudgetId, setExpandedBudgetId] = useState<string | null>(null);
   const [isBudgetAddOpen, setIsBudgetAddOpen] = useState(false);
   const remainingToPay = Math.max(totalActual - totalPaid, 0);
-  const plannedBalance = totalPlanned - totalActual;
   const paidProgress = totalActual > 0 ? Math.min(100, Math.round((totalPaid / totalActual) * 100)) : 0;
   const overBudgetItems = budgetItems.filter((item) => item.actual > item.planned && item.planned > 0);
-  const activeBudgetItems = budgetItems.filter((item) => item.status !== 'done').length;
   const unpaidItems = budgetItems.filter((item) => Math.max(item.actual - item.paid, 0) > 0);
   const completedBudgetItems = budgetItems.filter((item) => item.status === 'done');
   const budgetViewOptions = [
-    { value: 'all' as const, label: 'All', count: budgetItems.length },
-    { value: 'attention' as const, label: 'Needs attention', count: overBudgetItems.length },
-    { value: 'unpaid' as const, label: 'To pay', count: unpaidItems.length },
-    { value: 'done' as const, label: 'Done', count: completedBudgetItems.length }
+    { value: 'all' as const, label: t.views.all, count: budgetItems.length },
+    { value: 'attention' as const, label: t.views.attention, count: overBudgetItems.length },
+    { value: 'unpaid' as const, label: t.views.unpaid, count: unpaidItems.length },
+    { value: 'done' as const, label: t.views.done, count: completedBudgetItems.length }
   ];
   const filteredBudgetItems = budgetItems.filter((item) => {
     if (budgetView === 'attention') return item.actual > item.planned && item.planned > 0;
@@ -387,10 +449,10 @@ export function BudgetPanel({
     return true;
   });
   const budgetHealth = overBudgetItems.length > 0
-    ? `${overBudgetItems.length} over budget`
+    ? t.health.over(overBudgetItems.length)
     : totalActual > 0
-      ? 'On track'
-      : 'Ready to plan';
+      ? t.health.onTrack
+      : t.health.ready;
   const largestActualItem = [...budgetItems].sort((first, second) => second.actual - first.actual)[0];
   const paidBarWidth = totalActual > 0 ? paidProgress : 0;
   const normalizedBudgetCategories = budgetItems.map((item) => item.category.trim().toLowerCase());
@@ -446,71 +508,83 @@ export function BudgetPanel({
   };
 
   return (
-    <div className="planner-panel budget-panel budget-command-center">
-      <div className="planner-panel-header budget-hero-modern">
-        <div>
-          <p className="eyebrow">Budget tracker</p>
-          <h3>Wedding budget overview</h3>
-          <p>See what is planned, what has changed, and what still needs payment without editing every row at once.</p>
+    <div className="planner-panel budget-panel mm-budget">
+      <header className="mm-bg__header">
+        <div className="mm-bg__heading">
+          <span className="mm-bg__eyebrow">{t.eyebrow}</span>
+          <h2 className="mm-bg__amount">
+            {money(totalActual)}
+            <em>{t.ofPlanned(money(totalPlanned))}</em>
+          </h2>
+          <span className={`mm-bg__health${overBudgetItems.length > 0 ? ' is-warn' : ''}`}>{budgetHealth}</span>
         </div>
-        <div className="budget-hero-actions">
-          <span className={overBudgetItems.length > 0 ? 'budget-health warning' : 'budget-health'}>{budgetHealth}</span>
-          <button type="button" className="primary-action" onClick={() => setIsBudgetAddOpen(true)}>Add category</button>
-          <button type="button" className="utility-action" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>Export CSV</button>
-        </div>
-      </div>
-
-      <div className="budget-focus-grid" aria-label="Budget summary">
-        <article className="budget-focus-card">
-          <span>Total actual</span>
-          <strong>{money(totalActual)}</strong>
-          <p>{plannedBalance >= 0 ? `${money(plannedBalance)} within plan` : `${money(Math.abs(plannedBalance))} over planned budget`}</p>
-          <div className="budget-meter" aria-label={`${paidProgress}% paid`}>
-            <span style={{ width: `${paidBarWidth}%` }} />
+        <div className="mm-bg__progress" aria-label={`${paidProgress}% ${t.paid}`}>
+          <div className="mm-bg__progress-meta">
+            <strong>{paidProgress}%</strong>
+            <span>{t.paidMeta(money(totalPaid), money(remainingToPay))}</span>
           </div>
-          <small>{paidProgress}% paid</small>
-        </article>
+          <div className="mm-bg__bar"><span style={{ width: `${paidBarWidth}%` }} /></div>
+        </div>
+      </header>
 
-        <article>
-          <span>Planned</span>
-          <strong>{money(totalPlanned)}</strong>
-          <p>{budgetItems.length} categories</p>
-        </article>
-
-        <article>
-          <span>Paid</span>
-          <strong>{money(totalPaid)}</strong>
-          <p>{completedBudgetItems.length} completed</p>
-        </article>
-
-        <article>
-          <span>To pay</span>
-          <strong>{money(remainingToPay)}</strong>
-          <p>{activeBudgetItems} active categor{activeBudgetItems === 1 ? 'y' : 'ies'}</p>
-        </article>
-      </div>
-
-      <div className="budget-workspace">
-        <section className="budget-main">
-          <div className="budget-toolbar">
-            <div className="budget-view-tabs" role="tablist" aria-label="Budget views">
-              {budgetViewOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={budgetView === option.value}
-                  className={budgetView === option.value ? 'active' : ''}
-                  onClick={() => setBudgetView(option.value)}
-                >
-                  {option.label}
-                  <span>{option.count}</span>
-                </button>
-              ))}
+      <div className="mm-bg__toolbar">
+        <div className="mm-bg__views" role="tablist" aria-label="Budget views">
+          {budgetViewOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="tab"
+              aria-selected={budgetView === option.value}
+              className={budgetView === option.value ? 'is-active' : ''}
+              onClick={() => setBudgetView(option.value)}
+            >
+              {option.label}
+              <span className="mm-bg__view-count">{option.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mm-bg__tools">
+          <button
+            type="button"
+            className={`mm-bg__add${isBudgetAddOpen ? ' is-open' : ''}`}
+            aria-expanded={isBudgetAddOpen}
+            onClick={() => setIsBudgetAddOpen((v) => !v)}
+          >
+            <span className="mm-bg__add-plus" aria-hidden="true">+</span>
+            <span className="mm-bg__add-label">{t.add}</span>
+          </button>
+          <details className="mm-bg__menu">
+            <summary aria-label={t.more}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+            </summary>
+            <div className="mm-bg__menu-pop">
+              <button type="button" onClick={applyBudgetAllocation}>{t.applySplit}</button>
+              <button type="button" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>{t.exportCsv}</button>
             </div>
-          </div>
+          </details>
+        </div>
+      </div>
 
-          <div className="budget-list-modern">
+      {isBudgetAddOpen ? (
+        <form
+          className="mm-bg__addform"
+          onSubmit={(event) => {
+            const shouldClose = budgetDraft.category.trim().length > 0;
+            addBudgetItem(event);
+            if (shouldClose) setIsBudgetAddOpen(false);
+          }}
+        >
+          <input value={budgetDraft.category} onChange={(event) => setBudgetDraft((current) => ({ ...current, category: event.target.value }))} placeholder={t.categoryPh} aria-label="Budget category" />
+          <div className="mm-bg__addform-row">
+            <input type="number" value={budgetDraft.planned || ''} onChange={(event) => setBudgetDraft((current) => ({ ...current, planned: Number(event.target.value) }))} placeholder={t.plannedPh} aria-label="Planned budget" />
+            <input type="number" value={budgetDraft.actual || ''} onChange={(event) => setBudgetDraft((current) => ({ ...current, actual: Number(event.target.value) }))} placeholder={t.actualPh} aria-label="Actual cost" />
+            <input type="number" value={budgetDraft.paid || ''} onChange={(event) => setBudgetDraft((current) => ({ ...current, paid: Number(event.target.value) }))} placeholder={t.paidPh} aria-label="Paid amount" />
+          </div>
+          <button type="submit" disabled={!budgetDraft.category.trim()}>{t.addItem}</button>
+        </form>
+      ) : null}
+
+      <div className="budget-list-modern mm-bg__list">
             {filteredBudgetItems.length > 0 ? filteredBudgetItems.map((item) => {
               const remaining = Math.max(item.actual - item.paid, 0);
               const isExpanded = expandedBudgetId === item.id;
@@ -554,61 +628,52 @@ export function BudgetPanel({
                     <span style={{ width: `${itemProgress}%` }} />
                   </div>
 
-                  {!isExpanded && !isFullyPaid && (hasActual || item.planned > 0) ? (
-                    <div className="budget-quick-pay">
-                      {item.paid < depositAmount ? (
-                        <button
-                          type="button"
-                          className="budget-pay-deposit"
-                          onClick={(e) => { e.stopPropagation(); updateBudgetItem(item.id, { paid: depositAmount, status: 'in-progress' }); }}
-                        >
-                          Bayar deposit ({money(depositAmount)})
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="budget-pay-full"
-                        onClick={(e) => { e.stopPropagation(); updateBudgetItem(item.id, { paid: item.actual || item.planned, status: 'done' }); }}
-                      >
-                        Bayar penuh
-                      </button>
-                    </div>
-                  ) : null}
-
                   {isExpanded ? (
                     <div className="budget-edit-panel">
                       <label>
-                        <span>Category</span>
+                        <span>{language === 'ms' ? 'Kategori' : 'Category'}</span>
                         <input value={item.category} onChange={(event) => updateBudgetItem(item.id, { category: event.target.value })} aria-label="Budget category" />
                       </label>
                       <label>
-                        <span>Planned</span>
+                        <span>{language === 'ms' ? 'Dirancang' : 'Planned'}</span>
                         <input type="number" value={item.planned} onChange={(event) => updateBudgetItem(item.id, { planned: Number(event.target.value) })} aria-label="Planned budget" />
                       </label>
                       <label>
-                        <span>Actual</span>
+                        <span>{language === 'ms' ? 'Sebenar' : 'Actual'}</span>
                         <input type="number" value={item.actual} onChange={(event) => updateBudgetItem(item.id, { actual: Number(event.target.value) })} aria-label="Actual cost" />
                       </label>
                       <label>
-                        <span>Paid</span>
+                        <span>{language === 'ms' ? 'Dibayar' : 'Paid'}</span>
                         <input type="number" value={item.paid} onChange={(event) => updateBudgetItem(item.id, { paid: Number(event.target.value) })} aria-label="Paid amount" />
                       </label>
                       <label>
                         <span>Status</span>
                         <select value={item.status} onChange={(event) => updateBudgetItem(item.id, { status: event.target.value as BudgetItem['status'] })} aria-label="Budget status">
-                          <option value="not-started">Belum Mula</option>
-                          <option value="in-progress">Sedang Diurus</option>
-                          <option value="done">Selesai</option>
+                          <option value="not-started">{language === 'ms' ? 'Belum Mula' : 'Not started'}</option>
+                          <option value="in-progress">{language === 'ms' ? 'Sedang Diurus' : 'In progress'}</option>
+                          <option value="done">{language === 'ms' ? 'Selesai' : 'Done'}</option>
                         </select>
                       </label>
                       <label className="budget-note-field">
-                        <span>Note</span>
-                        <input value={item.note} onChange={(event) => updateBudgetItem(item.id, { note: event.target.value })} placeholder="Vendor, due date, or payment note..." aria-label="Budget note" />
+                        <span>{language === 'ms' ? 'Nota' : 'Note'}</span>
+                        <input value={item.note} onChange={(event) => updateBudgetItem(item.id, { note: event.target.value })} placeholder={language === 'ms' ? 'Vendor, tarikh akhir, atau nota bayaran...' : 'Vendor, due date, or payment note...'} aria-label="Budget note" />
                       </label>
-                      {isOverBudget ? <p className="budget-warning-text">Over budget by {money(item.actual - item.planned)}</p> : null}
+                      {isOverBudget ? <p className="budget-warning-text">{language === 'ms' ? 'Melebihi bajet sebanyak' : 'Over budget by'} {money(item.actual - item.planned)}</p> : null}
+                      {!isFullyPaid && (hasActual || item.planned > 0) ? (
+                        <div className="mm-bg__quickpay">
+                          {item.paid < depositAmount ? (
+                            <button type="button" className="mm-bg__pay-deposit" onClick={() => updateBudgetItem(item.id, { paid: depositAmount, status: 'in-progress' })}>
+                              {language === 'ms' ? 'Bayar deposit' : 'Pay deposit'} ({money(depositAmount)})
+                            </button>
+                          ) : null}
+                          <button type="button" className="mm-bg__pay-full" onClick={() => updateBudgetItem(item.id, { paid: item.actual || item.planned, status: 'done' })}>
+                            {language === 'ms' ? 'Bayar penuh' : 'Pay in full'}
+                          </button>
+                        </div>
+                      ) : null}
                       <div className="budget-edit-actions">
-                        <button type="button" onClick={() => setExpandedBudgetId(null)}>Done editing</button>
-                        <button type="button" className="danger" onClick={() => removeBudgetItem(item.id)}>Remove</button>
+                        <button type="button" onClick={() => setExpandedBudgetId(null)}>{language === 'ms' ? 'Selesai edit' : 'Done editing'}</button>
+                        <button type="button" className="danger" onClick={() => removeBudgetItem(item.id)}>{language === 'ms' ? 'Buang' : 'Remove'}</button>
                       </div>
                     </div>
                   ) : null}
@@ -616,101 +681,73 @@ export function BudgetPanel({
               );
             }) : (
               <div className="empty-state action-empty">
-                <strong>No budget items in this view.</strong>
-                <span>Switch to All or add a new category.</span>
-                <button type="button" onClick={() => setIsBudgetAddOpen(true)}>Add category</button>
+                <strong>{t.emptyTitle}</strong>
+                <span>{t.emptyHint}</span>
+                <button type="button" onClick={() => setIsBudgetAddOpen(true)}>{t.add}</button>
               </div>
             )}
-          </div>
-        </section>
+      </div>
 
-        <aside className={`budget-side-panel ${isBudgetAddOpen ? 'add-open' : ''}`}>
-          {isBudgetAddOpen ? (
-          <form
-            className="budget-add-card budget-add-modern"
-            onSubmit={(event) => {
-              const shouldClose = budgetDraft.category.trim().length > 0;
-              addBudgetItem(event);
-              if (shouldClose) setIsBudgetAddOpen(false);
-            }}
-          >
-            <div>
-              <p className="eyebrow">New category</p>
-              <h4>Add budget item</h4>
-            </div>
-        <label>
-          <span>Category</span>
-          <input value={budgetDraft.category} onChange={(event) => setBudgetDraft((current) => ({ ...current, category: event.target.value }))} placeholder="e.g. Door gift" aria-label="Budget category" />
-        </label>
-        <label>
-          <span>Planned</span>
-          <input type="number" value={budgetDraft.planned} onChange={(event) => setBudgetDraft((current) => ({ ...current, planned: Number(event.target.value) }))} placeholder="RM" aria-label="Planned budget" />
-        </label>
-        <label>
-          <span>Actual</span>
-          <input type="number" value={budgetDraft.actual} onChange={(event) => setBudgetDraft((current) => ({ ...current, actual: Number(event.target.value) }))} placeholder="RM" aria-label="Actual cost" />
-        </label>
-        <label>
-          <span>Paid</span>
-          <input type="number" value={budgetDraft.paid} onChange={(event) => setBudgetDraft((current) => ({ ...current, paid: Number(event.target.value) }))} placeholder="RM" aria-label="Paid amount" />
-        </label>
-        <div className="budget-edit-actions">
-          <button type="submit" disabled={!budgetDraft.category.trim()}>Add item</button>
-          <button type="button" className="danger" onClick={() => setIsBudgetAddOpen(false)}>Cancel</button>
+      <details className="mm-bg__panel">
+        <summary>
+          <span className="mm-bg__panel-title">{t.aiCheck}</span>
+          <span className="mm-bg__panel-caret" aria-hidden="true" />
+        </summary>
+        <div className="mm-bg__panel-body">
+          <strong className="mm-bg__panel-lead">{budgetRisk}</strong>
+          <p>
+            {largestActualItem && largestActualItem.actual > 0 && budgetRisk === 'Budget looks balanced'
+              ? t.largest(money(largestActualItem.actual))
+              : budgetRiskDetail}
+          </p>
         </div>
-          </form>
-          ) : null}
+      </details>
 
-          <div className="budget-insight-card">
-            <span>AI budget check</span>
-            <strong>{budgetRisk}</strong>
-            <p>
-              {largestActualItem && largestActualItem.actual > 0 && budgetRisk === 'Budget looks balanced'
-                ? `${money(largestActualItem.actual)} is currently the largest actual cost.`
-                : budgetRiskDetail}
-            </p>
+      <details className="mm-bg__panel">
+        <summary>
+          <span className="mm-bg__panel-title">{t.suggestedSplit}</span>
+          <span className="mm-bg__panel-caret" aria-hidden="true" />
+        </summary>
+        <div className="mm-bg__panel-body">
+          <p>{t.splitGuide(money(suggestionBase))}</p>
+          <div className="mm-bg__alloc">
+            {budgetAllocation.map((allocation) => (
+              <div key={allocation.label} className="mm-bg__alloc-row">
+                <span>
+                  <strong>{allocation.label}</strong>
+                  <small>{allocation.hint}</small>
+                </span>
+                <em>{money(Math.round(suggestionBase * allocation.percent))}</em>
+              </div>
+            ))}
           </div>
+          <button type="button" className="mm-bg__panel-cta" onClick={applyBudgetAllocation}>{t.applySplit}</button>
+        </div>
+      </details>
 
-          <div className="budget-allocation-card">
-            <span>Suggested split</span>
-            <strong>{money(suggestionBase)} planning guide</strong>
-            <p>Use this as a starting point, then adjust based on venue style and guest count.</p>
-            <div className="budget-allocation-list">
-              {budgetAllocation.map((allocation) => (
-                <div key={allocation.label}>
+      {missingSuggestions.length > 0 ? (
+        <details className="mm-bg__panel">
+          <summary>
+            <span className="mm-bg__panel-title">{t.commonCosts}</span>
+            <span className="mm-bg__panel-count">{missingSuggestions.length}</span>
+            <span className="mm-bg__panel-caret" aria-hidden="true" />
+          </summary>
+          <div className="mm-bg__panel-body">
+            <p>{t.commonHint}</p>
+            <div className="mm-bg__suggestions">
+              {missingSuggestions.map((item) => (
+                <button key={item.id} type="button" onClick={() => addSuggestedBudgetItem(item)}>
                   <span>
-                    <strong>{allocation.label}</strong>
-                    <small>{allocation.hint}</small>
+                    <strong>{item.category}</strong>
+                    <small>{item.note}</small>
                   </span>
-                  <em>{money(Math.round(suggestionBase * allocation.percent))}</em>
-                </div>
+                  <em>{money(item.planned)}</em>
+                </button>
               ))}
             </div>
-            <button type="button" onClick={applyBudgetAllocation}>Apply suggested split</button>
           </div>
-
-          <div className="budget-suggestion-card">
-            <span>Budget suggestions</span>
-            <strong>Common costs couples forget</strong>
-            <p>Add these when they apply to your majlis. You can edit the estimate later.</p>
-            {missingSuggestions.length > 0 ? (
-              <div className="budget-suggestion-list">
-                {missingSuggestions.map((item) => (
-                  <button key={item.id} type="button" onClick={() => addSuggestedBudgetItem(item)}>
-                    <span>
-                      <strong>{item.category}</strong>
-                      <small>{item.note}</small>
-                    </span>
-                    <em>{money(item.planned)}</em>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <small>Nice, you already covered the common suggestion list.</small>
-            )}
-          </div>
-        </aside>
-      </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -788,10 +825,10 @@ export function RsvpPanel({
   const guestGroups = Array.from(new Set(guests.map((guest) => guest.group).filter(Boolean)));
   const filteredGuests = guests.filter((guest) => guestView === 'all' || guest.status === guestView);
   const guestViewOptions = [
-    { value: 'all' as const, label: 'All', count: guests.length },
-    { value: 'pending' as const, label: 'Pending', count: guests.filter((guest) => guest.status === 'pending').length },
-    { value: 'confirmed' as const, label: 'Confirmed', count: guests.filter((guest) => guest.status === 'confirmed').length },
-    { value: 'declined' as const, label: 'Declined', count: guests.filter((guest) => guest.status === 'declined').length }
+    { value: 'all' as const, label: language === 'ms' ? 'Semua' : 'All', count: guests.length },
+    { value: 'pending' as const, label: language === 'ms' ? 'Pending' : 'Pending', count: guests.filter((guest) => guest.status === 'pending').length },
+    { value: 'confirmed' as const, label: language === 'ms' ? 'Hadir' : 'Confirmed', count: guests.filter((guest) => guest.status === 'confirmed').length },
+    { value: 'declined' as const, label: language === 'ms' ? 'Tak hadir' : 'Declined', count: guests.filter((guest) => guest.status === 'declined').length }
   ];
   const topGroup = guestGroups
     .map((group) => ({
@@ -801,40 +838,23 @@ export function RsvpPanel({
     .sort((first, second) => second.pax - first.pax)[0];
 
   return (
-    <div className="planner-panel guest-command-center">
-      <div className="planner-panel-header guest-hero-modern">
-        <div>
-          <p className="eyebrow">RSVP manager</p>
-          <h3>Guest list and headcount</h3>
-          <p>Track attendance by household, group, and pax without turning the page into a spreadsheet.</p>
+    <div className="planner-panel guest-command-center mm-guest">
+      <header className="mm-gs__header">
+        <div className="mm-gs__heading">
+          <span className="mm-gs__eyebrow">{language === 'ms' ? 'Senarai tetamu' : 'Guest list'}</span>
+          <h2 className="mm-gs__amount">
+            {totalPax}
+            <em>{language === 'ms' ? ` pax · ${guests.length} rekod` : ` pax · ${guests.length} record${guests.length === 1 ? '' : 's'}`}</em>
+          </h2>
         </div>
-        <div className="guest-header-actions">
-          <button type="button" className="primary-action" onClick={() => setIsGuestAddOpen(true)}>Add guest</button>
-          <button
-            type="button"
-            className="utility-action"
-            onClick={() => {
-              setRsvpUrlDraft(rsvpFormUrl);
-              setIsRsvpShareOpen((open) => !open);
-            }}
-            aria-expanded={isRsvpShareOpen}
-          >
-            {language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}
-          </button>
-          <button type="button" className="utility-action" onClick={() => guestImportRef.current?.click()}>Import CSV</button>
-          <button type="button" className="utility-action" onClick={exportGuestsCsv} disabled={guests.length === 0}>Export CSV</button>
-          <input
-            ref={guestImportRef}
-            className="visually-hidden"
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(event) => {
-              importGuestsCsv(event.target.files?.[0]);
-              event.currentTarget.value = '';
-            }}
-          />
+        <div className="mm-gs__breakdown">
+          <span className="is-confirmed">{confirmedGuests} {language === 'ms' ? 'hadir' : 'going'}</span>
+          <span className="mm-gs__breakdown-sep">·</span>
+          <span>{pendingGuests} pending</span>
+          <span className="mm-gs__breakdown-sep">·</span>
+          <span>{declinedGuests} {language === 'ms' ? 'tak hadir' : 'declined'}</span>
         </div>
-      </div>
+      </header>
 
       {isRsvpShareOpen ? (
         <div className="rsvp-share-card">
@@ -929,38 +949,89 @@ export function RsvpPanel({
         </div>
       ) : null}
 
-      <div className="guest-focus-grid" aria-label="Guest headcount summary">
-        <article className="guest-focus-card">
-          <span>Total pax</span>
-          <strong>{totalPax}</strong>
-          <p>{guests.length} guest record{guests.length === 1 ? '' : 's'}</p>
-        </article>
-        <article><span>Confirmed</span><strong>{confirmedGuests}</strong><p>ready for caterer</p></article>
-        <article><span>Pending</span><strong>{pendingGuests}</strong><p>need follow-up</p></article>
-        <article><span>Declined</span><strong>{declinedGuests}</strong><p>not attending</p></article>
+      <div className="mm-gs__toolbar">
+        <div className="mm-gs__views" role="tablist" aria-label="Guest views">
+          {guestViewOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              role="tab"
+              aria-selected={guestView === option.value}
+              className={guestView === option.value ? 'is-active' : ''}
+              onClick={() => setGuestView(option.value)}
+            >
+              {option.label}
+              <span className="mm-gs__view-count">{option.count}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mm-gs__tools">
+          <button
+            type="button"
+            className={`mm-gs__add${isGuestAddOpen ? ' is-open' : ''}`}
+            aria-expanded={isGuestAddOpen}
+            onClick={() => setIsGuestAddOpen((v) => !v)}
+          >
+            <span className="mm-gs__add-plus" aria-hidden="true">+</span>
+            <span className="mm-gs__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
+          </button>
+          <details className="mm-gs__menu">
+            <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+            </summary>
+            <div className="mm-gs__menu-pop">
+              <button type="button" onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsRsvpShareOpen((open) => !open); }}>{language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}</button>
+              <button type="button" onClick={() => guestImportRef.current?.click()}>{language === 'ms' ? 'Import CSV' : 'Import CSV'}</button>
+              <button type="button" onClick={exportGuestsCsv} disabled={guests.length === 0}>{language === 'ms' ? 'Eksport CSV' : 'Export CSV'}</button>
+            </div>
+          </details>
+          <input
+            ref={guestImportRef}
+            className="visually-hidden"
+            type="file"
+            accept=".csv,text/csv"
+            onChange={(event) => {
+              importGuestsCsv(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+        </div>
       </div>
 
-      <div className="guest-workspace">
-        <section className="guest-main">
-          <div className="guest-toolbar">
-            <div className="guest-view-tabs" role="tablist" aria-label="Guest views">
-              {guestViewOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={guestView === option.value}
-                  className={guestView === option.value ? 'active' : ''}
-                  onClick={() => setGuestView(option.value)}
-                >
-                  {option.label}
-                  <span>{option.count}</span>
-                </button>
-              ))}
-            </div>
+      {isGuestAddOpen ? (
+        <form
+          className="mm-gs__addform"
+          onSubmit={(event) => {
+            const shouldClose = guestDraft.name.trim().length > 0;
+            addGuest(event);
+            if (shouldClose) setIsGuestAddOpen(false);
+          }}
+        >
+          <input value={guestDraft.name} onChange={(event) => setGuestDraft((current) => ({ ...current, name: event.target.value }))} placeholder={language === 'ms' ? 'Nama tetamu' : 'Guest name'} aria-label="Guest name" />
+          <div className="mm-gs__addform-row">
+            <input value={guestDraft.phone} onChange={(event) => setGuestDraft((current) => ({ ...current, phone: event.target.value }))} placeholder={language === 'ms' ? 'Telefon' : 'Phone'} aria-label="Guest phone" />
+            <input type="number" min="1" value={guestDraft.pax} onChange={(event) => setGuestDraft((current) => ({ ...current, pax: Number(event.target.value) || 1 }))} placeholder="Pax" aria-label="Guest pax" />
           </div>
+          <div className="mm-gs__addform-row">
+            <select value={guestDraft.group} onChange={(event) => setGuestDraft((current) => ({ ...current, group: event.target.value }))} aria-label="Guest group">
+              <option>Tetamu Ayah</option>
+              <option>Tetamu Ibu</option>
+              <option>Adik Beradik</option>
+              <option>Kawan-kawan</option>
+              <option>Rakan Sekerja</option>
+              <option>VIP</option>
+            </select>
+            <select value={guestDraft.status} onChange={(event) => setGuestDraft((current) => ({ ...current, status: event.target.value as Guest['status'] }))} aria-label="RSVP status">
+              <option value="pending">{language === 'ms' ? 'Belum Reply' : 'Pending'}</option>
+              <option value="confirmed">{language === 'ms' ? 'Confirm Hadir' : 'Confirmed'}</option>
+              <option value="declined">{language === 'ms' ? 'Tidak Hadir' : 'Declined'}</option>
+            </select>
+          </div>
+          <button type="submit" disabled={!guestDraft.name.trim()}>{language === 'ms' ? 'Tambah tetamu' : 'Add guest'}</button>
+        </form>
+      ) : null}
 
-          <div className="guest-list-modern">
+      <div className="guest-list-modern mm-gs__list">
             {filteredGuests.length > 0 ? filteredGuests.map((guest) => {
               const isExpanded = expandedGuestId === guest.id;
 
@@ -975,7 +1046,7 @@ export function RsvpPanel({
                     <span className="guest-avatar" aria-hidden="true">{guest.name.slice(0, 1).toUpperCase()}</span>
                     <span className="guest-row-title">
                       <strong>{guest.name}</strong>
-                      <small>{guest.phone || 'No phone'} - {guest.group}</small>
+                      <small>{guest.phone || (language === 'ms' ? 'Tiada telefon' : 'No phone')} · {guest.group}</small>
                     </span>
                     <span className="guest-pax">{guest.pax} pax</span>
                     <span className={`guest-status ${guest.status}`}>{rsvpLabel(guest.status)}</span>
@@ -984,15 +1055,15 @@ export function RsvpPanel({
                   {isExpanded ? (
                     <div className="guest-edit-panel">
                       <label>
-                        <span>Name</span>
+                        <span>{language === 'ms' ? 'Nama' : 'Name'}</span>
                         <input value={guest.name} onChange={(event) => updateGuest(guest.id, { name: event.target.value })} aria-label="Guest name" />
                       </label>
                       <label>
-                        <span>Phone</span>
+                        <span>{language === 'ms' ? 'Telefon' : 'Phone'}</span>
                         <input value={guest.phone} onChange={(event) => updateGuest(guest.id, { phone: event.target.value })} aria-label="Guest phone" />
                       </label>
                       <label>
-                        <span>Group</span>
+                        <span>{language === 'ms' ? 'Kumpulan' : 'Group'}</span>
                         <input value={guest.group} onChange={(event) => updateGuest(guest.id, { group: event.target.value })} aria-label="Guest group" />
                       </label>
                       <label>
@@ -1002,14 +1073,14 @@ export function RsvpPanel({
                       <label>
                         <span>Status</span>
                         <select value={guest.status} onChange={(event) => updateGuest(guest.id, { status: event.target.value as Guest['status'] })} aria-label={`RSVP status for ${guest.name}`}>
-                          <option value="pending">Belum Reply</option>
-                          <option value="confirmed">Confirm Hadir</option>
-                          <option value="declined">Tidak Hadir</option>
+                          <option value="pending">{language === 'ms' ? 'Belum Reply' : 'Pending'}</option>
+                          <option value="confirmed">{language === 'ms' ? 'Confirm Hadir' : 'Confirmed'}</option>
+                          <option value="declined">{language === 'ms' ? 'Tidak Hadir' : 'Declined'}</option>
                         </select>
                       </label>
                       <div className="guest-edit-actions">
-                        <button type="button" onClick={() => setExpandedGuestId(null)}>Done editing</button>
-                        <button type="button" className="danger" onClick={() => removeGuest(guest.id)}>Remove</button>
+                        <button type="button" onClick={() => setExpandedGuestId(null)}>{language === 'ms' ? 'Selesai edit' : 'Done editing'}</button>
+                        <button type="button" className="danger" onClick={() => removeGuest(guest.id)}>{language === 'ms' ? 'Buang' : 'Remove'}</button>
                       </div>
                     </div>
                   ) : null}
@@ -1017,58 +1088,25 @@ export function RsvpPanel({
               );
             }) : (
               <div className="empty-state action-empty">
-                <strong>No guests in this view.</strong>
-                <span>Switch tabs or add a guest from the side panel.</span>
-                <button type="button" onClick={() => setIsGuestAddOpen(true)}>Add guest</button>
+                <strong>{language === 'ms' ? 'Tiada tetamu dalam paparan ini.' : 'No guests in this view.'}</strong>
+                <span>{language === 'ms' ? 'Tukar tab atau tambah tetamu baharu.' : 'Switch tabs or add a new guest.'}</span>
+                <button type="button" onClick={() => setIsGuestAddOpen(true)}>{language === 'ms' ? 'Tambah tetamu' : 'Add guest'}</button>
               </div>
             )}
-          </div>
-        </section>
-
-        <aside className={`guest-side-panel ${isGuestAddOpen ? 'add-open' : ''}`}>
-          {isGuestAddOpen ? (
-          <form
-            className="guest-add-card"
-            onSubmit={(event) => {
-              const shouldClose = guestDraft.name.trim().length > 0;
-              addGuest(event);
-              if (shouldClose) setIsGuestAddOpen(false);
-            }}
-          >
-            <div>
-              <p className="eyebrow">New guest</p>
-              <h4>Add guest</h4>
-            </div>
-            <input value={guestDraft.name} onChange={(event) => setGuestDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Guest name" aria-label="Guest name" />
-            <input value={guestDraft.phone} onChange={(event) => setGuestDraft((current) => ({ ...current, phone: event.target.value }))} placeholder="Phone" aria-label="Guest phone" />
-            <select value={guestDraft.group} onChange={(event) => setGuestDraft((current) => ({ ...current, group: event.target.value }))} aria-label="Guest group">
-              <option>Tetamu Ayah</option>
-              <option>Tetamu Ibu</option>
-              <option>Adik Beradik</option>
-              <option>Kawan-kawan</option>
-              <option>Rakan Sekerja</option>
-              <option>VIP</option>
-            </select>
-            <input type="number" min="1" value={guestDraft.pax} onChange={(event) => setGuestDraft((current) => ({ ...current, pax: Number(event.target.value) || 1 }))} aria-label="Guest pax" />
-            <select value={guestDraft.status} onChange={(event) => setGuestDraft((current) => ({ ...current, status: event.target.value as Guest['status'] }))} aria-label="RSVP status">
-              <option value="pending">Belum Reply</option>
-              <option value="confirmed">Confirm Hadir</option>
-              <option value="declined">Tidak Hadir</option>
-            </select>
-            <div className="guest-edit-actions">
-              <button type="submit" disabled={!guestDraft.name.trim()}>Add guest</button>
-              <button type="button" className="danger" onClick={() => setIsGuestAddOpen(false)}>Cancel</button>
-            </div>
-          </form>
-          ) : null}
-
-          <div className="guest-insight-card">
-            <span>Headcount insight</span>
-            <strong>{topGroup ? topGroup.group : 'No groups yet'}</strong>
-            <p>{topGroup ? `${topGroup.pax} pax in this group.` : 'Add guests to see the largest guest group.'}</p>
-          </div>
-        </aside>
       </div>
+
+      {topGroup ? (
+        <details className="mm-gs__panel">
+          <summary>
+            <span className="mm-gs__panel-title">{language === 'ms' ? 'Kumpulan terbesar' : 'Largest group'}</span>
+            <span className="mm-gs__panel-caret" aria-hidden="true" />
+          </summary>
+          <div className="mm-gs__panel-body">
+            <strong className="mm-gs__panel-lead">{topGroup.group}</strong>
+            <p>{language === 'ms' ? `${topGroup.pax} pax dalam kumpulan ini.` : `${topGroup.pax} pax in this group.`}</p>
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -1120,7 +1158,6 @@ export function VendorsPanel({
   const browseMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     `${browseTerm} kahwin ${browseNegeri} Malaysia`.replace(/\s+/g, ' ').trim()
   )}`;
-  const selectedMapVendor = filteredVendors.find((vendor) => savedVendors.includes(vendor.id)) || filteredVendors[0];
   const comparedVendors = compareVendorIds
     .map((id) => filteredVendors.find((vendor) => vendor.id === id))
     .filter((vendor): vendor is Vendor => Boolean(vendor));
@@ -1132,47 +1169,35 @@ export function VendorsPanel({
   };
 
   return (
-    <div className="planner-panel vendor-discovery-panel">
-      <div className="planner-panel-header vendor-page-header">
-        <div>
-          <p className="eyebrow">Vendor directory</p>
-          <h3>Curated Malaysia vendor shortlist</h3>
-          <p>Explore vendors by location, compare price ranges, and draft outreach messages faster.</p>
+    <div className="planner-panel vendor-discovery-panel mm-vendor">
+      <header className="mm-vd__header">
+        <div className="mm-vd__heading">
+          <span className="mm-vd__eyebrow">{language === 'ms' ? 'Direktori vendor' : 'Vendor directory'}</span>
+          <h2 className="mm-vd__title">{language === 'ms' ? 'Senarai vendor majlis' : 'Wedding vendor shortlist'}</h2>
         </div>
-        <div className="vendor-header-actions">
-          <span className="status-pill">{savedVendors.length} shortlisted</span>
-          {compareVendorIds.length > 0 ? <span className="status-pill">{compareVendorIds.length}/3 comparing</span> : null}
+        <div className="mm-vd__stats">
+          <span>{savedVendors.length} {language === 'ms' ? 'disimpan' : 'shortlisted'}</span>
+          {compareVendorIds.length > 0 ? <span className="is-compare">{compareVendorIds.length}/3 {language === 'ms' ? 'banding' : 'comparing'}</span> : null}
         </div>
-      </div>
+      </header>
 
-      <div className="vendor-filter-bar">
-        <label>
-          <span>Negeri</span>
-          <select value={vendorFilter.negeri} onChange={(event) => setVendorFilter((current) => ({ ...current, negeri: event.target.value }))} aria-label="Filter vendor negeri">
-            <option value="All">All negeri</option>
-            {vendorStates.map((state) => <option key={state} value={state}>{state}</option>)}
-          </select>
-        </label>
-        <label>
-          <span>Category</span>
-          <select value={vendorFilter.category} onChange={(event) => setVendorFilter((current) => ({ ...current, category: event.target.value }))} aria-label="Filter vendor category">
-            <option value="All">All categories</option>
-            {vendorCategories.map((category) => <option key={category} value={category}>{category}</option>)}
-          </select>
-        </label>
-        <span className="vendor-result-count">{filteredVendors.length} result{filteredVendors.length === 1 ? '' : 's'}</span>
-        <a
-          className="vendor-search-nearby"
-          href={browseMapsUrl}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {language === 'ms' ? '🗺️ Cari berdekatan di Google Maps' : '🗺️ Find nearby on Google Maps'}
+      <div className="mm-vd__filter">
+        <select value={vendorFilter.negeri} onChange={(event) => setVendorFilter((current) => ({ ...current, negeri: event.target.value }))} aria-label="Filter vendor negeri">
+          <option value="All">{language === 'ms' ? 'Semua negeri' : 'All states'}</option>
+          {vendorStates.map((state) => <option key={state} value={state}>{state}</option>)}
+        </select>
+        <select value={vendorFilter.category} onChange={(event) => setVendorFilter((current) => ({ ...current, category: event.target.value }))} aria-label="Filter vendor category">
+          <option value="All">{language === 'ms' ? 'Semua kategori' : 'All categories'}</option>
+          {vendorCategories.map((category) => <option key={category} value={category}>{category}</option>)}
+        </select>
+        <span className="mm-vd__count">{filteredVendors.length} {language === 'ms' ? 'hasil' : `result${filteredVendors.length === 1 ? '' : 's'}`}</span>
+        <a className="mm-vd__maps" href={browseMapsUrl} target="_blank" rel="noreferrer">
+          {language === 'ms' ? '🗺️ Cari di Google Maps' : '🗺️ Find on Google Maps'}
         </a>
         {onSearchNearby ? (
           <button
             type="button"
-            className="vendor-search-import"
+            className="mm-vd__import"
             onClick={onSearchNearby}
             disabled={searchLoading}
             title={language === 'ms' ? 'Import hasil ke dalam app (perlu API key)' : 'Import results into the app (needs API key)'}
@@ -1184,71 +1209,41 @@ export function VendorsPanel({
         ) : null}
       </div>
       {searchInfo ? <p className="vendor-search-info">{searchInfo}</p> : null}
-      <p className="vendor-search-hint">
-        {language === 'ms'
-          ? 'Butang Google Maps adalah percuma — ia buka carian vendor sebenar berhampiran anda.'
-          : 'The Google Maps button is free — it opens a real nearby vendor search.'}
-      </p>
-
-      {selectedMapVendor ? (
-        <section className="vendor-map-panel" aria-label="Google Maps vendor preview">
-          <div className="vendor-map-info">
-            <p className="eyebrow">Map preview</p>
-            <h4>{selectedMapVendor.name}</h4>
-            <span>{selectedMapVendor.category} in {selectedMapVendor.negeri}</span>
-            <p>{money(selectedMapVendor.minPrice)} - {money(selectedMapVendor.maxPrice)}</p>
-            <div className="vendor-map-actions">
-              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQueryBase(selectedMapVendor)}`} target="_blank" rel="noreferrer">
-                View map
-              </a>
-              <a href={`https://www.google.com/maps/dir/?api=1&destination=${mapQueryBase(selectedMapVendor)}`} target="_blank" rel="noreferrer">
-                Directions
-              </a>
-            </div>
-          </div>
-          <iframe
-            title={`Google Maps preview for ${selectedMapVendor.name}`}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            src={`https://www.google.com/maps?q=${mapQueryBase(selectedMapVendor)}&output=embed`}
-          />
-        </section>
-      ) : null}
 
       {comparedVendors.length > 0 ? (
         <section className="vendor-compare-panel" aria-label="Vendor comparison">
           <div className="vendor-compare-header">
             <div>
-              <p className="eyebrow">Compare</p>
-              <h4>Shortlist side by side</h4>
+              <p className="eyebrow">{language === 'ms' ? 'Banding' : 'Compare'}</p>
+              <h4>{language === 'ms' ? 'Banding sebelah-menyebelah' : 'Shortlist side by side'}</h4>
             </div>
             <div className="vendor-compare-actions">
               {comparedVendors.length >= 2 ? (
-                <button type="button" className="primary" onClick={() => askVendorComparison(comparedVendors)}>Ask AI</button>
+                <button type="button" className="primary" onClick={() => askVendorComparison(comparedVendors)}>{language === 'ms' ? 'Tanya AI' : 'Ask AI'}</button>
               ) : null}
-              <button type="button" onClick={() => setCompareVendorIds([])}>Clear</button>
+              <button type="button" onClick={() => setCompareVendorIds([])}>{language === 'ms' ? 'Kosongkan' : 'Clear'}</button>
             </div>
           </div>
           <div className="vendor-compare-grid">
             {comparedVendors.map((vendor) => (
               <article key={vendor.id}>
                 <strong>{vendor.name}</strong>
-                <span>{vendor.category} - {vendor.negeri}</span>
+                <span>{vendor.category} · {vendor.negeri}</span>
                 <dl>
                   <div>
-                    <dt>Price</dt>
+                    <dt>{language === 'ms' ? 'Harga' : 'Price'}</dt>
                     <dd>{money(vendor.minPrice)} - {money(vendor.maxPrice)}</dd>
                   </div>
                   <div>
-                    <dt>Rating</dt>
+                    <dt>{language === 'ms' ? 'Penilaian' : 'Rating'}</dt>
                     <dd>{vendor.rating.toFixed(1)}</dd>
                   </div>
                   <div>
-                    <dt>Contact</dt>
+                    <dt>{language === 'ms' ? 'Hubungi' : 'Contact'}</dt>
                     <dd>{vendor.contact}</dd>
                   </div>
                 </dl>
-                <button type="button" onClick={() => setSelectedVendor(vendor)}>Open details</button>
+                <button type="button" onClick={() => setSelectedVendor(vendor)}>{language === 'ms' ? 'Buka butiran' : 'Open details'}</button>
               </article>
             ))}
           </div>
@@ -1261,9 +1256,9 @@ export function VendorsPanel({
             <div className="vendor-top">
               <div>
                 <strong>{vendor.name}</strong>
-                <span>{vendor.category} - {vendor.negeri}</span>
+                <span>{vendor.category} · {vendor.negeri}</span>
               </div>
-              <span className="vendor-rating">{vendor.rating.toFixed(1)}</span>
+              <span className="vendor-rating">★ {vendor.rating.toFixed(1)}</span>
             </div>
             <p>{vendor.note}</p>
             <div className="vendor-meta-row">
@@ -1289,20 +1284,15 @@ export function VendorsPanel({
                 ) : null}
               </div>
             ) : null}
-            <div className="vendor-actions">
-              <button type="button" className={savedVendors.includes(vendor.id) ? 'is-saved' : ''} onClick={() => toggleSavedVendor(vendor.id)}>
-                {savedVendors.includes(vendor.id) ? 'Shortlisted' : 'Shortlist'}
+            <div className="vendor-actions mm-vd__actions">
+              <button type="button" className={`mm-vd__save${savedVendors.includes(vendor.id) ? ' is-saved' : ''}`} onClick={() => toggleSavedVendor(vendor.id)}>
+                {savedVendors.includes(vendor.id) ? (language === 'ms' ? '✓ Disimpan' : '✓ Saved') : (language === 'ms' ? 'Simpan' : 'Shortlist')}
               </button>
               <button type="button" className={compareVendorIds.includes(vendor.id) ? 'is-saved' : ''} onClick={() => toggleCompareVendor(vendor.id)}>
-                {compareVendorIds.includes(vendor.id) ? 'Comparing' : 'Compare'}
+                {compareVendorIds.includes(vendor.id) ? (language === 'ms' ? '✓ Banding' : '✓ Comparing') : (language === 'ms' ? 'Banding' : 'Compare')}
               </button>
-              <button type="button" className="primary" onClick={() => askVendorMessage(vendor)}>Draft WhatsApp</button>
-              <button type="button" onClick={() => setSelectedVendor(vendor)}>Details</button>
-              <button type="button" onClick={() => askVendorQuestions(vendor)}>Questions</button>
-              <button type="button" onClick={() => addVendorToBudget(vendor)}>Add to budget</button>
-              <a href={`https://www.google.com/maps/search/?api=1&query=${mapQueryBase(vendor)}`} target="_blank" rel="noreferrer">
-                View map
-              </a>
+              <button type="button" className="primary" onClick={() => askVendorMessage(vendor)}>{language === 'ms' ? 'Draf WhatsApp' : 'Draft WhatsApp'}</button>
+              <button type="button" onClick={() => setSelectedVendor(vendor)}>{language === 'ms' ? 'Butiran' : 'Details'}</button>
             </div>
           </article>
         ))}
@@ -1321,9 +1311,9 @@ export function VendorsPanel({
               <div>
                 <p className="eyebrow">{selectedVendor.category}</p>
                 <h3>{selectedVendor.name}</h3>
-                <span>{selectedVendor.negeri} - {selectedVendor.rating.toFixed(1)} rating</span>
+                <span>{selectedVendor.negeri} · ★ {selectedVendor.rating.toFixed(1)}</span>
               </div>
-              <button type="button" onClick={() => setSelectedVendor(null)}>Close</button>
+              <button type="button" onClick={() => setSelectedVendor(null)}>{language === 'ms' ? 'Tutup' : 'Close'}</button>
             </div>
             <iframe
               title={`Google Maps detail for ${selectedVendor.name}`}
@@ -1333,25 +1323,25 @@ export function VendorsPanel({
             />
             <div className="vendor-detail-body">
               <article>
-                <span>Price range</span>
+                <span>{language === 'ms' ? 'Julat harga' : 'Price range'}</span>
                 <strong>{money(selectedVendor.minPrice)} - {money(selectedVendor.maxPrice)}</strong>
               </article>
               <article>
-                <span>Contact</span>
+                <span>{language === 'ms' ? 'Hubungi' : 'Contact'}</span>
                 <strong>{selectedVendor.contact}</strong>
                 {selectedVendor.instagram ? <p>{selectedVendor.instagram}</p> : null}
               </article>
               <article>
-                <span>Notes</span>
+                <span>{language === 'ms' ? 'Nota' : 'Notes'}</span>
                 <p>{selectedVendor.note}</p>
               </article>
             </div>
             <div className="vendor-detail-actions">
-              <button type="button" className="primary" onClick={() => askVendorMessage(selectedVendor)}>Draft WhatsApp</button>
-              <button type="button" onClick={() => askVendorQuestions(selectedVendor)}>Questions</button>
-              <button type="button" onClick={() => addVendorToBudget(selectedVendor)}>Add to budget</button>
+              <button type="button" className="primary" onClick={() => askVendorMessage(selectedVendor)}>{language === 'ms' ? 'Draf WhatsApp' : 'Draft WhatsApp'}</button>
+              <button type="button" onClick={() => askVendorQuestions(selectedVendor)}>{language === 'ms' ? 'Soalan' : 'Questions'}</button>
+              <button type="button" onClick={() => addVendorToBudget(selectedVendor)}>{language === 'ms' ? 'Tambah ke bajet' : 'Add to budget'}</button>
               <a href={`https://www.google.com/maps/dir/?api=1&destination=${mapQueryBase(selectedVendor)}`} target="_blank" rel="noreferrer">
-                Directions
+                {language === 'ms' ? 'Arah' : 'Directions'}
               </a>
             </div>
           </aside>

@@ -8985,7 +8985,7 @@ button,
 
   .planner-workspace {
     min-height: 100dvh;
-    background: #ffffff;
+    background: var(--mm-bg);
   }
 
   .planner-body {
@@ -10793,13 +10793,16 @@ textarea:focus {
   .main-chat-panel.active-chat {
     height: calc(100dvh - 56px) !important;
     overflow: hidden !important;
+    /* Reserve room for the floating bottom nav so the sticky composer
+       (position: sticky; bottom: 0) doesn't hide behind it. */
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .main-chat-panel.active-chat .messages {
     max-height: none !important;
     overflow-y: auto !important;
     overscroll-behavior: contain;
-    padding-bottom: 96px !important;
+    padding-bottom: 16px !important;
   }
 
   .main-chat-panel.empty-chat {

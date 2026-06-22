@@ -178,6 +178,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .mm-cl__add {
@@ -573,33 +574,27 @@
   .mm-cl__tools {
     margin-left: auto;
   }
-  /* Compact, icon-only add button on mobile. */
+  /* Compact, icon-only add button on mobile (standardized 38px circle). */
   .mm-cl__add-label {
     display: none;
   }
-  .mm-cl__add {
-    width: 36px;
-    height: 36px;
-    padding: 0;
+  .mm-checklist .mm-cl__add,
+  .mm-checklist .mm-cl__filter {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
     justify-content: center;
   }
   .mm-cl__add-plus {
-    font-size: 1.35rem;
+    font-size: 1.3rem;
   }
-  /* Categories: one horizontally-scrollable row instead of a tall wrapped
-     block, so the task list stays visible without lots of scrolling. */
-  .mm-cl__chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .mm-cl__chips::-webkit-scrollbar {
+  .mm-cl__filter-label {
     display: none;
   }
-  .mm-cl__chips button {
-    flex-shrink: 0;
+  /* Categories now live behind the "Tapis" toggle, so wrapping is fine —
+     they only appear on demand and must be fully visible (no clipping). */
+  .mm-cl__chips {
+    flex-wrap: wrap;
   }
 }
 
@@ -636,11 +631,13 @@
 
 .mm-checklist .mm-cl__add {
   min-height: 0 !important;
+  padding: 8px 15px !important;
   border: 1px solid var(--mm-brand) !important;
   border-radius: 999px !important;
   background: var(--mm-brand) !important;
   color: var(--mm-on-brand) !important;
   box-shadow: none !important;
+  font-size: 0.84rem;
 }
 
 .mm-checklist .mm-cl__add:hover {
@@ -652,6 +649,44 @@
   background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   border-color: var(--mm-border-strong) !important;
+}
+
+.mm-checklist .mm-cl__filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0 !important;
+  padding: 8px 13px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text-muted) !important;
+  box-shadow: none !important;
+  font-size: 0.84rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-checklist .mm-cl__filter:hover {
+  border-color: var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
+}
+
+.mm-checklist .mm-cl__filter.is-active {
+  border-color: var(--mm-accent) !important;
+  background: var(--mm-accent-soft) !important;
+  color: var(--mm-accent-strong) !important;
+}
+
+.mm-cl__filter-dot {
+  position: absolute;
+  top: 5px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mm-accent);
 }
 
 .mm-checklist .mm-cl__menu-pop button {

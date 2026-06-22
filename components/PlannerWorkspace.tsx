@@ -262,13 +262,14 @@ export default function PlannerWorkspace() {
   const [checklistCategoryFilter, setChecklistCategoryFilter] = useState<ChecklistCategoryId | null>(null);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
   const [isEditingChecklistTitle, setIsEditingChecklistTitle] = useState(false);
   const [checklistTitleDraft, setChecklistTitleDraft] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => dateKey(new Date()));
-  const [calendarView, setCalendarView] = useState<'month' | 'agenda'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'agenda' | 'proposed'>('month');
   const [calendarAgendaFilter, setCalendarAgendaFilter] = useState<'upcoming' | 'all'>('upcoming');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [budgetItems, setBudgetItems] = useState<BudgetItem[]>(defaultBudgetItems);
@@ -1091,34 +1092,17 @@ export default function PlannerWorkspace() {
     setMenuInputs((current) => ({ ...current, [tab]: prompt }));
   }
 
-  function repairChecklistScroll(mode: 'clamp' | 'focus-list' = 'clamp') {
+  function repairChecklistScroll() {
+    // Only clamp the panel's own over-scroll after the list reorders. We must
+    // NOT touch window/document scroll here — doing so jumped the whole page to
+    // the top on every status tap (and reflowed with empty space on mobile).
     window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-
-        const checklistPanel = document.querySelector<HTMLElement>('.planner-content > .checklist-panel');
-        if (!checklistPanel) return;
-
-        if (mode === 'focus-list') {
-          const checklistList = checklistPanel.querySelector<HTMLElement>('.checklist-main-list');
-          const targetTop = checklistList
-            ? checklistList.offsetTop - 18
-            : 0;
-
-          checklistPanel.scrollTo({
-            top: Math.max(0, targetTop),
-            behavior: 'auto'
-          });
-          return;
-        }
-
-        const maxScrollTop = Math.max(0, checklistPanel.scrollHeight - checklistPanel.clientHeight);
-        if (checklistPanel.scrollTop > maxScrollTop) {
-          checklistPanel.scrollTop = maxScrollTop;
-        }
-      });
+      const checklistPanel = document.querySelector<HTMLElement>('.planner-content > .checklist-panel');
+      if (!checklistPanel) return;
+      const maxScrollTop = Math.max(0, checklistPanel.scrollHeight - checklistPanel.clientHeight);
+      if (checklistPanel.scrollTop > maxScrollTop) {
+        checklistPanel.scrollTop = maxScrollTop;
+      }
     });
   }
 
@@ -1155,7 +1139,7 @@ export default function PlannerWorkspace() {
     );
     // Keep scroll stable when the list reorders after a status change (the
     // tap-cycle tick routes through here, so it inherits this behavior).
-    repairChecklistScroll('clamp');
+    repairChecklistScroll();
     addActivity('Checklist status updated.');
   }
 
@@ -1861,15 +1845,6 @@ export default function PlannerWorkspace() {
     .sort(sortAppointments)
     .slice(0, 3);
   const calendarDays = getCalendarDays(calendarMonth);
-  const selectedMonthAppointments = appointments
-    .filter((appointment) => {
-      const appointmentDate = new Date(`${appointment.date}T00:00:00`);
-      return (
-        appointmentDate.getMonth() === calendarMonth.getMonth() &&
-        appointmentDate.getFullYear() === calendarMonth.getFullYear()
-      );
-    })
-    .sort(sortAppointments);
   const selectedDateAppointments = appointments
     .filter((appointment) => appointment.date === selectedDate)
     .sort(sortAppointments);
@@ -1904,7 +1879,21 @@ export default function PlannerWorkspace() {
     }
     return [...groups, { key, label, items: [appointment] }];
   }, []);
-  const agendaNeedsTime = calendarAgendaItems.filter((appointment) => !appointment.time && appointment.id !== 'wedding-day').length;
+  // Proposed agenda: checklist deadlines surfaced as schedulable agenda items.
+  const proposedAgendaGroups = checklistItems
+    .filter((item) => item.deadline && !item.completed && item.status !== 'done')
+    .sort((first, second) => (first.deadline! < second.deadline! ? -1 : first.deadline! > second.deadline! ? 1 : 0))
+    .reduce<Array<{ key: string; label: string; items: ChecklistItem[] }>>((groups, item) => {
+      const itemDate = new Date(`${item.deadline}T00:00:00`);
+      const key = `${itemDate.getFullYear()}-${String(itemDate.getMonth() + 1).padStart(2, '0')}`;
+      const label = itemDate.toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', { month: 'long', year: 'numeric' });
+      const existing = groups.find((group) => group.key === key);
+      if (existing) {
+        existing.items.push(item);
+        return groups;
+      }
+      return [...groups, { key, label, items: [item] }];
+    }, []);
   const selectedDateLabel = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -2135,6 +2124,12 @@ export default function PlannerWorkspace() {
     // Intentionally only re-run on open/close; liveVoice is a stable ref-like handle.
   }, [isLiveVoiceOpen]);
 
+  // The chat shows an empty list in its welcome state. Memoize so we don't pass
+  // a brand-new [] array to ChatWidget on every render — that made ChatWidget's
+  // `[messages]` scroll effect re-run every render (→ "Maximum update depth").
+  const isEmptyChat = messages.length === 1 && messages[0].content === defaultAssistantMessage.content;
+  const chatWidgetMessages = useMemo(() => (isEmptyChat ? [] : messages), [isEmptyChat, messages]);
+
   const displayChecklistTitle = checklistTitle === 'Majlis planning checklist' || checklistTitle === 'Checklist'
     ? copy.defaultTemplate
     : checklistTitle;
@@ -2285,32 +2280,6 @@ export default function PlannerWorkspace() {
   const checklistEmptyActionText = language === 'ms' ? 'Bina checklist sekarang' : 'Create checklist now';
   const checklistNextPrompt = language === 'ms' ? 'Apa perlu dibuat minggu ini?' : 'What should I do this week?';
   const checklistSchedulePrompt = language === 'ms' ? 'Jadikan appointment' : 'Add to calendar';
-  const calendarSuggestions =
-    daysLeft === null
-      ? [
-          language === 'ms' ? 'Tambah tarikh majlis untuk cadangan calendar' : 'Add wedding date for calendar suggestions',
-          language === 'ms' ? 'Schedule call dengan venue pilihan' : 'Schedule a call with a preferred venue'
-        ]
-      : daysLeft <= 30
-        ? [
-            language === 'ms' ? 'Confirm final headcount dengan caterer' : 'Confirm final headcount with caterer',
-            language === 'ms' ? 'Schedule final briefing vendor' : 'Schedule final vendor briefing',
-            language === 'ms' ? 'Confirm setup time pelamin/dekor' : 'Confirm decor setup time'
-          ]
-        : daysLeft <= 90
-          ? [
-              language === 'ms' ? 'Follow up RSVP deadline' : 'Follow up RSVP deadline',
-              language === 'ms' ? 'Confirm fitting baju' : 'Confirm outfit fitting',
-              language === 'ms' ? 'Review payment balance vendor' : 'Review vendor payment balance'
-            ]
-          : [
-              language === 'ms' ? 'Book venue/vendor appointment' : 'Book venue/vendor appointment',
-              language === 'ms' ? 'Schedule food tasting' : 'Schedule food tasting',
-              language === 'ms' ? 'Plan photographer discussion' : 'Plan photographer discussion'
-            ];
-  const selectedMonthConfirmed = selectedMonthAppointments.filter((appointment) => appointment.status === 'confirmed').length;
-  const selectedMonthOpen = selectedMonthAppointments.filter((appointment) => appointment.status !== 'done').length;
-  const nextAppointment = selectedMonthAppointments.find((appointment) => appointment.date >= dateKey(new Date()));
   const globalNextAppointment = [...appointments]
     .filter((appointment) => appointment.date >= dateKey(new Date()))
     .sort(sortAppointments)[0];
@@ -2996,7 +2965,7 @@ export default function PlannerWorkspace() {
 
         </div>
       ) : activeTab === 'chat' ? (
-        <div className={`main-chat-panel ${messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? 'empty-chat' : 'active-chat'}`}>
+        <div className={`main-chat-panel ${isEmptyChat ? 'empty-chat' : 'active-chat'}`}>
           <div className="chat-welcome">
             <span aria-hidden="true">heart</span>
             <h2>
@@ -3014,7 +2983,7 @@ export default function PlannerWorkspace() {
             ))}
           </div>
           <ChatWidget
-            messages={messages.length === 1 && messages[0].content === defaultAssistantMessage.content ? [] : messages}
+            messages={chatWidgetMessages}
             input={input}
             loading={loading}
             placeholder={copy.placeholder}
@@ -3118,6 +3087,18 @@ export default function PlannerWorkspace() {
                   <span className="mm-cl__add-plus" aria-hidden="true">+</span>
                   <span className="mm-cl__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
                 </button>
+                {checklistCategoryChips.length > 1 ? (
+                  <button
+                    type="button"
+                    className={`mm-cl__filter${categoryFilterOpen || checklistCategoryFilter ? ' is-active' : ''}`}
+                    aria-expanded={categoryFilterOpen}
+                    onClick={() => setCategoryFilterOpen((v) => !v)}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
+                    <span className="mm-cl__filter-label">{language === 'ms' ? 'Tapis' : 'Filter'}</span>
+                    {checklistCategoryFilter ? <span className="mm-cl__filter-dot" aria-hidden="true" /> : null}
+                  </button>
+                ) : null}
                 <details className="mm-cl__menu">
                   <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
@@ -3154,7 +3135,7 @@ export default function PlannerWorkspace() {
             </form>
           ) : null}
 
-          {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
+          {categoryFilterOpen && checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
             <div className="mm-cl__chips" role="group" aria-label={language === 'ms' ? 'Tapis ikut kategori' : 'Filter by category'}>
               <button
                 type="button"
@@ -3388,194 +3369,57 @@ export default function PlannerWorkspace() {
           ) : null}
         </div>
       ) : activeTab === 'calendar' ? (
-        <div className={`calendar-panel calendar-view-${calendarView}`}>
-          <div className="calendar-toolbar">
-            <div>
-              <p className="eyebrow">Wedding calendar</p>
-              <h3>{monthLabel(calendarMonth)}</h3>
-              <p>Schedule vendor follow-ups, payment reminders, fittings, and final confirmations.</p>
+        <div className={`calendar-panel mm-cal calendar-view-${calendarView}`}>
+          <header className="mm-cal__header">
+            <div className="mm-cal__heading">
+              <span className="mm-cal__eyebrow">{language === 'ms' ? 'Kalendar majlis' : 'Wedding calendar'}</span>
+              <h2 className="mm-cal__title">{monthLabel(calendarMonth)}</h2>
             </div>
-            <div className="calendar-actions">
-              <button type="button" onClick={() => changeCalendarMonth(-1)} aria-label="Previous month">
-                &lt;
+            <div className="mm-cal__nav">
+              <button type="button" className="mm-cal__nav-btn" onClick={() => changeCalendarMonth(-1)} aria-label={language === 'ms' ? 'Bulan sebelum' : 'Previous month'}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
               </button>
-              <button type="button" onClick={() => setCalendarMonth(new Date())}>
-                Today
+              <button type="button" className="mm-cal__today" onClick={() => setCalendarMonth(new Date())}>{language === 'ms' ? 'Hari ini' : 'Today'}</button>
+              <button type="button" className="mm-cal__nav-btn" onClick={() => changeCalendarMonth(1)} aria-label={language === 'ms' ? 'Bulan seterusnya' : 'Next month'}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
               </button>
-              {plannerProfile.majlisDate ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
-                    setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
-                    setSelectedDate(plannerProfile.majlisDate);
-                    setAppointmentDraft((current) => ({ ...current, date: plannerProfile.majlisDate }));
-                  }}
-                >
-                  Wedding day
-                </button>
-              ) : null}
-              <button type="button" onClick={() => changeCalendarMonth(1)} aria-label="Next month">
-                &gt;
+            </div>
+          </header>
+
+          <div className="mm-cal__toolbar">
+            <div className="mm-cal__views" role="tablist" aria-label="Calendar views">
+              <button type="button" role="tab" aria-selected={calendarView === 'month'} className={calendarView === 'month' ? 'is-active' : ''} onClick={() => setCalendarView('month')}>{language === 'ms' ? 'Bulan' : 'Month'}</button>
+              <button type="button" role="tab" aria-selected={calendarView === 'agenda'} className={calendarView === 'agenda' ? 'is-active' : ''} onClick={() => setCalendarView('agenda')}>{language === 'ms' ? 'Agenda' : 'Agenda'}</button>
+              <button type="button" role="tab" aria-selected={calendarView === 'proposed'} className={calendarView === 'proposed' ? 'is-active' : ''} onClick={() => setCalendarView('proposed')}>{language === 'ms' ? 'Cadangan' : 'Proposed'}</button>
+            </div>
+            <div className="mm-cal__tools">
+              <button type="button" className="mm-cal__add" onClick={startAppointmentAssistant}>
+                <span className="mm-cal__add-plus" aria-hidden="true">+</span>
+                <span className="mm-cal__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
               </button>
-              <button type="button" className="utility-action" onClick={addAllAppointmentsToPhoneCalendar} title="Download a calendar file for all appointments">
-                Download calendar
-              </button>
-              <button type="button" className="primary-action" onClick={startAppointmentAssistant}>
-                Schedule with AI
-              </button>
+              <details className="mm-cal__menu">
+                <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+                </summary>
+                <div className="mm-cal__menu-pop">
+                  {plannerProfile.majlisDate ? (
+                    <button type="button" onClick={() => {
+                      const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
+                      setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
+                      setSelectedDate(plannerProfile.majlisDate);
+                      setAppointmentDraft((current) => ({ ...current, date: plannerProfile.majlisDate }));
+                    }}>{language === 'ms' ? 'Pergi ke hari majlis' : 'Go to wedding day'}</button>
+                  ) : null}
+                  <button type="button" onClick={addAllAppointmentsToPhoneCalendar}>{language === 'ms' ? 'Muat turun kalendar' : 'Download calendar'}</button>
+                </div>
+              </details>
             </div>
           </div>
-
-          <div className="calendar-overview-row" aria-label="Calendar overview">
-            <article>
-              <span>This month</span>
-              <strong>{selectedMonthAppointments.length}</strong>
-              <p>appointments</p>
-            </article>
-            <article>
-              <span>Confirmed</span>
-              <strong>{selectedMonthConfirmed}</strong>
-              <p>locked in</p>
-            </article>
-            <article>
-              <span>Open tasks</span>
-              <strong>{selectedMonthOpen}</strong>
-              <p>need follow-up</p>
-            </article>
-            <article>
-              <span>Next</span>
-              <strong>{nextAppointment ? nextAppointment.date.slice(5) : 'None'}</strong>
-              <p>{nextAppointment ? nextAppointment.title : 'no upcoming item'}</p>
-            </article>
-          </div>
-
-          <div className="calendar-viewbar" aria-label="Calendar view">
-            <div className="calendar-view-switch" role="tablist" aria-label="Calendar display">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={calendarView === 'month'}
-                className={calendarView === 'month' ? 'active' : ''}
-                onClick={() => setCalendarView('month')}
-              >
-                Month
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={calendarView === 'agenda'}
-                className={calendarView === 'agenda' ? 'active' : ''}
-                onClick={() => setCalendarView('agenda')}
-              >
-                Agenda
-              </button>
-            </div>
-            <div className="calendar-agenda-filter" aria-label="Agenda filter">
-              <button
-                type="button"
-                className={calendarAgendaFilter === 'upcoming' ? 'active' : ''}
-                onClick={() => setCalendarAgendaFilter('upcoming')}
-              >
-                Upcoming
-              </button>
-              <button
-                type="button"
-                className={calendarAgendaFilter === 'all' ? 'active' : ''}
-                onClick={() => setCalendarAgendaFilter('all')}
-              >
-                All
-              </button>
-            </div>
-          </div>
-
-          <div className="calendar-suggestion-strip" aria-label="Calendar suggestions">
-            {calendarSuggestions.map((suggestion) => (
-              <button
-                key={suggestion}
-                type="button"
-                onClick={() => {
-                  setActiveTab('calendar');
-                  setIsContextAssistantOpen(true);
-                  setAppointmentAssistantActive(true);
-                  setMenuInputs((current) => ({
-                    ...current,
-                    calendar: `${suggestion} on ${selectedDate} at `
-                  }));
-                }}
-              >
-                <span>Plan with AI</span>
-                {suggestion}
-              </button>
-            ))}
-          </div>
-
-          <section className="mobile-calendar-agenda" aria-label="Mobile calendar agenda">
-            <div className="mobile-agenda-header">
-              <div>
-                <p className="eyebrow">{language === 'ms' ? 'Agenda' : 'Agenda'}</p>
-                <h4>{language === 'ms' ? 'Perkara terdekat' : 'Coming up'}</h4>
-              </div>
-              <button type="button" onClick={startAppointmentAssistant}>
-                {language === 'ms' ? 'Tambah' : 'Add'}
-              </button>
-            </div>
-            {plannerProfile.majlisDate ? (
-              <button
-                type="button"
-                className="mobile-agenda-card wedding"
-                onClick={() => {
-                  const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
-                  setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
-                  setSelectedDate(plannerProfile.majlisDate);
-                }}
-              >
-                <span>{language === 'ms' ? 'Hari majlis' : 'Wedding day'}</span>
-                <strong>{plannerProfile.coupleName || [plannerProfile.groomName, plannerProfile.brideName].filter(Boolean).join(' & ') || 'MajlisMate'}</strong>
-                <small>{plannerProfile.majlisDate}</small>
-              </button>
-            ) : null}
-            {selectedMonthAppointments.slice(0, 4).map((appointment) => (
-              <button
-                key={appointment.id}
-                type="button"
-                className="mobile-agenda-card"
-                onClick={() => {
-                  setSelectedDate(appointment.date);
-                  setAppointmentDraft((current) => ({ ...current, date: appointment.date }));
-                }}
-              >
-                <span>{appointment.date}{appointment.time ? `, ${appointment.time}` : ''}</span>
-                <strong>{appointment.title}</strong>
-                <small>{appointment.vendor || appointment.location || appointment.status || 'Planned'}</small>
-              </button>
-            ))}
-            {selectedMonthAppointments.length === 0 && !plannerProfile.majlisDate ? (
-              <div className="mobile-agenda-empty">
-                <strong>{language === 'ms' ? 'Belum ada jadual.' : 'No schedule yet.'}</strong>
-                <span>{language === 'ms' ? 'Tambah appointment vendor atau tarikh majlis.' : 'Add a vendor appointment or wedding date.'}</span>
-              </div>
-            ) : null}
-          </section>
 
           <section className="calendar-agenda-summary" aria-label="Calendar agenda summary">
-            <div className="agenda-summary-row">
-              <article>
-                <span>{calendarAgendaFilter === 'upcoming' ? 'Upcoming' : 'All items'}</span>
-                <strong>{calendarAgendaItems.length}</strong>
-              </article>
-              <article>
-                <span>Confirmed</span>
-                <strong>{calendarAgendaItems.filter((appointment) => appointment.status === 'confirmed').length}</strong>
-              </article>
-              <article>
-                <span>Need time</span>
-                <strong>{agendaNeedsTime}</strong>
-              </article>
-              <article>
-                <span>Next</span>
-                <strong>{calendarAgendaItems[0]?.date.slice(5) || 'None'}</strong>
-              </article>
+            <div className="mm-cal__agenda-filter" role="group" aria-label={language === 'ms' ? 'Tapis agenda' : 'Agenda filter'}>
+              <button type="button" className={calendarAgendaFilter === 'upcoming' ? 'is-active' : ''} onClick={() => setCalendarAgendaFilter('upcoming')}>{language === 'ms' ? 'Akan datang' : 'Upcoming'}</button>
+              <button type="button" className={calendarAgendaFilter === 'all' ? 'is-active' : ''} onClick={() => setCalendarAgendaFilter('all')}>{language === 'ms' ? 'Semua' : 'All'}</button>
             </div>
 
             {calendarAgendaGroups.length > 0 ? (
@@ -3615,16 +3459,69 @@ export default function PlannerWorkspace() {
               </div>
             ) : (
               <div className="empty-state action-empty">
-                <strong>No calendar items yet.</strong>
-                <span>Add appointments or set your wedding date to build a year view.</span>
-                <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
+                <strong>{language === 'ms' ? 'Belum ada item kalendar.' : 'No calendar items yet.'}</strong>
+                <span>{language === 'ms' ? 'Tambah appointment atau set tarikh majlis untuk bina paparan tahunan.' : 'Add appointments or set your wedding date to build a year view.'}</span>
+                <button type="button" onClick={startAppointmentAssistant}>{language === 'ms' ? 'Jadual dengan AI' : 'Schedule with AI'}</button>
               </div>
             )}
           </section>
 
+          {calendarView === 'proposed' ? (
+            <section className="mm-cal__proposed" aria-label={language === 'ms' ? 'Cadangan agenda' : 'Proposed agenda'}>
+              <p className="mm-cal__proposed-lead">
+                {language === 'ms'
+                  ? 'Agenda dicadang daripada tarikh akhir checklist anda. Tekan mana-mana untuk jadualkan sebagai appointment.'
+                  : 'A proposed agenda built from your checklist deadlines. Tap any item to schedule it as an appointment.'}
+              </p>
+              {proposedAgendaGroups.length > 0 ? (
+                <div className="mm-cal__proposed-list">
+                  {proposedAgendaGroups.map((group) => (
+                    <div key={group.key} className="mm-cal__proposed-month">
+                      <h4>{group.label}</h4>
+                      <div>
+                        {group.items.map((item) => {
+                          const itemDate = new Date(`${item.deadline}T00:00:00`);
+                          const dayLabel = itemDate.toLocaleDateString(language === 'ms' ? 'ms-MY' : 'en-MY', { day: 'numeric', weekday: 'short' });
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="mm-cal__proposed-item"
+                              onClick={() => {
+                                setAppointmentDraft((current) => ({ ...current, title: getItemText(item), date: item.deadline! }));
+                                setSelectedDate(item.deadline!);
+                                setCalendarMonth(new Date(itemDate.getFullYear(), itemDate.getMonth(), 1));
+                                setCalendarView('month');
+                              }}
+                            >
+                              <span className="mm-cal__proposed-date">{dayLabel}</span>
+                              <span className="mm-cal__proposed-text">
+                                <strong>{getItemText(item)}</strong>
+                                <small>{getItemPhase(item) || (language === 'ms' ? 'Checklist' : 'Checklist')}</small>
+                              </span>
+                              <span className="mm-cal__proposed-cta">{language === 'ms' ? 'Jadualkan' : 'Schedule'}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state action-empty">
+                  <strong>{language === 'ms' ? 'Tiada tarikh akhir checklist lagi.' : 'No checklist deadlines yet.'}</strong>
+                  <span>{language === 'ms' ? 'Tetapkan tarikh akhir pada task checklist untuk lihat cadangan agenda di sini.' : 'Set deadlines on your checklist tasks to see a proposed agenda here.'}</span>
+                </div>
+              )}
+            </section>
+          ) : null}
+
           <div className="calendar-workspace">
             <div className="calendar-grid" aria-label={`${monthLabel(calendarMonth)} calendar`}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              {(language === 'ms'
+                ? ['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab']
+                : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+              ).map((day) => (
                 <div key={day} className="calendar-weekday">
                   {day}
                 </div>
@@ -3677,10 +3574,10 @@ export default function PlannerWorkspace() {
             <aside className="day-agenda" aria-label="Selected day agenda">
               <div className="day-agenda-header">
                 <div>
-                  <p className="eyebrow">Selected day</p>
+                  <p className="eyebrow">{language === 'ms' ? 'Hari dipilih' : 'Selected day'}</p>
                   <h4>{selectedDateLabel}</h4>
                 </div>
-                <span>{selectedDateAppointments.length + (isSelectedWeddingDay ? 1 : 0)} item{selectedDateAppointments.length + (isSelectedWeddingDay ? 1 : 0) === 1 ? '' : 's'}</span>
+                <span>{selectedDateAppointments.length + (isSelectedWeddingDay ? 1 : 0)} item</span>
               </div>
 
               {pendingAppointment ? (
@@ -3780,22 +3677,22 @@ export default function PlannerWorkspace() {
                       </dl>
                       <div className="agenda-actions">
                         <button type="button" onClick={() => startEditingAppointment(appointment)}>
-                          Edit
+                          {language === 'ms' ? 'Edit' : 'Edit'}
                         </button>
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'planned')}>
-                          Planned
+                          {language === 'ms' ? 'Dirancang' : 'Planned'}
                         </button>
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}>
-                          Confirmed
+                          {language === 'ms' ? 'Disahkan' : 'Confirmed'}
                         </button>
                         <button type="button" onClick={() => updateAppointmentStatus(appointment.id, 'done')}>
-                          Done
+                          {language === 'ms' ? 'Selesai' : 'Done'}
                         </button>
-                        <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(appointment)} title="Download this event as a calendar file">
-                          Add to calendar
+                        <button type="button" className="utility-action" onClick={() => addAppointmentToPhoneCalendar(appointment)} title={language === 'ms' ? 'Muat turun acara sebagai fail kalendar' : 'Download this event as a calendar file'}>
+                          {language === 'ms' ? 'Tambah ke kalendar' : 'Add to calendar'}
                         </button>
                         <button type="button" onClick={() => removeAppointment(appointment.id)}>
-                          Remove
+                          {language === 'ms' ? 'Buang' : 'Remove'}
                         </button>
                       </div>
                     </article>
@@ -3803,27 +3700,27 @@ export default function PlannerWorkspace() {
                 </div>
               ) : (
                 <div className="empty-state action-empty">
-                  <strong>No appointment on this day.</strong>
-                  <button type="button" onClick={startAppointmentAssistant}>Schedule with AI</button>
+                  <strong>{language === 'ms' ? 'Tiada appointment pada hari ini.' : 'No appointment on this day.'}</strong>
+                  <button type="button" onClick={startAppointmentAssistant}>{language === 'ms' ? 'Jadual dengan AI' : 'Schedule with AI'}</button>
                 </div>
               )}
 
               <form className={`appointment-form ${editingAppointmentId ? 'editing' : ''}`} onSubmit={addManualAppointment}>
                 <div className="appointment-form-heading">
                   <div>
-                    <p className="eyebrow">{editingAppointmentId ? 'Edit appointment' : 'Add manually'}</p>
+                    <p className="eyebrow">{editingAppointmentId ? (language === 'ms' ? 'Edit appointment' : 'Edit appointment') : (language === 'ms' ? 'Tambah manual' : 'Add manually')}</p>
                     <h5>{selectedDateLabel}</h5>
                   </div>
                   {editingAppointmentId ? (
                     <button type="button" onClick={cancelEditingAppointment}>
-                      Cancel
+                      {language === 'ms' ? 'Batal' : 'Cancel'}
                     </button>
                   ) : null}
                 </div>
                 <input
                   value={appointmentDraft.title}
                   onChange={(event) => setAppointmentDraft((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="Appointment title"
+                  placeholder={language === 'ms' ? 'Tajuk appointment' : 'Appointment title'}
                   aria-label="Appointment title"
                 />
                 <div className="appointment-form-row">
@@ -3853,13 +3750,13 @@ export default function PlannerWorkspace() {
                 <input
                   value={appointmentDraft.vendor}
                   onChange={(event) => setAppointmentDraft((current) => ({ ...current, vendor: event.target.value }))}
-                  placeholder="Vendor"
+                  placeholder={language === 'ms' ? 'Vendor' : 'Vendor'}
                   aria-label="Appointment vendor"
                 />
                 <input
                   value={appointmentDraft.location}
                   onChange={(event) => setAppointmentDraft((current) => ({ ...current, location: event.target.value }))}
-                  placeholder="Location"
+                  placeholder={language === 'ms' ? 'Lokasi' : 'Location'}
                   aria-label="Appointment location"
                 />
                 <select
@@ -3872,18 +3769,18 @@ export default function PlannerWorkspace() {
                   }
                   aria-label="Appointment status"
                 >
-                  <option value="planned">Planned</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="done">Done</option>
+                  <option value="planned">{language === 'ms' ? 'Dirancang' : 'Planned'}</option>
+                  <option value="confirmed">{language === 'ms' ? 'Disahkan' : 'Confirmed'}</option>
+                  <option value="done">{language === 'ms' ? 'Selesai' : 'Done'}</option>
                 </select>
                 <input
                   value={appointmentDraft.note}
                   onChange={(event) => setAppointmentDraft((current) => ({ ...current, note: event.target.value }))}
-                  placeholder="Notes"
+                  placeholder={language === 'ms' ? 'Nota' : 'Notes'}
                   aria-label="Appointment notes"
                 />
                 <button type="submit" disabled={!appointmentDraft.title.trim() || !appointmentDraft.date}>
-                  {editingAppointmentId ? 'Save changes' : 'Save appointment'}
+                  {editingAppointmentId ? (language === 'ms' ? 'Simpan perubahan' : 'Save changes') : (language === 'ms' ? 'Simpan appointment' : 'Save appointment')}
                 </button>
               </form>
             </aside>
@@ -3905,6 +3802,7 @@ export default function PlannerWorkspace() {
           totalPlanned={totalPlanned}
           totalActual={totalActual}
           totalPaid={totalPaid}
+          language={language}
         />
       ) : activeTab === 'rsvp' ? (
         <RsvpPanel

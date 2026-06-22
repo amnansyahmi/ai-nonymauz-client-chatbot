@@ -1,0 +1,408 @@
+/* =============================================================
+ * Guest / RSVP page — minimalist single-column redesign
+ * header → toolbar → list → collapsible insight.
+ * Themed via --mm-* tokens (light/dark). Loaded last to win.
+ * ============================================================= */
+
+.mm-guest {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.mm-guest > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ---- Header ------------------------------------------------- */
+.mm-gs__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.mm-gs__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.mm-gs__eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-text-soft);
+}
+
+.mm-gs__amount {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0;
+  font-size: clamp(24px, 2.6vw, 32px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--mm-text);
+}
+
+.mm-gs__amount em {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--mm-text-muted);
+}
+
+.mm-gs__breakdown {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--mm-text-muted);
+}
+
+.mm-gs__breakdown .is-confirmed {
+  color: var(--mm-green);
+  font-weight: 700;
+}
+
+.mm-gs__breakdown-sep {
+  color: var(--mm-text-soft);
+}
+
+/* ---- Toolbar ----------------------------------------------- */
+.mm-gs__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mm-gs__views {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  flex-wrap: wrap;
+}
+
+.mm-gs__view-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--mm-text-soft);
+}
+
+.mm-gs__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.mm-gs__add-plus {
+  font-size: 1rem;
+  line-height: 0;
+}
+
+.mm-gs__menu {
+  position: relative;
+}
+
+.mm-gs__menu summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--mm-border);
+  border-radius: 50%;
+  background: var(--mm-surface);
+  color: var(--mm-text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mm-gs__menu summary::-webkit-details-marker { display: none; }
+
+.mm-gs__menu summary:hover,
+.mm-gs__menu[open] summary {
+  background: var(--mm-surface-muted);
+  border-color: var(--mm-border-strong);
+  color: var(--mm-text);
+}
+
+.mm-gs__menu-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--mm-border);
+  border-radius: 12px;
+  background: var(--mm-surface);
+  box-shadow: 0 16px 40px rgba(36, 28, 24, 0.18);
+}
+
+/* ---- Add form ---------------------------------------------- */
+.mm-gs__addform {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card);
+  background: var(--mm-surface);
+  animation: mm-gs-slide 0.18s ease both;
+}
+
+@keyframes mm-gs-slide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mm-gs__addform-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mm-gs__addform input,
+.mm-gs__addform select {
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid var(--mm-border);
+  border-radius: 10px;
+  background: var(--mm-bg);
+  color: var(--mm-text);
+  font-size: 0.92rem;
+}
+
+.mm-gs__addform input:focus,
+.mm-gs__addform select:focus {
+  outline: none;
+  border-color: var(--mm-accent);
+  box-shadow: var(--mm-focus);
+}
+
+/* ---- List -------------------------------------------------- */
+.mm-gs__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Collapsible insight ----------------------------------- */
+.mm-gs__panel {
+  border: 1px solid var(--mm-border);
+  border-radius: 14px;
+  background: var(--mm-surface);
+  overflow: hidden;
+}
+
+.mm-gs__panel summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.mm-gs__panel summary::-webkit-details-marker { display: none; }
+
+.mm-gs__panel-title {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--mm-text);
+}
+
+.mm-gs__panel-caret {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--mm-text-soft);
+  border-bottom: 2px solid var(--mm-text-soft);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.mm-gs__panel[open] .mm-gs__panel-caret {
+  transform: rotate(225deg);
+}
+
+.mm-gs__panel-body {
+  padding: 0 16px 16px;
+}
+
+.mm-gs__panel-body p {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+  color: var(--mm-text-muted);
+}
+
+.mm-gs__panel-lead {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+/* ---- Responsive -------------------------------------------- */
+@media (max-width: 720px) {
+  .mm-gs__header {
+    align-items: flex-start;
+  }
+  .mm-gs__views {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+  }
+  .mm-gs__add-label {
+    display: none;
+  }
+  .mm-gs__addform-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-gs__addform { animation: none; }
+}
+
+/* =============================================================
+ * Override the global `.planner-panel button { …!important }`
+ * theme for the redesigned controls (scoped + !important).
+ * ============================================================= */
+.mm-guest .mm-gs__views button {
+  min-height: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-guest .mm-gs__views button.is-active {
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: 0 1px 3px rgba(36, 28, 24, 0.12) !important;
+}
+
+.mm-guest .mm-gs__views button.is-active .mm-gs__view-count {
+  color: var(--mm-accent-strong) !important;
+}
+
+.mm-guest .mm-gs__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0 !important;
+  padding: 8px 15px !important;
+  border: 1px solid var(--mm-brand) !important;
+  border-radius: 999px !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand) !important;
+  box-shadow: none !important;
+  font-size: 0.84rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-guest .mm-gs__add:hover {
+  background: var(--mm-brand-strong) !important;
+  border-color: var(--mm-brand-strong) !important;
+}
+
+.mm-guest .mm-gs__add.is-open {
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+.mm-guest .mm-gs__menu-pop button {
+  min-height: 0 !important;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem;
+  font-weight: 550 !important;
+  cursor: pointer;
+}
+
+.mm-guest .mm-gs__menu-pop button:hover {
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-guest .mm-gs__addform > button {
+  min-height: 0 !important;
+  padding: 11px !important;
+  border: 1px solid var(--mm-brand) !important;
+  border-radius: 10px !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand) !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-guest .mm-gs__addform > button:disabled {
+  opacity: 0.45 !important;
+}
+
+/* One clean card per guest row. */
+.mm-guest .guest-row-card {
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 14px !important;
+  background: var(--mm-surface) !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+
+.mm-guest .guest-row-summary {
+  background: transparent !important;
+}
+
+.mm-guest .guest-row-summary:hover,
+.mm-guest .guest-row-summary:focus-visible {
+  background: var(--mm-surface-subtle) !important;
+}
+
+@media (max-width: 720px) {
+  .mm-guest .mm-gs__add {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    justify-content: center;
+  }
+  .mm-gs__add-plus {
+    font-size: 1.3rem;
+  }
+}

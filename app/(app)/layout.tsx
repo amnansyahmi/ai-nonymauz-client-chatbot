@@ -15,6 +15,10 @@ import '../styles/majlismate-theme.css';
 import '../styles/dark-sweep.css';
 import '../styles/dashboard.css';
 import '../styles/checklist.css';
+import '../styles/budget.css';
+import '../styles/calendar.css';
+import '../styles/guest.css';
+import '../styles/vendor.css';
 import '../styles/datepicker.css';
 
 /**
