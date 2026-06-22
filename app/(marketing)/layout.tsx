@@ -7,6 +7,16 @@ import '../styles/majlismate-theme.css';
 import '../styles/ai-features.css';
 import '../styles/datepicker.css';
 
+// Mark the document as JS-capable before paint so scroll-reveal elements start
+// hidden only when we can actually reveal them (no flash / no stuck-hidden
+// content if JS is unavailable).
+const animInit = `(function(){try{document.documentElement.classList.add('mm-anim');}catch(e){}})();`;
+
 export default function MarketingLayout({ children }: { children: ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <script dangerouslySetInnerHTML={{ __html: animInit }} />
+      {children}
+    </>
+  );
 }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { PLANS } from '../../lib/payments/plans';
+import ScrollReveal from '../../components/marketing/ScrollReveal';
 
 export const metadata: Metadata = {
   title: 'MajlisMate.ai — Pembantu AI untuk rancang majlis kahwin',
@@ -142,13 +143,18 @@ export default function LandingPage() {
       </section>
 
       <section id="features" className="landing__features" aria-label="Features">
-        <div className="landing__section-head">
+        <div className="landing__section-head" data-reveal>
           <span className="eyebrow">{/* ms */}Kenapa pilih MajlisMate?</span>
           <h2>Semua yang anda perlukan, satu app</h2>
         </div>
         <div className="landing__features-grid">
-          {FEATURES.map((feature) => (
-            <article key={feature.titleEn} className="landing__feature-card">
+          {FEATURES.map((feature, index) => (
+            <article
+              key={feature.titleEn}
+              className="landing__feature-card"
+              data-reveal
+              style={{ animationDelay: `${index * 70}ms` }}
+            >
               <span className="landing__feature-icon" aria-hidden="true">
                 {feature.icon}
               </span>
@@ -160,16 +166,18 @@ export default function LandingPage() {
       </section>
 
       <section id="pricing" className="landing__pricing" aria-label="Pricing">
-        <div className="landing__section-head">
+        <div className="landing__section-head" data-reveal>
           <span className="eyebrow">{/* ms */}Harga</span>
           <h2>Pilih pelan yang sesuai</h2>
           <p>Bermula percuma. Tukar atau batal bila-bila.</p>
         </div>
         <div className="landing__pricing-grid">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan, index) => (
             <article
               key={plan.id}
               className={`landing__plan-card${plan.highlighted ? ' is-highlighted' : ''}`}
+              data-reveal
+              style={{ animationDelay: `${index * 90}ms` }}
             >
               {plan.highlighted ? <span className="landing__plan-badge">Paling popular</span> : null}
               <h3>{plan.nameMs}</h3>
@@ -204,11 +212,11 @@ export default function LandingPage() {
       </section>
 
       <section id="faq" className="landing__faq" aria-label="FAQ">
-        <div className="landing__section-head">
+        <div className="landing__section-head" data-reveal>
           <span className="eyebrow">{/* ms */}Soalan lazim</span>
           <h2>Soalan yang orang selalu tanya</h2>
         </div>
-        <div className="landing__faq-grid">
+        <div className="landing__faq-grid" data-reveal>
           <details className="landing__faq-item">
             <summary>Adakah data saya selamat?</summary>
             <p>
@@ -245,7 +253,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="landing__cta">
+      <section className="landing__cta" data-reveal>
         <h2>Bermula cuma 5 minit</h2>
         <p>
           {/* ms */}Daftar percuma hari ini. Tiada kad kredit diperlukan.
@@ -272,6 +280,8 @@ export default function LandingPage() {
           <Link href="#faq">Soalan lazim</Link>
         </div>
       </footer>
+
+      <ScrollReveal />
     </main>
   );
 }

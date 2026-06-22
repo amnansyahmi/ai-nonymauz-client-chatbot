@@ -1019,3 +1019,136 @@
     transition: none;
   }
 }
+
+/* =============================================================
+ * Marketing motion layer — entrance, scroll reveal, hover.
+ * All gated behind prefers-reduced-motion at the bottom.
+ * ============================================================= */
+@keyframes mm-mkt-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mm-mkt-reveal {
+  from { opacity: 0; transform: translateY(26px); }
+}
+
+@keyframes mm-mkt-bubble {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes mm-mkt-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes mm-mkt-sheen {
+  to { background-position: 200% center; }
+}
+
+/* ---- Hero entrance (on load) ------------------------------- */
+.landing__hero-copy > * {
+  animation: mm-mkt-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing__hero-copy .eyebrow { animation-delay: 0.05s; }
+.landing__hero-copy h1 { animation-delay: 0.12s; }
+.landing__hero-copy p { animation-delay: 0.2s; }
+.landing__hero-actions { animation-delay: 0.28s; }
+.landing__trust { animation-delay: 0.36s; }
+
+.landing__hero-card {
+  animation: mm-mkt-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.32s both;
+}
+
+@media (min-width: 880px) {
+  .landing__hero-window {
+    animation: mm-mkt-float 6s ease-in-out 1.4s infinite;
+  }
+}
+
+/* Chat bubbles type in, one after another (bar is the 1st child) */
+.landing__hero-bubble {
+  animation: mm-mkt-bubble 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.landing__hero-bubble:nth-child(2) { animation-delay: 0.6s; }
+.landing__hero-bubble:nth-child(3) { animation-delay: 1s; }
+.landing__hero-bubble:nth-child(4) { animation-delay: 1.4s; }
+
+/* Animated accent text */
+.landing__hero-accent {
+  background: linear-gradient(100deg, var(--accent), #e0a892 38%, var(--accent) 72%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: mm-mkt-sheen 7s linear infinite;
+}
+
+/* ---- Scroll reveal (gated on JS via .mm-anim) ------------- */
+.mm-anim [data-reveal] {
+  opacity: 0;
+}
+.mm-anim [data-reveal].is-revealed {
+  opacity: 1;
+  animation: mm-mkt-reveal 0.7s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+/* ---- Hover micro-interactions ------------------------------ */
+.landing__feature-card {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.landing__feature-card:hover {
+  transform: translateY(-5px);
+}
+.landing__feature-icon {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.landing__feature-card:hover .landing__feature-icon {
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.landing__plan-card {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s ease, box-shadow 0.2s ease;
+}
+.landing__plan-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 18px 44px rgba(40, 31, 24, 0.12);
+}
+
+.primary-action,
+.utility-action,
+.landing__nav-cta {
+  transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+.landing__hero-primary:hover,
+.landing__nav-cta:hover {
+  transform: translateY(-2px);
+}
+
+/* ---- Reduced motion --------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .landing__hero-copy > *,
+  .landing__hero-card,
+  .landing__hero-window,
+  .landing__hero-bubble,
+  .landing__hero-accent,
+  .mm-anim [data-reveal].is-revealed {
+    animation: none !important;
+  }
+  .landing__hero-accent {
+    color: var(--accent);
+    -webkit-text-fill-color: currentColor;
+  }
+  .mm-anim [data-reveal] {
+    opacity: 1 !important;
+  }
+  .landing__feature-card:hover,
+  .landing__feature-card:hover .landing__feature-icon,
+  .landing__plan-card:hover,
+  .landing__hero-primary:hover,
+  .landing__nav-cta:hover {
+    transform: none;
+  }
+}
