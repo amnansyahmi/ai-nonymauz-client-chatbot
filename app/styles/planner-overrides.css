@@ -237,16 +237,6 @@
     white-space: normal !important;
   }
 
-  .budget-row-card {
-    border-radius: 0 !important;
-  }
-
-  /* Expanded budget row on mobile - flat, no curves */
-  .budget-row-card.expanded {
-    border-radius: 0 !important;
-    margin: 6px 0 !important;
-  }
-
   .budget-row-summary {
     grid-template-columns: 10px minmax(0, 1fr) auto !important;
     grid-template-areas:
@@ -408,7 +398,7 @@
     min-height: 48px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: var(--mm-radius-card) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     color: var(--mm-text) !important;
     padding: 0 14px !important;
     box-shadow: none !important;
@@ -447,7 +437,7 @@
     padding: 10px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: var(--mm-radius-card) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     box-shadow: none !important;
     overflow: visible !important;
   }
@@ -480,7 +470,7 @@
     position: relative !important;
     z-index: 1 !important;
     margin: 0 !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
   }
 }
 
@@ -558,7 +548,7 @@
   .calendar-overview-row article {
     min-width: 0 !important;
     min-height: 94px !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     padding: 14px !important;
   }
 
@@ -589,7 +579,7 @@
     flex: initial !important;
     width: 100% !important;
     min-height: 62px !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     padding: 12px 14px !important;
   }
 
@@ -603,7 +593,7 @@
     margin: 0 !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 18px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     padding: 16px !important;
     box-shadow: none !important;
   }
@@ -633,8 +623,8 @@
     gap: 6px !important;
     width: 100% !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 16px !important;
-    background: #ffffff !important;
+    border-radius: var(--mm-radius-card) !important;
+    background: var(--mm-surface) !important;
     padding: 14px !important;
     text-align: left !important;
     box-shadow: none !important;
@@ -642,7 +632,7 @@
 
   .mobile-agenda-card.wedding {
     border-color: rgba(123, 63, 95, 0.18) !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: #fff8fb !important;
   }
 
@@ -699,7 +689,7 @@
     margin: 0 !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 18px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     padding: 16px !important;
     box-shadow: none !important;
   }
@@ -728,8 +718,8 @@
     min-width: 0 !important;
     min-height: 52px !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 14px !important;
-    background: #ffffff !important;
+    border-radius: var(--mm-radius-card) !important;
+    background: var(--mm-surface) !important;
     padding: 0 14px !important;
     color: var(--mm-text) !important;
     font-size: 0.96rem !important;
@@ -764,7 +754,7 @@
     min-height: 42px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: var(--mm-radius-pill) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     color: #111111 !important;
     padding: 0 !important;
     font-size: 0 !important;
@@ -842,8 +832,8 @@
     height: 52px !important;
     min-height: 52px !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 14px !important;
-    background-color: #ffffff !important;
+    border-radius: var(--mm-radius-card) !important;
+    background-color: var(--mm-surface) !important;
     padding-inline: 14px 38px !important;
     overflow: hidden !important;
     text-align: left !important;
@@ -871,7 +861,7 @@
 .planner-assistant-rail.assistant-drawer {
   width: min(420px, calc(100vw - 24px)) !important;
   max-width: 420px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: -12px 0 36px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -899,7 +889,7 @@
 
 .assistant-drawer .menu-assistant {
   grid-template-rows: minmax(0, 1fr) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
 }
 
 .assistant-drawer .menu-assistant-copy {
@@ -915,7 +905,7 @@
 .assistant-drawer .menu-assistant-actions {
   gap: 8px !important;
   border-bottom: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   padding: 12px 16px !important;
 }
 
@@ -923,7 +913,7 @@
   min-height: 38px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   padding: 0 14px !important;
   font-size: 0.88rem !important;
@@ -975,7 +965,7 @@
   margin: 0 16px 16px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   padding: 6px 7px 6px 18px !important;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.08) !important;
 }
@@ -1061,7 +1051,7 @@ body,
 .planner-shell,
 .planner-content,
 .embed-page {
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
 }
 
@@ -1110,7 +1100,7 @@ body,
   height: 40px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   box-shadow: none !important;
   font-size: 0.9rem !important;
@@ -1172,10 +1162,58 @@ body,
   background: #6f3855 !important;
 }
 
+/* ── Global button base ─────────────────────────────────────────────────────
+   Shared surface, weight, and transition for all planner buttons.
+   Border-radius is intentionally split below so pill only applies to
+   navigation/chrome — not to content rows inside budget, checklist, etc. */
+.planner-panel button,
+.checklist-panel button,
+.calendar-panel button,
+.dashboard-panel button,
+.settings-drawer button,
+.vendor-detail-drawer button,
+.assistant-drawer button,
+.workspace-command-button,
+.workspace-ai-button,
+.workspace-profile-button,
+.workspace-checklist-shortcut,
+.mobile-bottom-nav button {
+  min-height: var(--mm-control-h);
+  border: 1px solid var(--mm-border) !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 140ms ease !important;
+}
+
+/* Panel content buttons — card radius keeps rows/items looking like cards,
+   not capsules. Budget line items, checklist rows, etc. all benefit. */
+.planner-panel button,
+.checklist-panel button,
+.calendar-panel button,
+.dashboard-panel button,
+.settings-drawer button,
+.vendor-detail-drawer button,
+.assistant-drawer button {
+  border-radius: var(--mm-radius-card) !important;
+}
+
+/* Navigation / workspace chrome buttons — pill is correct here (icon-only
+   or short-label top-bar buttons look intentional as capsules). */
+.workspace-command-button,
+.workspace-ai-button,
+.workspace-profile-button,
+.workspace-checklist-shortcut,
+.mobile-bottom-nav button {
+  border-radius: var(--mm-radius-pill) !important;
+}
+
 .planner-sidebar {
   border-right: 1px solid var(--mm-border) !important;
   border-radius: 0 !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1203,7 +1241,7 @@ body,
 .couple-profile-card {
   border: 1px solid var(--mm-border) !important;
   border-radius: 12px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1217,7 +1255,7 @@ body,
   width: min(1180px, calc(100vw - 48px)) !important;
   margin: 0 auto !important;
   padding: clamp(22px, 3vw, 38px) 0 88px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
 }
 
 .planner-panel-header,
@@ -1279,7 +1317,6 @@ body,
 .guest-focus-grid article,
 .metric-card,
 .today-card-grid article,
-.budget-row-card,
 .guest-row-card,
 .vendor-card,
 .checklist-side-card,
@@ -1293,7 +1330,7 @@ body,
 .planner-section {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1346,7 +1383,7 @@ body,
   min-height: 38px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: 4px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   box-shadow: none !important;
   font-weight: 650 !important;
@@ -1399,14 +1436,14 @@ body,
 .checklist-view-tabs button.active,
 .budget-view-tabs button.active,
 .guest-view-tabs button.active {
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .checklist-task-list {
   border: 1px solid var(--mm-border) !important;
   border-radius: 0 !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   overflow: hidden !important;
 }
 
@@ -1415,7 +1452,7 @@ body,
   border-radius: 0 !important;
   border: 0 !important;
   border-bottom: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1429,14 +1466,8 @@ body,
   border-radius: 0 !important;
 }
 
-/* Expanded budget row: flat, no curves */
-.budget-row-card.expanded {
-  background: var(--mm-surface) !important;
-  box-shadow: none !important;
-}
-
 .guest-row-card.expanded {
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1455,7 +1486,7 @@ body,
 .guest-add-card {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1473,7 +1504,7 @@ body,
 .vendor-filter-bar select {
   border: 1px solid var(--mm-border) !important;
   border-radius: 4px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -1551,7 +1582,7 @@ body,
 .settings-drawer,
 .vendor-detail-drawer {
   border-left: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: -16px 0 44px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -1566,7 +1597,7 @@ body,
 
 .assistant-drawer .menu-assistant-actions {
   border-bottom: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
 }
 
 .assistant-drawer .menu-assistant-form.chat-form {
@@ -1624,12 +1655,6 @@ body,
 }
 
 @media (max-width: 760px) {
-  .workspace-titlebar {
-    height: 58px !important;
-    min-height: 58px !important;
-    padding: 0 12px !important;
-  }
-
   .workspace-command-button {
     width: 40px !important;
     min-width: 40px !important;
@@ -1784,7 +1809,7 @@ body,
 @media (max-width: 760px) {
   .planner-content {
     display: grid !important;
-    grid-template-rows: 58px minmax(0, 1fr) !important;
+    grid-template-rows: 56px minmax(0, 1fr) !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
     min-height: 0 !important;
@@ -1814,7 +1839,7 @@ body,
     overflow-x: hidden !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
-    padding: 20px 14px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 12px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
     scroll-padding-top: 18px !important;
   }
 
@@ -1889,7 +1914,7 @@ body,
   .checklist-hero-progress {
     border: 1px solid var(--mm-border) !important;
     border-radius: var(--mm-radius-card) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     padding: 16px !important;
   }
 
@@ -1979,10 +2004,6 @@ body,
 
 /* Mobile usability polish: compact app chrome, prevent overlap, and simplify menu surfaces. */
 @media (max-width: 760px) {
-  .planner-content {
-    grid-template-rows: 56px minmax(0, 1fr) !important;
-  }
-
   .workspace-titlebar {
     height: 56px !important;
     min-height: 56px !important;
@@ -2054,7 +2075,7 @@ body,
   .planner-content > .budget-command-center,
   .planner-content > .guest-command-center,
   .planner-content > .vendor-discovery-panel {
-    padding: 24px 20px calc(138px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 12px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   .mobile-bottom-nav {
@@ -2167,7 +2188,7 @@ body,
   .guest-view-tabs button {
     min-height: 42px !important;
     padding: 0 16px !important;
-    border-radius: 14px !important;
+    border-radius: var(--mm-radius-card) !important;
   }
 
   .checklist-export-actions {
@@ -2324,7 +2345,7 @@ body,
     width: 100% !important;
     min-height: 46px !important;
     padding: 0 12px !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
   }
 
   .vendor-result-count {
@@ -2462,7 +2483,7 @@ body,
 .guest-main-list .guest-row-summary {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -2470,7 +2491,7 @@ body,
 .guest-main-list .guest-row-card.expanded {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   overflow: hidden !important;
 }
 
@@ -2486,7 +2507,7 @@ body,
 .vendor-compare-panel {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: none !important;
 }
 
@@ -2589,7 +2610,7 @@ body,
   min-height: 38px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   padding: 0 14px !important;
   font-weight: 700 !important;
@@ -2606,7 +2627,7 @@ body,
   gap: 10px !important;
   min-width: 0 !important;
   border: 1px solid var(--mm-border) !important;
-  border-radius: 14px !important;
+  border-radius: var(--mm-radius-card) !important;
   background: #fbfbfa !important;
   padding: 14px !important;
 }
@@ -3069,7 +3090,7 @@ body,
     min-height: 40px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: var(--mm-radius-pill) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     color: #111111 !important;
     padding: 0 !important;
     font-size: 0 !important;
@@ -3136,8 +3157,8 @@ body,
     max-width: 100% !important;
     min-height: 42px !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 14px !important;
-    background: #ffffff !important;
+    border-radius: var(--mm-radius-card) !important;
+    background: var(--mm-surface) !important;
     padding: 0 12px !important;
     overflow: hidden !important;
     color: var(--mm-text) !important;
@@ -3180,7 +3201,7 @@ body,
     align-content: center !important;
     width: 100% !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 14px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: #fafaf8 !important;
     color: var(--mm-text) !important;
     padding: 9px 42px 9px 13px !important;
@@ -3228,7 +3249,7 @@ body,
     height: 100% !important;
     min-height: 100% !important;
     border: 0 !important;
-    border-radius: 14px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: transparent !important;
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
@@ -3240,7 +3261,7 @@ body,
 
   .sidebar-date .sidebar-date-control:focus-within {
     border-color: var(--mm-brand) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     box-shadow: 0 0 0 3px rgba(137, 65, 99, 0.12) !important;
   }
 }
@@ -3341,7 +3362,7 @@ body,
     min-height: 54px !important;
     align-content: center !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: #fafaf8 !important;
     color: var(--mm-text) !important;
     padding: 9px 44px 9px 14px !important;
@@ -3378,7 +3399,7 @@ body,
     height: 100% !important;
     min-height: 100% !important;
     border: 0 !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: transparent !important;
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
@@ -3398,7 +3419,7 @@ body,
 
   .sidebar-date .sidebar-date-control:focus-within {
     border-color: var(--mm-brand) !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     box-shadow: 0 0 0 3px rgba(137, 65, 99, 0.12) !important;
   }
 
@@ -3436,7 +3457,7 @@ body,
     min-width: 0 !important;
     min-height: 48px !important;
     border: 0 !important;
-    border-radius: 14px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: transparent !important;
     color: var(--mm-text) !important;
     box-shadow: none !important;
@@ -3511,7 +3532,7 @@ body,
     padding: 10px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 18px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
   }
 
@@ -3626,7 +3647,7 @@ body,
   min-height: var(--mm-control-height) !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   box-shadow: none !important;
   font-weight: 700 !important;
@@ -3739,8 +3760,8 @@ body,
   min-width: 260px !important;
   padding: 10px !important;
   border: 1px solid var(--mm-border) !important;
-  border-radius: 16px !important;
-  background: #ffffff !important;
+  border-radius: var(--mm-radius-card) !important;
+  background: var(--mm-surface) !important;
   box-shadow: var(--mm-shadow-soft) !important;
 }
 
@@ -3759,7 +3780,7 @@ body,
   padding: 0 14px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   font-weight: 700 !important;
 }
@@ -3800,7 +3821,7 @@ body,
   padding: 0 16px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   font-weight: 700 !important;
   list-style: none !important;
@@ -3834,8 +3855,8 @@ body,
   min-width: 220px !important;
   padding: 8px !important;
   border: 1px solid var(--mm-border) !important;
-  border-radius: 16px !important;
-  background: #ffffff !important;
+  border-radius: var(--mm-radius-card) !important;
+  background: var(--mm-surface) !important;
   box-shadow: var(--mm-shadow-soft) !important;
 }
 
@@ -3902,7 +3923,7 @@ body,
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--mm-surface);
   display: grid;
   place-items: center;
   font-weight: 800;
@@ -3918,8 +3939,8 @@ body,
   gap: 12px;
   padding: 12px 14px;
   border: 1px solid var(--mm-border);
-  border-radius: 14px;
-  background: #ffffff;
+  border-radius: var(--mm-radius-card);
+  background: var(--mm-surface);
   cursor: pointer;
   list-style: none;
   transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
@@ -4091,14 +4112,14 @@ body,
 
 .planner-assistant-rail.assistant-drawer {
   border-left: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   box-shadow: -20px 0 64px rgba(0, 0, 0, 0.12) !important;
 }
 
 .assistant-drawer-header {
   min-height: 64px !important;
   border-bottom: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   padding: 12px 18px !important;
 }
 
@@ -4159,6 +4180,23 @@ body,
 .calendar-suggestion-strip::-webkit-scrollbar,
 .checklist-template-row::-webkit-scrollbar {
   display: none !important;
+}
+
+/* Panel tab-switch fade-in — makes mobile navigation feel native */
+@keyframes panel-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.planner-content > .dashboard-panel,
+.planner-content > .planner-panel,
+.planner-content > .checklist-panel,
+.planner-content > .calendar-panel,
+.planner-content > .budget-command-center,
+.planner-content > .guest-command-center,
+.planner-content > .vendor-discovery-panel,
+.planner-content > .main-chat-panel {
+  animation: panel-enter 0.2s ease both;
 }
 
 @media (max-width: 760px) {
@@ -4328,7 +4366,7 @@ body,
     padding: 0 !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 999px !important;
-    background: #ffffff !important;
+    background: var(--mm-surface) !important;
     color: #111111 !important;
     font-size: 0 !important;
     line-height: 0 !important;
@@ -4382,8 +4420,8 @@ body,
     min-width: 0 !important;
     height: 52px !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 14px !important;
-    background: #ffffff !important;
+    border-radius: var(--mm-radius-card) !important;
+    background: var(--mm-surface) !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
   }
@@ -4500,7 +4538,7 @@ body,
   padding: 10px 12px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: 12px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-ink) !important;
   font: inherit !important;
   font-weight: 650 !important;
@@ -4689,16 +4727,22 @@ body,
     grid-row: 2 !important;
     min-height: 0 !important;
   }
+
+  /* Checklist panel must clip its flex children so mm-cl__main scrolls
+     rather than growing the grid item past the cell boundary. */
+  .planner-content > .checklist-panel {
+    overflow: hidden !important;
+    padding-bottom: 24px !important;
+  }
 }
 
-/* Remove side padding from panels at smaller widths */
 @media (max-width: 768px) {
   .planner-content,
   .planner-workspace,
   .dashboard-panel,
   .planner-panel {
-    padding-left: 0px;
-    padding-right: 0px;
+    padding-left: 2px;
+    padding-right: 2px;
   }
 }
 
@@ -4787,7 +4831,7 @@ body,
   min-height: 22px !important;
   border: 1.5px solid #d4d4d4 !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: #ffffff !important;
   padding: 0 !important;
   box-shadow: none !important;
@@ -5010,7 +5054,7 @@ body,
   min-height: 36px !important;
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text-muted) !important;
   padding: 0 12px !important;
 }
@@ -5052,7 +5096,7 @@ body,
 
 .calendar-view-switch button.active,
 .calendar-agenda-filter button.active {
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06) !important;
 }
@@ -5081,7 +5125,7 @@ body,
 .agenda-summary-row article {
   border: 1px solid var(--mm-border) !important;
   border-radius: 18px !important;
-  background: #ffffff !important;
+  background: var(--mm-surface) !important;
   padding: 16px !important;
 }
 
@@ -5130,8 +5174,8 @@ body,
   width: 100% !important;
   min-height: 58px !important;
   border: 1px solid var(--mm-border) !important;
-  border-radius: 16px !important;
-  background: #ffffff !important;
+  border-radius: var(--mm-radius-card) !important;
+  background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
   padding: 12px 14px !important;
   text-align: left !important;
@@ -5275,7 +5319,7 @@ body,
     gap: 4px !important;
     min-width: 0 !important;
     min-height: 104px !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     padding: 14px !important;
   }
 
@@ -5419,7 +5463,7 @@ body,
   padding: 10px 12px;
   border: 1px solid var(--mm-border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--mm-surface);
 }
 
 .checklist-recommend-text {
@@ -5448,7 +5492,7 @@ body,
   height: 30px;
   border-radius: var(--mm-radius-pill);
   border: 1px solid var(--mm-brand);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-brand);
   font-size: 1.2rem;
   line-height: 1;
@@ -5474,7 +5518,7 @@ body,
   padding: 0 16px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-pill);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text);
   font-weight: 600;
   font-size: 0.84rem;
@@ -5606,7 +5650,7 @@ body,
 }
 
 .mm-cl__views button.is-active {
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
@@ -5661,7 +5705,7 @@ body,
   padding: 6px 10px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-pill);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text-muted);
   font-size: 0.82rem;
   font-weight: 600;
@@ -5699,7 +5743,7 @@ body,
   height: 32px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-pill);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text-muted);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -5722,7 +5766,7 @@ body,
   padding: 6px;
   border: 1px solid var(--mm-border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--mm-surface);
   box-shadow: var(--mm-shadow-soft);
   z-index: 10;
 }
@@ -5762,7 +5806,7 @@ body,
   margin-bottom: 16px;
   border: 1px solid var(--mm-border);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--mm-surface);
 }
 
 .mm-cl__quickadd input {
@@ -5810,7 +5854,7 @@ body,
   padding: 4px 10px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-pill);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text-muted);
   font-size: 0.78rem;
   font-weight: 600;
@@ -5842,7 +5886,7 @@ body,
   text-align: center;
   padding: 48px 24px;
   border: 1px dashed var(--mm-border-strong);
-  border-radius: 16px;
+  border-radius: var(--mm-radius-card);
   background: #fafaf8;
 }
 
@@ -5903,7 +5947,7 @@ body,
 
 .checklist-empty-actions button:last-child {
   border: 1px solid var(--mm-border);
-  background: #ffffff;
+  background: var(--mm-surface);
   color: var(--mm-text);
 }
 

@@ -136,8 +136,8 @@ a.icon-only {
   .planner-workspace,
   .dashboard-panel,
   .planner-panel {
-    padding-left: 12px;
-    padding-right: 12px;
+    padding-left: 2px;
+    padding-right: 2px;
   }
 
   .planner-sidebar {

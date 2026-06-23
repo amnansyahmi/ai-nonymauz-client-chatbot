@@ -428,7 +428,7 @@
 /* ---- Recommended (collapsible) ----------------------------- */
 .mm-cl__recommend {
   border: 1px solid var(--mm-border);
-  border-radius: 14px;
+  border-radius: var(--mm-radius-card);
   background: var(--mm-surface);
   overflow: hidden;
 }
@@ -576,7 +576,7 @@
     overflow: hidden;
   }
   /* Override global `.checklist-panel button { padding: 0 14px }` */
-  .mm-checklist .mm-cl__views button {
+  .checklist-panel.mm-checklist .mm-cl__views button {
     padding: 6px 8px !important;
     white-space: nowrap;
   }
@@ -622,11 +622,12 @@
 
 /* =============================================================
  * Override the global `.checklist-panel button { …!important }`
- * planner theme for the redesigned controls. Scoped under
- * .mm-checklist (higher specificity) + !important so these win.
- * Without this, every control here renders as a bordered pill.
+ * planner theme for the redesigned controls.
+ * Uses `.checklist-panel.mm-checklist` (both classes on the same
+ * element — specificity 0,3,1) to beat the (0,1,1) global rule
+ * even when Next.js App Router doesn't guarantee CSS file order.
  * ============================================================= */
-.mm-checklist .mm-cl__views button {
+.checklist-panel.mm-checklist .mm-cl__views button {
   min-height: 0 !important;
   border: 0 !important;
   border-radius: 999px !important;
@@ -636,7 +637,7 @@
   font-weight: 650 !important;
 }
 
-.mm-checklist .mm-cl__views button:hover {
+.checklist-panel.mm-checklist .mm-cl__views button:hover {
   background: transparent !important;
   color: var(--mm-text) !important;
 }
@@ -855,13 +856,16 @@
     padding-bottom: var(--mm-nav-space, 92px) !important;
   }
 
-  /* Checklist panel goes edge-to-edge: the rail and the scroll column
-     (.mm-cl__main) carry their own padding, so the panel's own side
-     padding only added an unwanted inset (the gap on the rail). Other
-     panels keep their padding — their content has none of its own. */
+  /* Checklist panel goes edge-to-edge + no horizontal overflow */
   .planner-content > .checklist-panel {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    overflow-x: hidden !important;
+  }
+  .mm-checklist,
+  .mm-cl__main {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
   }
 
   /* Flex-row split (rail + main). Flexbox stretches children to the
@@ -1007,7 +1011,7 @@
     min-height: 0 !important;
     padding: 13px 52px 12px 18px !important;
     border: 1px solid var(--mm-border) !important;
-    border-radius: 16px !important;
+    border-radius: var(--mm-radius-card) !important;
     background: var(--mm-surface) !important;
     box-shadow: 0 1px 2px rgba(36, 28, 24, 0.05) !important;
   }
@@ -1060,13 +1064,794 @@
     line-height: 1.35 !important;
   }
 
-  /* Action buttons sit in a compact, right-aligned row below the text */
+  /* "···" trigger — small, top-right corner of the card */
   .mm-checklist .checklist-row-actions {
-    margin-top: 9px;
-    justify-content: flex-end;
-    gap: 6px;
+    position: absolute;
+    top: 10px;
+    right: 44px; /* leaves space for the status toggle */
+    margin: 0;
+  }
+
+  .mm-checklist .checklist-actions-trigger {
+    position: relative;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    box-shadow: none !important;
+  }
+
+  .mm-checklist .checklist-actions-trigger.is-open,
+  .mm-checklist .checklist-actions-trigger:hover {
+    background: var(--mm-surface-muted) !important;
+    color: var(--mm-text) !important;
+  }
+
+  /* Note dot indicator on the trigger */
+  .mm-checklist .checklist-note-dot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 5px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--mm-accent);
+    pointer-events: none;
+  }
+
+  /* Action popup — floats below the trigger, z-indexed above other rows */
+  .mm-checklist .checklist-actions-popup {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 200;
+    min-width: 170px;
+    background: var(--mm-surface);
+    border: 1px solid var(--mm-border);
+    border-radius: var(--mm-radius-card);
+    box-shadow: 0 6px 24px rgba(36, 28, 24, 0.14);
+    overflow: hidden;
+  }
+
+  .mm-checklist .checklist-actions-popup button {
+    display: flex !important;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 11px 14px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: var(--mm-text) !important;
+    font-size: 0.88rem;
+    font-weight: 600 !important;
+    text-align: left;
+    box-shadow: none !important;
+    cursor: pointer;
+  }
+
+  .mm-checklist .checklist-actions-popup button:not(:last-child) {
+    border-bottom: 1px solid var(--mm-border) !important;
+  }
+
+  .mm-checklist .checklist-actions-popup button:hover {
+    background: var(--mm-surface-subtle) !important;
+  }
+
+  .mm-checklist .checklist-actions-popup .checklist-remove-btn {
+    color: var(--mm-red) !important;
+  }
+
+  .mm-checklist .checklist-actions-popup svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  /* Checkbox: right-aligned, compact, no card decoration */
+  .mm-checklist .checklist-task-toggle,
+  .mm-checklist .checklist-select-toggle {
+    top: 50% !important;
+    right: 12px !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    border: 1.5px solid var(--mm-border-strong) !important;
+    border-radius: 4px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .mm-checklist .checklist-task-toggle.done,
+  .mm-checklist .checklist-task-row.done .checklist-task-toggle {
+    background: var(--mm-green) !important;
+    border-color: var(--mm-green) !important;
+  }
+
+  /* Title only — clean, readable */
+  .mm-checklist .checklist-task-text {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Hide ALL meta — dates, badges, phase, alt text, edit, note preview */
+  .mm-checklist .checklist-task-meta { display: none !important; }
+  .mm-checklist .checklist-task-alt { display: none !important; }
+  .mm-checklist .checklist-category-badge { display: none !important; }
+  .mm-checklist .checklist-suggest-btn { display: none !important; }
+  .mm-checklist .checklist-edit-btn { display: none !important; }
+  .mm-checklist .checklist-note-preview { display: none !important; }
+
+  /* Section heading — remove on mobile */
+  .mm-checklist .checklist-section-heading { display: none !important; }
+
+  /* Gap between cards */
+  .mm-checklist .checklist-task-list { gap: 6px !important; }
+
+  /* Hide ··· trigger entirely — actions live in the detail sheet */
+  .mm-checklist .checklist-actions-trigger { display: none !important; }
+  .mm-checklist .checklist-actions-popup { display: none !important; }
+  .mm-checklist .checklist-row-actions { display: none !important; }
+
+  /* Active card: visual highlight on first tap */
+  .mm-checklist .checklist-task-row.is-card-active {
+    border-color: var(--mm-accent) !important;
+    background: color-mix(in srgb, var(--mm-accent) 7%, var(--mm-surface)) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mm-accent) 25%, transparent) !important;
+  }
+  .mm-checklist .checklist-task-row.is-card-active .checklist-task-text {
+    color: var(--mm-accent) !important;
   }
 }
+
+/* ── Mobile toolbar + timeline revamp ───────────────────────────── */
+@media (max-width: 760px) {
+
+  /* ── Header: compact one-row layout ─────────────────── */
+  .mm-cl__eyebrow { display: none !important; }
+
+  .mm-cl__header {
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 0 !important;
+    position: relative !important;
+  }
+
+  /* Title row: name (left) + % (right) on same line */
+  .mm-cl__heading {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .mm-cl__title {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    gap: 5px !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Always show the pencil icon on mobile (no hover needed) */
+  .mm-cl__title-edit {
+    opacity: 1 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Progress section: thin bar + inline meta */
+  .mm-cl__progress {
+    flex: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    gap: 5px !important;
+  }
+
+  .mm-cl__progress-meta {
+    align-items: baseline !important;
+    gap: 6px !important;
+  }
+
+  .mm-cl__progress-meta strong {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: var(--mm-accent-strong, var(--mm-accent)) !important;
+  }
+
+  .mm-cl__progress-meta span {
+    font-size: 0.73rem !important;
+    color: var(--mm-text-muted) !important;
+  }
+
+  .mm-cl__bar {
+    height: 4px !important;
+    border-radius: 999px !important;
+  }
+
+  .mm-cl__bar > span {
+    border-radius: 999px !important;
+    background: var(--mm-accent) !important;
+  }
+
+  /* ── Toolbar: segmented control + tools on one row ── */
+  .mm-cl__toolbar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 0 !important;
+  }
+
+  /* iOS-style segmented control pill track */
+  .mm-cl__views {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 2px !important;
+    padding: 3px !important;
+    background: rgba(0, 0, 0, 0.07) !important;
+    border-radius: 12px !important;
+    overflow: visible !important;
+  }
+
+  /* Each tab: equal-width pill inside the track.
+     .checklist-panel.mm-checklist (0,3,1) beats the global
+     .checklist-panel button (0,1,1) even if file order shifts. */
+  .checklist-panel.mm-checklist .mm-cl__views button {
+    flex: 1 !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 7px 6px !important;
+    border-radius: 9px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 650 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    box-shadow: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1px !important;
+  }
+  .checklist-panel.mm-checklist .mm-cl__views button.is-active {
+    background: var(--mm-surface) !important;
+    color: var(--mm-text) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14) !important;
+    border: 0 !important;
+  }
+  .checklist-panel.mm-checklist .mm-cl__views button .mm-cl__view-count {
+    display: block !important;
+    font-size: 0.65rem !important;
+    font-weight: 700 !important;
+    opacity: 0.55 !important;
+    line-height: 1 !important;
+    color: inherit !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Tools: right of the segmented control */
+  .mm-cl__tools {
+    flex-shrink: 0 !important;
+    margin-left: 0 !important;
+    gap: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* + button: small brand circle */
+  .mm-checklist .mm-cl__add,
+  .mm-cl__add {
+    position: static !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    border-radius: 999px !important;
+    background: var(--mm-brand) !important;
+    border: 0 !important;
+    box-shadow: 0 2px 8px rgba(123, 63, 95, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    color: #ffffff !important;
+  }
+  .mm-cl__add-label { display: none !important; }
+  .mm-cl__add-plus {
+    font-size: 1.5rem !important;
+    font-weight: 300 !important;
+    line-height: 1 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin-top: -1px !important;
+  }
+
+  /* Filter + ··· menu buttons */
+  .mm-checklist .mm-cl__filter,
+  .mm-cl__menu summary {
+    width: 34px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--mm-border) !important;
+    background: var(--mm-surface) !important;
+    box-shadow: none !important;
+  }
+
+  /* Category rail items: no pill border */
+  .mm-checklist .mm-cl__cat-item {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Cards: flat, no left stripe, very compact ─────── */
+  .mm-checklist .checklist-task-row::before {
+    display: none !important;
+  }
+  .mm-checklist .checklist-task-row {
+    padding: 10px 42px 10px 14px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--mm-border) !important;
+    background: var(--mm-surface) !important;
+    box-shadow: none !important;
+    touch-action: manipulation !important;
+    transition: border-color 120ms ease, background 120ms ease, box-shadow 120ms ease !important;
+  }
+  .mm-checklist .checklist-task-row.done {
+    opacity: 0.55 !important;
+  }
+
+  /* ── Timeline mobile revamp — no spine/node ───────── */
+  .mm-timeline {
+    gap: 8px !important;
+    padding: 0 !important;
+  }
+
+  /* Remove spine + number node entirely on mobile */
+  .mm-timeline-phase {
+    padding-left: 0 !important;
+  }
+  .mm-timeline-phase::before {
+    display: none !important;
+  }
+  .mm-timeline-node {
+    display: none !important;
+  }
+
+  /* Phase summary: section header, not a nested card */
+  .mm-timeline-summary {
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    border-radius: 10px 10px 0 0 !important;
+    border-bottom: 0 !important;
+  }
+  .mm-timeline-phase[open] > .mm-timeline-summary {
+    border-radius: 10px 10px 0 0 !important;
+  }
+  .mm-timeline-phase:not([open]) > .mm-timeline-summary {
+    border-radius: 10px !important;
+  }
+  /* Wrap summary + task list in a unified card via the phase element */
+  .mm-timeline-phase {
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    background: var(--mm-surface) !important;
+  }
+
+  .mm-timeline-phase-name {
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+  }
+
+  .mm-timeline-meta {
+    font-size: 0.7rem !important;
+    gap: 4px !important;
+  }
+
+  .mm-timeline-pct {
+    font-size: 0.76rem !important;
+  }
+
+  /* Task list inside phase: flat rows with dividers, no nested cards */
+  .mm-timeline-phase > .checklist-task-list {
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .mm-timeline-phase > .checklist-task-list .checklist-task-row {
+    border: 0 !important;
+    border-bottom: 1px solid var(--mm-border) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding-left: 4px !important;
+  }
+  .mm-timeline-phase > .checklist-task-list .checklist-task-row:last-child {
+    border-bottom: 0 !important;
+  }
+
+  /* ── Add popup category chips ──────────────────────── */
+  .mm-cl__quickadd-cats {
+    margin-bottom: 12px;
+  }
+  .mm-cl__quickadd-cats-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mm-text-muted);
+    margin-bottom: 8px;
+  }
+  .mm-cl__quickadd-cats-row {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .mm-cl__quickadd-cats-row::-webkit-scrollbar { display: none; }
+  .mm-cl__quickadd-cat {
+    flex-shrink: 0 !important;
+    padding: 5px 12px !important;
+    border-radius: 999px !important;
+    border: 1.5px solid var(--mm-border) !important;
+    background: transparent !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 650 !important;
+    white-space: nowrap !important;
+    min-height: 0 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease !important;
+  }
+  .mm-cl__quickadd-cat.is-active {
+    background: var(--mm-brand) !important;
+    border-color: var(--mm-brand) !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ── Add task popup sheet (mobile only) ─────────────────────────── */
+.mm-cl__quickadd-backdrop {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mm-cl__quickadd-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 440;
+    background: rgba(0, 0, 0, 0.4);
+    animation: cl-backdrop-in 0.18s ease both;
+  }
+
+  .mm-cl__quickadd {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 450 !important;
+    background: var(--mm-surface) !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-top: none !important;
+    padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+    gap: 0 !important;
+    flex-direction: column !important;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18) !important;
+    animation: cl-sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both !important;
+  }
+
+  .mm-cl__quickadd-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--mm-border-strong);
+    margin: 10px auto 14px;
+    flex-shrink: 0;
+  }
+
+  .mm-cl__quickadd-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 14px !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    color: var(--mm-text) !important;
+  }
+
+  .mm-cl__quickadd-close {
+    width: 30px !important;
+    height: 30px !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--mm-surface-muted) !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 1.2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+  }
+
+  .mm-cl__quickadd input {
+    min-height: 50px !important;
+    font-size: 1rem !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .mm-cl__quickadd-actions {
+    display: flex !important;
+    gap: 10px !important;
+  }
+
+  .mm-cl__quickadd-actions button:first-child {
+    flex: 1 !important;
+    min-height: 46px !important;
+    border: 1.5px solid var(--mm-border) !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: var(--mm-text-muted) !important;
+    font-weight: 650 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+  }
+
+  .mm-cl__quickadd-actions button:last-child {
+    flex: 2 !important;
+    min-height: 46px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: var(--mm-brand) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+  }
+
+  .mm-cl__quickadd-actions button:last-child:disabled {
+    opacity: 0.4 !important;
+    cursor: not-allowed !important;
+  }
+}
+
+/* ── Checklist task detail sheet ────────────────────────────────── */
+.cl-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: flex-end;
+  animation: cl-backdrop-in 0.18s ease both;
+}
+
+@keyframes cl-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cl-sheet {
+  width: 100%;
+  max-height: 88dvh;
+  background: var(--mm-surface);
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 env(safe-area-inset-bottom, 16px);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: cl-sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes cl-sheet-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.cl-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--mm-border-strong);
+  margin: 10px auto 4px;
+  flex-shrink: 0;
+}
+
+.cl-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 18px 4px;
+  flex-shrink: 0;
+}
+
+.cl-sheet__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mm-accent);
+  letter-spacing: 0.01em;
+}
+
+.cl-sheet__close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  color: var(--mm-text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-height: 0 !important;
+}
+
+.cl-sheet__title-row {
+  padding: 6px 18px 10px;
+}
+
+.cl-sheet__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--mm-text);
+  cursor: text;
+  margin: 0;
+}
+
+.cl-sheet__title-input {
+  width: 100%;
+  font-size: 1.25rem;
+  font-weight: 700;
+  border: 0;
+  border-bottom: 2px solid var(--mm-accent);
+  background: transparent;
+  color: var(--mm-text);
+  outline: none;
+  padding: 2px 0;
+}
+
+.cl-sheet__section {
+  padding: 10px 18px;
+  border-top: 1px solid var(--mm-border);
+}
+
+.cl-sheet__section--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cl-sheet__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mm-text-muted);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cl-sheet__section--row .cl-sheet__label {
+  margin-bottom: 0;
+}
+
+.cl-sheet__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--mm-border);
+  background: var(--mm-surface-subtle);
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--mm-text);
+  cursor: pointer;
+  min-height: 0 !important;
+}
+
+.cl-sheet__status-pill.status-in-progress { border-color: var(--mm-accent); color: var(--mm-accent); background: color-mix(in srgb, var(--mm-accent) 10%, transparent); }
+.cl-sheet__status-pill.status-done { border-color: var(--mm-green); color: var(--mm-green); background: color-mix(in srgb, var(--mm-green) 10%, transparent); }
+
+.cl-sheet__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.cl-sheet__note {
+  width: 100%;
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius-card);
+  background: var(--mm-surface-subtle);
+  color: var(--mm-text);
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+}
+
+.cl-sheet__note:focus { border-color: var(--mm-accent); }
+
+.cl-sheet__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--mm-border);
+  margin-top: 8px;
+}
+
+.cl-sheet__action-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  font-size: 0.92rem;
+  font-weight: 600 !important;
+  text-align: left;
+  cursor: pointer;
+  min-height: 0 !important;
+  border-bottom: 1px solid var(--mm-border) !important;
+}
+
+.cl-sheet__action-btn:hover { background: var(--mm-surface-subtle) !important; }
+.cl-sheet__action-btn--danger { color: var(--mm-red) !important; }
+.cl-sheet__action-btn:last-child { border-bottom: 0 !important; }
 
 /* ── Bottom "Tanya AI" prompt — secondary, below the task list ──── */
 .mm-checklist .checklist-ask-ai-bottom {

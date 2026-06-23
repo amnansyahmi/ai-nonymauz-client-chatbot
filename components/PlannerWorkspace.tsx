@@ -26,6 +26,7 @@ import { BudgetPanel, DashboardPanel, RsvpPanel, VendorsPanel } from './planner/
 import RiskAlerts from './planner/components/RiskAlerts';
 import { detectRisks } from './planner/riskDetector';
 import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
+import ChecklistTaskSheet from './planner/components/ChecklistTaskSheet';
 import VendorMessageSheet from './planner/components/VendorMessageSheet';
 import NotificationToggle from './planner/components/NotificationToggle';
 import ThemeToggle from './planner/ThemeToggle';
@@ -256,6 +257,7 @@ export default function PlannerWorkspace() {
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState<AppLanguage>('ms');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [catRailOpen, setCatRailOpen] = useState(false);
   const [isContextAssistantOpen, setIsContextAssistantOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(false);
@@ -269,15 +271,18 @@ export default function PlannerWorkspace() {
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [setupOpen, setSetupOpen] = useState(false);
-  const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('next');
+  const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('timeline');
   // null = show all categories. Secondary filter axis layered on top of the
   // phase/month timeline; does not affect AI context or other panels.
   const [checklistCategoryFilter, setChecklistCategoryFilter] = useState<ChecklistCategoryId | null>(null);
   const [newChecklistItem, setNewChecklistItem] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState<ChecklistCategoryId | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
+  const [expandedChecklistItem, setExpandedChecklistItem] = useState<ChecklistItem | null>(null);
+  const [activeChecklistId, setActiveChecklistId] = useState<string | null>(null);
   const [isEditingChecklistTitle, setIsEditingChecklistTitle] = useState(false);
   const [checklistTitleDraft, setChecklistTitleDraft] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
@@ -1138,11 +1143,13 @@ export default function PlannerWorkspace() {
         textEn: language === 'en' ? text : undefined,
         completed: false,
         status: 'not-started',
-        category: categorizeTask(text),
+        category: newItemCategory ?? categorizeTask(text),
         phase: copy.custom
       }
     ]);
     setNewChecklistItem('');
+    setNewItemCategory(null);
+    setQuickAddOpen(false);
     addActivity('Checklist item added.');
   }
 
@@ -2613,6 +2620,15 @@ export default function PlannerWorkspace() {
           calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(item)} on ${item.deadline || selectedDate} at `
         }));
       } : undefined}
+      isCardActive={activeChecklistId === item.id}
+      onExpand={() => {
+        if (activeChecklistId === item.id) {
+          setExpandedChecklistItem(item);
+          setActiveChecklistId(null);
+        } else {
+          setActiveChecklistId(item.id);
+        }
+      }}
       copyLabels={checklistRowCopy}
     />
   );
@@ -2632,6 +2648,35 @@ export default function PlannerWorkspace() {
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
       <ViewportLock />
+
+      {expandedChecklistItem ? (
+        <ChecklistTaskSheet
+          item={expandedChecklistItem}
+          language={language}
+          categoryLabel={getCategoryLabel(expandedChecklistItem.category, language)}
+          majlisDate={plannerProfile.majlisDate || undefined}
+          getItemText={getItemText}
+          getItemPhase={getItemPhase}
+          getStatus={getChecklistStatus}
+          onClose={() => { setExpandedChecklistItem(null); setActiveChecklistId(null); }}
+          onRemove={() => { removeChecklistItem(expandedChecklistItem.id); setExpandedChecklistItem(null); setActiveChecklistId(null); }}
+          onUpdateStatus={(status) => { updateChecklistStatus(expandedChecklistItem.id, status); setExpandedChecklistItem((i) => i ? { ...i, status, completed: status === 'done' } : null); }}
+          onUpdateText={(text) => { updateChecklistItemText(expandedChecklistItem.id, text); setExpandedChecklistItem((i) => i ? { ...i, text } : null); }}
+          onUpdateDeadline={(deadline) => { updateChecklistDeadline(expandedChecklistItem.id, deadline); setExpandedChecklistItem((i) => i ? { ...i, deadline } : null); }}
+          onUpdateNote={(note) => { updateChecklistNote(expandedChecklistItem.id, note); setExpandedChecklistItem((i) => i ? { ...i, note } : null); }}
+          onSchedule={() => {
+            setActiveTab('calendar');
+            setIsContextAssistantOpen(true);
+            setAppointmentAssistantActive(true);
+            setMenuInputs((current) => ({
+              ...current,
+              calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(expandedChecklistItem)} on ${expandedChecklistItem.deadline || selectedDate} at `
+            }));
+            setExpandedChecklistItem(null);
+          }}
+        />
+      ) : null}
+
       {isOffline ? (
         <div className="pwa-banner">Offline mode: templates and saved planning data are available. AI replies need internet.</div>
       ) : null}
@@ -2814,10 +2859,10 @@ export default function PlannerWorkspace() {
           <div className="workspace-titlebar">
             <button
               type="button"
-              className={`workspace-menu-button ${isSidebarOpen ? 'active' : ''}`}
-              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isSidebarOpen}
-              onClick={() => setIsSidebarOpen((current) => !current)}
+              className={`workspace-menu-button ${activeTab === 'checklist' ? (catRailOpen ? 'active' : '') : (isSidebarOpen ? 'active' : '')}`}
+              aria-label={activeTab === 'checklist' ? (catRailOpen ? 'Tutup kategori' : 'Buka kategori') : (isSidebarOpen ? 'Close menu' : 'Open menu')}
+              aria-expanded={activeTab === 'checklist' ? catRailOpen : isSidebarOpen}
+              onClick={() => activeTab === 'checklist' ? setCatRailOpen((v) => !v) : setIsSidebarOpen((current) => !current)}
             >
               Menu
             </button>
@@ -3022,8 +3067,8 @@ export default function PlannerWorkspace() {
         </div>
       ) : activeTab === 'checklist' ? (
         <div className="checklist-panel mm-checklist">
-          {/* Full-height category rail — mobile only (column 1) */}
-          {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
+          {/* Full-height category rail — mobile only when catRailOpen (column 1) */}
+          {checklistItems.length > 0 && checklistCategoryChips.length > 1 && catRailOpen ? (
             <nav className="mm-cl__cat-rail" aria-label={language === 'ms' ? 'Kategori' : 'Categories'}>
               <button
                 type="button"
@@ -3165,16 +3210,44 @@ export default function PlannerWorkspace() {
           ) : null}
 
           {quickAddOpen && checklistItems.length > 0 ? (
-            <form className="mm-cl__quickadd" onSubmit={addChecklistItem}>
-              <input
-                autoFocus
-                value={newChecklistItem}
-                onChange={(event) => setNewChecklistItem(event.target.value)}
-                placeholder={copy.addItem}
-                aria-label="New checklist item"
-              />
-              <button type="submit" disabled={newChecklistItem.trim().length === 0}>{copy.add}</button>
-            </form>
+            <>
+              <div className="mm-cl__quickadd-backdrop" onClick={() => setQuickAddOpen(false)} aria-hidden="true" />
+              <form className="mm-cl__quickadd" onSubmit={addChecklistItem}>
+                <div className="mm-cl__quickadd-handle" aria-hidden="true" />
+                <div className="mm-cl__quickadd-header">
+                  <span>{language === 'ms' ? 'Tambah Task Baru' : 'Add New Task'}</span>
+                  <button type="button" className="mm-cl__quickadd-close" aria-label="Tutup" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); }}>×</button>
+                </div>
+                <input
+                  autoFocus
+                  value={newChecklistItem}
+                  onChange={(event) => setNewChecklistItem(event.target.value)}
+                  placeholder={copy.addItem}
+                  aria-label="New checklist item"
+                />
+                {checklistCategoryChips.length > 1 ? (
+                  <div className="mm-cl__quickadd-cats">
+                    <span className="mm-cl__quickadd-cats-label">{language === 'ms' ? 'Kategori' : 'Category'}</span>
+                    <div className="mm-cl__quickadd-cats-row">
+                      {checklistCategoryChips.map((chip) => (
+                        <button
+                          key={chip.id}
+                          type="button"
+                          className={`mm-cl__quickadd-cat${newItemCategory === chip.id ? ' is-active' : ''}`}
+                          onClick={() => setNewItemCategory(newItemCategory === chip.id ? null : chip.id)}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                <div className="mm-cl__quickadd-actions">
+                  <button type="button" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); }}>{language === 'ms' ? 'Batal' : 'Cancel'}</button>
+                  <button type="submit" disabled={newChecklistItem.trim().length === 0}>{language === 'ms' ? 'Tambah' : 'Add'}</button>
+                </div>
+              </form>
+            </>
           ) : null}
 
           {categoryFilterOpen && checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (

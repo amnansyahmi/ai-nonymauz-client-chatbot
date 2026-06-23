@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import type { AppLanguage, ChecklistItem } from '../types';
 import DatePicker from '../../ui/DatePicker';
 
@@ -70,9 +70,11 @@ type Props = {
   onUpdateText: (text: string) => void;
   onUpdateDeadline: (deadline: string) => void;
   onUpdateNote: (note: string) => void;
+  isCardActive?: boolean;
   onSelect?: () => void;
   onSchedule?: () => void;
   onLongPressSelect?: () => void;
+  onExpand?: () => void;
   copyLabels: {
     custom: string;
     notStarted: string;
@@ -118,20 +120,41 @@ export default function ChecklistTaskRow({
   onUpdateText,
   onUpdateDeadline,
   onUpdateNote,
+  isCardActive,
   onSelect,
   onSchedule,
   onLongPressSelect,
+  onExpand,
   copyLabels
 }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState('');
   const [notesOpen, setNotesOpen] = useState(false);
   const [noteText, setNoteText] = useState(item.note || '');
+  const [showActions, setShowActions] = useState(false);
 
   const editInputRef = useRef<HTMLInputElement>(null);
   const noteRef = useRef<HTMLTextAreaElement>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
+  const actionsPopupRef = useRef<HTMLDivElement>(null);
+
+  const closeActions = useCallback(() => setShowActions(false), []);
+
+  useEffect(() => {
+    if (!showActions) return;
+    function onOutside(e: MouseEvent | TouchEvent) {
+      if (actionsPopupRef.current && !actionsPopupRef.current.contains(e.target as Node)) {
+        closeActions();
+      }
+    }
+    document.addEventListener('mousedown', onOutside);
+    document.addEventListener('touchstart', onOutside);
+    return () => {
+      document.removeEventListener('mousedown', onOutside);
+      document.removeEventListener('touchstart', onOutside);
+    };
+  }, [showActions, closeActions]);
 
   function clearLongPress() {
     if (longPressTimerRef.current !== null) {
@@ -201,7 +224,7 @@ export default function ChecklistTaskRow({
 
   return (
     <li
-      className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}${isSelected ? ' is-selected' : ''}`}
+      className={`checklist-task-row ${item.completed ? 'done' : ''} priority-${priority.className}${isSelected ? ' is-selected' : ''}${isCardActive ? ' is-card-active' : ''}`}
       onPointerDown={handleLongPressStart}
       onPointerMove={handleLongPressMove}
       onPointerUp={clearLongPress}
@@ -241,7 +264,14 @@ export default function ChecklistTaskRow({
           </button>
         )}
         <span className="checklist-task-check" aria-hidden="true" />
-        <span className="checklist-task-copy">
+        <span
+          className="checklist-task-copy"
+          onClick={!isEditing && onExpand ? onExpand : undefined}
+          role={onExpand && !isEditing ? 'button' : undefined}
+          tabIndex={onExpand && !isEditing ? 0 : undefined}
+          onKeyDown={onExpand && !isEditing ? (e) => { if (e.key === 'Enter') onExpand(); } : undefined}
+          style={onExpand && !isEditing ? { cursor: 'pointer' } : undefined}
+        >
           {isEditing ? (
             <input
               ref={editInputRef}
@@ -255,15 +285,15 @@ export default function ChecklistTaskRow({
             <span className="checklist-task-titlebar">
               <strong
                 className="checklist-task-text"
-                role="button"
-                tabIndex={item.completed ? -1 : 0}
-                title={language === 'ms' ? 'Klik untuk edit' : 'Click to edit'}
-                onClick={startEdit}
-                onKeyDown={(e) => { if (e.key === 'Enter') startEdit(); }}
+                role={onExpand ? undefined : 'button'}
+                tabIndex={item.completed || onExpand ? -1 : 0}
+                title={onExpand ? undefined : (language === 'ms' ? 'Klik untuk edit' : 'Click to edit')}
+                onClick={onExpand ? undefined : startEdit}
+                onKeyDown={onExpand ? undefined : (e) => { if (e.key === 'Enter') startEdit(); }}
               >
                 {getItemText(item)}
               </strong>
-              {!item.completed ? (
+              {!item.completed && !onExpand ? (
                 <button
                   type="button"
                   className="checklist-edit-btn"
@@ -324,33 +354,50 @@ export default function ChecklistTaskRow({
         {priority.label}
       </span>
 
-      <div className="checklist-row-actions">
+      <div className="checklist-row-actions" ref={actionsPopupRef}>
         <button
           type="button"
-          className={`checklist-note-btn${item.note ? ' has-note' : ''}`}
-          aria-label={language === 'ms' ? 'Nota' : 'Note'}
-          title={language === 'ms' ? 'Tambah nota' : 'Add note'}
-          onClick={() => {
-            setNoteText(item.note || '');
-            setNotesOpen((v) => !v);
-          }}
+          className={`checklist-actions-trigger${showActions ? ' is-open' : ''}${item.note ? ' has-note' : ''}`}
+          aria-label={language === 'ms' ? 'Lagi tindakan' : 'More actions'}
+          aria-expanded={showActions}
+          onClick={(e) => { e.stopPropagation(); setShowActions((v) => !v); }}
         >
-          <NoteIcon />
+          <span aria-hidden="true">···</span>
+          {item.note ? <span className="checklist-note-dot" aria-hidden="true" /> : null}
         </button>
-        {!compact && onSchedule ? (
-          <button type="button" className="checklist-schedule-btn" onClick={onSchedule}>
-            {copyLabels.schedule}
-          </button>
+        {showActions ? (
+          <div className="checklist-actions-popup" role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className={`checklist-note-btn${item.note ? ' has-note' : ''}`}
+              onClick={() => { setNoteText(item.note || ''); setNotesOpen((v) => !v); closeActions(); }}
+            >
+              <NoteIcon />
+              {item.note ? (language === 'ms' ? 'Edit nota' : 'Edit note') : (language === 'ms' ? 'Tambah nota' : 'Add note')}
+            </button>
+            {!compact && onSchedule ? (
+              <button
+                type="button"
+                role="menuitem"
+                className="checklist-schedule-btn"
+                onClick={() => { onSchedule(); closeActions(); }}
+              >
+                <CalendarIcon />
+                {copyLabels.schedule}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              role="menuitem"
+              className="checklist-remove-btn"
+              onClick={() => { onRemove(); closeActions(); }}
+            >
+              <TrashIcon />
+              {copyLabels.remove}
+            </button>
+          </div>
         ) : null}
-        <button
-          type="button"
-          className="checklist-remove-btn"
-          aria-label={`Remove ${item.text}`}
-          title={copyLabels.remove}
-          onClick={onRemove}
-        >
-          <TrashIcon />
-        </button>
       </div>
 
       {notesOpen ? (
