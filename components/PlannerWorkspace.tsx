@@ -29,6 +29,7 @@ import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
 import VendorMessageSheet from './planner/components/VendorMessageSheet';
 import NotificationToggle from './planner/components/NotificationToggle';
 import ThemeToggle from './planner/ThemeToggle';
+import ViewportLock from './ViewportLock';
 import { buildWeeklyBriefing } from '../lib/planner/weeklyBriefing';
 import { parseChatActions, stripActionBlock, type PlannerAction } from '../lib/planner/chatActions';
 import { parseClarify, stripClarifyBlock } from '../lib/planner/chatClarify';
@@ -236,6 +237,18 @@ type ChatSession = {
   messages: Message[];
 };
 
+const CATEGORY_ICON: Record<string, string> = {
+  'keperluan-asas':    '📋',
+  'nikah-protokol':    '📜',
+  'tempat-venue':      '🏛️',
+  'makanan-katering':  '🍽️',
+  'solekan-pakaian':   '👗',
+  'pelamin-dekorasi':  '💐',
+  'media-dokumentasi': '📸',
+  'hiburan-aturcara':  '🎵',
+  'jemputan-logistik': '💌',
+};
+
 export default function PlannerWorkspace() {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -256,7 +269,7 @@ export default function PlannerWorkspace() {
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [setupOpen, setSetupOpen] = useState(false);
-  const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('timeline');
+  const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('next');
   // null = show all categories. Secondary filter axis layered on top of the
   // phase/month timeline; does not affect AI context or other panels.
   const [checklistCategoryFilter, setChecklistCategoryFilter] = useState<ChecklistCategoryId | null>(null);
@@ -2273,9 +2286,9 @@ export default function PlannerWorkspace() {
     };
   });
   const checklistViewOptions = [
-    { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistCategoryGroups.length },
     { value: 'next' as const, label: language === 'ms' ? 'Fokus' : 'Focus', count: scopedNextChecklistItems.length },
-    { value: 'completed' as const, label: language === 'ms' ? 'Selesai' : 'Completed', count: completedChecklistItems.length }
+    { value: 'timeline' as const, label: language === 'ms' ? 'Timeline' : 'Timeline', count: checklistCategoryGroups.length },
+    { value: 'completed' as const, label: language === 'ms' ? 'Selesai' : 'Done', count: completedChecklistItems.length }
   ];
   const checklistEmptyActionText = language === 'ms' ? 'Bina checklist sekarang' : 'Create checklist now';
   const checklistNextPrompt = language === 'ms' ? 'Apa perlu dibuat minggu ini?' : 'What should I do this week?';
@@ -2618,6 +2631,7 @@ export default function PlannerWorkspace() {
 
   return (
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
+      <ViewportLock />
       {isOffline ? (
         <div className="pwa-banner">Offline mode: templates and saved planning data are available. AI replies need internet.</div>
       ) : null}
@@ -3008,6 +3022,36 @@ export default function PlannerWorkspace() {
         </div>
       ) : activeTab === 'checklist' ? (
         <div className="checklist-panel mm-checklist">
+          {/* Full-height category rail — mobile only (column 1) */}
+          {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
+            <nav className="mm-cl__cat-rail" aria-label={language === 'ms' ? 'Kategori' : 'Categories'}>
+              <button
+                type="button"
+                className={`mm-cl__cat-item${checklistCategoryFilter === null ? ' is-active' : ''}`}
+                onClick={() => setChecklistCategoryFilter(null)}
+                aria-pressed={checklistCategoryFilter === null}
+              >
+                <span className="mm-cl__cat-icon" aria-hidden="true">📋</span>
+                <span className="mm-cl__cat-name">{language === 'ms' ? 'Semua' : 'All'}</span>
+                <span className="mm-cl__cat-count">{checklistItems.length}</span>
+              </button>
+              {checklistCategoryChips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  className={`mm-cl__cat-item${checklistCategoryFilter === chip.id ? ' is-active' : ''}`}
+                  onClick={() => setChecklistCategoryFilter((cur) => (cur === chip.id ? null : chip.id))}
+                  aria-pressed={checklistCategoryFilter === chip.id}
+                >
+                  <span className="mm-cl__cat-icon" aria-hidden="true">{CATEGORY_ICON[chip.id] ?? '📝'}</span>
+                  <span className="mm-cl__cat-name">{chip.label}</span>
+                  <span className="mm-cl__cat-count">{chip.done}/{chip.total}</span>
+                </button>
+              ))}
+            </nav>
+          ) : null}
+
+          <div className="mm-cl__main">
           <header className="mm-cl__header">
             <div className="mm-cl__heading">
               <span className="mm-cl__eyebrow">{language === 'ms' ? 'Checklist majlis' : 'Wedding checklist'}</span>
@@ -3052,7 +3096,6 @@ export default function PlannerWorkspace() {
                   <span>
                     {scopedCompletedCount}/{scopedTotalCount} {copy.done}
                     {daysLeft !== null && daysLeft >= 0 ? ` · ${daysLeft} ${language === 'ms' ? 'hari lagi' : 'days left'}` : ''}
-                    {checklistCategoryFilter ? ` · ${getCategoryLabel(checklistCategoryFilter, language)}` : ''}
                   </span>
                 </div>
                 <div className="mm-cl__bar"><span style={{ width: `${scopedProgress}%` }} /></div>
@@ -3095,7 +3138,6 @@ export default function PlannerWorkspace() {
                     onClick={() => setCategoryFilterOpen((v) => !v)}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
-                    <span className="mm-cl__filter-label">{language === 'ms' ? 'Tapis' : 'Filter'}</span>
                     {checklistCategoryFilter ? <span className="mm-cl__filter-dot" aria-hidden="true" /> : null}
                   </button>
                 ) : null}
@@ -3184,15 +3226,6 @@ export default function PlannerWorkspace() {
                         <h4>{language === 'ms' ? 'Apa perlu dibuat sekarang' : 'What to do next'}</h4>
                         <p>{language === 'ms' ? 'Disusun ikut deadline, urgency, dan status.' : 'Sorted by deadline, urgency, and progress status.'}</p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActiveTab('chat');
-                          setInput(checklistNextPrompt);
-                        }}
-                      >
-                        {copy.askAi}
-                      </button>
                     </div>
                     {checklistFocusGroups.length > 0 ? (
                       <div className="checklist-focus-stack">
@@ -3216,6 +3249,18 @@ export default function PlannerWorkspace() {
                         {scopedOpenChecklistItems.slice(0, 6).map((item) => renderChecklistTask(item))}
                       </ul>
                     )}
+                    {/* AI prompt sits at the bottom — checklist tasks stay the focus */}
+                    <button
+                      type="button"
+                      className="checklist-ask-ai-bottom"
+                      onClick={() => {
+                        setActiveTab('chat');
+                        setInput(checklistNextPrompt);
+                      }}
+                    >
+                      <span className="checklist-ask-ai-bottom__icon" aria-hidden="true"><RobotIcon /></span>
+                      {copy.askAi}
+                    </button>
                   </>
                 ) : null}
 
@@ -3347,19 +3392,19 @@ export default function PlannerWorkspace() {
           ) : !loading ? (
             <div className="checklist-empty-modern">
               <span className="checklist-empty-icon" aria-hidden="true"><MenuIcon name="checklist" /></span>
-              <strong>{copy.emptyChecklist}</strong>
+              <strong>{language === 'ms' ? 'Mulakan checklist anda' : 'Start your checklist'}</strong>
               <p>
                 {language === 'ms'
-                  ? 'Jawab beberapa soalan ringkas dan MajlisMate akan jana checklist peribadi ikut tarikh, negeri, format, dan jumlah tetamu majlis anda.'
-                  : 'Answer a few quick questions and MajlisMate will generate a personalized checklist from your date, state, format, and guest count.'}
+                  ? 'Jana checklist peribadi ikut majlis anda.'
+                  : 'Generate a personalized checklist for your wedding.'}
               </p>
-              <div>
+              <div className="checklist-empty-actions">
                 <button type="button" onClick={createDefaultChecklist}>{checklistEmptyActionText}</button>
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab('chat');
-                    setInput(language === 'ms' ? 'Buat checklist majlis saya ikut tarikh dan bajet' : 'Create my wedding checklist from my date and budget');
+                    setInput(language === 'ms' ? 'Buat checklist majlis saya' : 'Create my wedding checklist');
                   }}
                 >
                   {copy.askAi}
@@ -3367,6 +3412,7 @@ export default function PlannerWorkspace() {
               </div>
             </div>
           ) : null}
+          </div>
         </div>
       ) : activeTab === 'calendar' ? (
         <div className={`calendar-panel mm-cal calendar-view-${calendarView}`}>

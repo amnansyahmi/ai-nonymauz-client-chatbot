@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
+  maximumScale: 1,
+  userScalable: false,
   // Shrink the content area when the virtual keyboard opens so the chat
   // composer stays pinned at the bottom rather than being pushed up.
   interactiveWidget: 'resizes-content',

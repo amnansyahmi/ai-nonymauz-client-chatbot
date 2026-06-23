@@ -13,6 +13,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Hide the floating dev-tools indicator so it never overlaps the
+  // mobile bottom nav during local testing.
+  devIndicators: false,
   async headers() {
     return [
       {

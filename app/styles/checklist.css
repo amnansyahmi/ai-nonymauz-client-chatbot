@@ -20,6 +20,11 @@
 /* ---- Header ------------------------------------------------- */
 .mm-cl__header {
   display: flex;
+  /* Must be explicit: an older duplicate rule in planner-overrides.css
+     sets `flex-direction: column`, which made the progress block's
+     `flex: 0 1 290px` resolve as a 290px HEIGHT and blew the header up to
+     ~378px. Row keeps it a compact title-left / progress-right bar. */
+  flex-direction: row !important;
   justify-content: space-between;
   align-items: flex-end;
   gap: 18px;
@@ -30,6 +35,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
   min-width: 0;
 }
 
@@ -560,19 +566,26 @@
     flex-basis: 100%;
   }
   .mm-cl__toolbar {
-    gap: 8px;
+    gap: 6px;
+    flex-wrap: nowrap !important;
   }
-  /* Keep the segmented control at its natural size so the three tabs
-     never shrink and overlap; the tools wrap to a second row if needed. */
+  /* Segmented control: shrink to fit, never wrap to a second row */
   .mm-cl__views {
-    flex: 0 0 auto;
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
   }
-  .mm-cl__views button {
-    padding: 7px 11px;
+  /* Override global `.checklist-panel button { padding: 0 14px }` */
+  .mm-checklist .mm-cl__views button {
+    padding: 6px 8px !important;
     white-space: nowrap;
   }
+  .mm-cl__view-count {
+    font-size: 0.62rem;
+  }
   .mm-cl__tools {
-    margin-left: auto;
+    flex-shrink: 0;
+    margin-left: 0;
   }
   /* Compact, icon-only add button on mobile (standardized 38px circle). */
   .mm-cl__add-label {
@@ -595,6 +608,11 @@
      they only appear on demand and must be fully visible (no clipping). */
   .mm-cl__chips {
     flex-wrap: wrap;
+  }
+  /* Ensure checklist panel doesn't overflow the fixed header/footer */
+  .checklist-panel.mm-checklist {
+    height: auto;
+    min-height: 0;
   }
 }
 
@@ -779,4 +797,313 @@
 
 .mm-checklist .mm-datepicker__trigger--inline:hover {
   background: var(--mm-accent-soft) !important;
+}
+
+/* ══ Mobile category rail (full-height left sidebar) ══════════════
+ * Mobile: the checklist becomes a two-column layout —
+ *   col 1 = full-height category rail (icon + short name)
+ *   col 2 = scrollable main column (header, toolbar, task list)
+ * Desktop: the rail is hidden and `.mm-cl__main` is `display:
+ * contents`, so the existing single-column flex layout is unchanged.
+ * ════════════════════════════════════════════════════════════════ */
+
+.mm-cl__cat-rail {
+  display: none; /* hidden on desktop */
+}
+
+/* Scroll column for the header + toolbar + task list. A real flex
+   column (not `display: contents`, which rendered inconsistently and
+   let the header stretch). The list grows/scrolls; the header and
+   toolbar stay their natural height. */
+.mm-cl__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.mm-cl__main > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Header + toolbar never grow; the task list takes the remaining space.
+   Without this the header stretched to fill the column (the giant
+   ~378px header that wasted the screen). */
+.mm-cl__header,
+.mm-cl__toolbar,
+.mm-cl__quickadd,
+.mm-cl__chips,
+.mm-cl__bulk {
+  flex: 0 0 auto !important;
+}
+
+.mm-cl__list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 760px) {
+  /* Reserve exactly the floating nav's measured height (set by
+     ViewportLock as --mm-nav-space) instead of a too-large fixed guess.
+     This removes the empty cream strip between the content and the nav
+     so the panel fills the screen. Loaded last → beats the 112px rule. */
+  .planner-content {
+    padding-bottom: var(--mm-nav-space, 92px) !important;
+  }
+
+  /* Checklist panel goes edge-to-edge: the rail and the scroll column
+     (.mm-cl__main) carry their own padding, so the panel's own side
+     padding only added an unwanted inset (the gap on the rail). Other
+     panels keep their padding — their content has none of its own. */
+  .planner-content > .checklist-panel {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Flex-row split (rail + main). Flexbox stretches children to the
+     container's full height reliably — unlike grid `1fr` rows, which
+     don't stretch inside a flex-item whose height isn't "definite",
+     which left a large empty gap above the bottom nav. */
+  .mm-checklist:has(.mm-cl__cat-rail) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    /* `.planner-content` is a CSS grid (titlebar row + 1fr panel row), so
+       this panel is a grid item. Fill the row via `align-self: stretch`
+       + `min-height: 100%`. NOTE: a plain `height: 100%` here collapses
+       the panel to content height (it disables align-self:stretch when
+       the % track is treated as indefinite), which is why only the
+       checklist tab was short. `min-height` does not have that problem. */
+    align-self: stretch !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  /* Left rail — fixed width, full height, independent scroll */
+  .mm-cl__cat-rail {
+    display: flex !important;
+    flex: 0 0 78px;
+    width: 78px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 7px calc(14px + env(safe-area-inset-bottom, 0px));
+    border-right: 1px solid var(--mm-border);
+    background: var(--mm-surface-subtle);
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .mm-cl__cat-rail::-webkit-scrollbar { display: none; }
+
+  /* Right column — scrollable content stack. `flex: 1` lets it fill
+     the panel height even when no rail is present (single category). */
+  .mm-cl__main {
+    display: flex !important;
+    flex-direction: column;
+    gap: 13px;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 14px 13px calc(16px + env(safe-area-inset-bottom, 0px));
+    background: var(--mm-bg);
+  }
+
+  /* Rail item — icon stacked over a truncated single-line label.
+     Scoped under .mm-checklist so it beats the global
+     `.checklist-panel button { background:…!important }` pill style. */
+  .mm-checklist .mm-cl__cat-item {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    padding: 9px 3px !important;
+    border: 0 !important;
+    border-radius: 13px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    min-height: 0 !important;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .mm-checklist .mm-cl__cat-item:hover {
+    background: var(--mm-surface-muted) !important;
+  }
+
+  .mm-checklist .mm-cl__cat-item.is-active {
+    background: var(--mm-accent-soft) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mm-accent) 28%, transparent) !important;
+  }
+
+  .mm-cl__cat-icon {
+    font-size: 1.55rem;
+    line-height: 1;
+  }
+
+  .mm-cl__cat-name {
+    width: 100%;
+    font-size: 0.625rem;
+    font-weight: 650;
+    color: var(--mm-text-muted);
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mm-cl__cat-item.is-active .mm-cl__cat-name {
+    color: var(--mm-accent-strong);
+    font-weight: 750;
+  }
+
+  .mm-cl__cat-count {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--mm-text-soft);
+    line-height: 1;
+  }
+
+  .mm-cl__cat-item.is-active .mm-cl__cat-count {
+    color: var(--mm-accent-strong);
+  }
+
+  /* The list flows inside the scrollable main column */
+  .mm-cl__list {
+    overflow: visible;
+  }
+
+  /* The rail replaces the desktop Tapis toggle + chips */
+  .mm-cl__filter,
+  .mm-cl__chips {
+    display: none !important;
+  }
+
+  /* ── Task cards (image-2 style: rounded card, left accent stripe,
+        checkbox pinned to the right edge) ───────────────────────── */
+  .mm-checklist .checklist-task-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .mm-checklist .checklist-task-row {
+    position: relative !important;
+    display: block !important;
+    min-height: 0 !important;
+    padding: 13px 52px 12px 18px !important;
+    border: 1px solid var(--mm-border) !important;
+    border-radius: 16px !important;
+    background: var(--mm-surface) !important;
+    box-shadow: 0 1px 2px rgba(36, 28, 24, 0.05) !important;
+  }
+
+  .mm-checklist .checklist-task-row.done {
+    background: var(--mm-surface-subtle) !important;
+  }
+
+  /* Left accent stripe — colour follows priority/status */
+  .mm-checklist .checklist-task-row::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 11px;
+    bottom: 11px;
+    width: 3px;
+    border-radius: 0 999px 999px 0;
+    background: var(--mm-border-strong);
+  }
+  .mm-checklist .checklist-task-row.priority-urgent::before { background: #b45309; }
+  .mm-checklist .checklist-task-row.priority-soon::before { background: var(--mm-accent); }
+  .mm-checklist .checklist-task-row.done::before { background: var(--mm-green); }
+
+  /* Main column collapses (checkbox is absolutely placed) */
+  .mm-checklist .checklist-task-main {
+    display: block !important;
+    cursor: default !important;
+  }
+
+  /* Checkbox pinned top-right, like the reference */
+  .mm-checklist .checklist-task-toggle,
+  .mm-checklist .checklist-select-toggle {
+    position: absolute !important;
+    right: 15px !important;
+    top: 14px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+  }
+
+  /* Hide the decorative check + the priority text chip (the stripe
+     already conveys priority — keeps the card clean) */
+  .mm-checklist .checklist-task-check { display: none !important; }
+  .mm-checklist .priority-chip { display: none !important; }
+
+  .mm-checklist .checklist-task-text {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Action buttons sit in a compact, right-aligned row below the text */
+  .mm-checklist .checklist-row-actions {
+    margin-top: 9px;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+}
+
+/* ── Bottom "Tanya AI" prompt — secondary, below the task list ──── */
+.mm-checklist .checklist-ask-ai-bottom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 10px 16px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-accent-strong) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-checklist .checklist-ask-ai-bottom:hover {
+  background: var(--mm-surface-subtle) !important;
+  border-color: var(--mm-border-strong) !important;
+}
+
+.mm-checklist .checklist-ask-ai-bottom__icon {
+  display: inline-flex;
+}
+
+.mm-checklist .checklist-ask-ai-bottom__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (max-width: 760px) {
+  .mm-checklist .checklist-ask-ai-bottom {
+    align-self: stretch;
+    width: 100%;
+  }
 }

@@ -2,12 +2,18 @@
  * Budget page — minimalist single-column redesign
  * header → stat strip → toolbar → list → collapsible insights.
  * Themed via --mm-* tokens (light/dark). Loaded last to win.
+ *
+ * Design principle: NO card-in-card nesting.
+ * - Stat items are flat (no borders)
+ * - Add form is inline (no card)
+ * - Budget rows are borderless by default, bordered only when expanded
+ * - Collapsible panels are simple sections with top border only
  * ============================================================= */
 
 .mm-budget {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -117,7 +123,7 @@
   transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---- Stat strip -------------------------------------------- */
+/* ---- Stat strip (flat, no cards) ---------------------------- */
 .mm-bg__stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -129,8 +135,8 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px 14px;
-  border: 1px solid var(--mm-border);
-  border-radius: var(--mm-radius-card);
+  border: none;
+  border-radius: 0;
   background: var(--mm-surface);
   min-width: 0;
 }
@@ -157,6 +163,7 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding-top: 4px;
 }
 
 .mm-bg__views {
@@ -229,7 +236,7 @@
   box-shadow: 0 16px 40px rgba(36, 28, 24, 0.18);
 }
 
-/* ---- Add form ---------------------------------------------- */
+/* ---- Add form (inline, no card) ---------------------------- */
 .mm-bg__addform {
   display: flex;
   flex-direction: column;
@@ -237,7 +244,7 @@
   padding: 14px;
   border: 1px solid var(--mm-border);
   border-radius: var(--mm-radius-card);
-  background: var(--mm-surface);
+  background: var(--mm-bg);
   animation: mm-bg-slide 0.18s ease both;
 }
 
@@ -257,7 +264,7 @@
   padding: 0 13px;
   border: 1px solid var(--mm-border);
   border-radius: 10px;
-  background: var(--mm-bg);
+  background: var(--mm-surface);
   color: var(--mm-text);
   font-size: 0.92rem;
 }
@@ -268,19 +275,57 @@
   box-shadow: var(--mm-focus);
 }
 
-/* ---- List spacing (rows keep their existing styling) ------- */
+/* ---- List (borderless rows, separator lines) --------------- */
 .mm-bg__list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
 }
 
-/* ---- Collapsible insight panels ---------------------------- */
+/* One clean row per budget item — NO card nesting.
+   Rows are separated by a simple border-bottom. */
+.mm-budget .budget-row-card {
+  border: none !important;
+  border-bottom: 1px solid var(--mm-border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.mm-budget .budget-row-card:first-child {
+  border-top: 1px solid var(--mm-border) !important;
+}
+
+.mm-budget .budget-row-card:last-child {
+  border-bottom: 1px solid var(--mm-border) !important;
+}
+
+/* Expanded state gets a subtle background to distinguish it */
+.mm-budget .budget-row-card.expanded {
+  border-color: var(--mm-border-strong) !important;
+  background: var(--mm-surface) !important;
+  border-radius: 12px !important;
+  margin: 6px 0;
+  border: 1px solid var(--mm-border-strong) !important;
+}
+
+.mm-budget .budget-row-summary {
+  background: transparent !important;
+}
+
+.mm-budget .budget-row-summary:hover,
+.mm-budget .budget-row-summary:focus-visible {
+  background: var(--mm-surface-subtle) !important;
+}
+
+/* ---- Collapsible insight panels (sections, not cards) ------- */
 .mm-bg__panel {
-  border: 1px solid var(--mm-border);
-  border-radius: 14px;
-  background: var(--mm-surface);
-  overflow: hidden;
+  border: none;
+  border-top: 1px solid var(--mm-border);
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
 }
 
 .mm-bg__panel summary {
@@ -288,7 +333,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 16px;
+  padding: 16px 0;
   cursor: pointer;
 }
 
@@ -329,7 +374,7 @@
 }
 
 .mm-bg__panel-body {
-  padding: 0 16px 16px;
+  padding: 0 0 16px;
 }
 
 .mm-bg__panel-body > p {
@@ -362,7 +407,7 @@
   padding: 10px 12px;
   border: 1px solid var(--mm-border);
   border-radius: 10px;
-  background: var(--mm-surface-subtle);
+  background: var(--mm-surface);
 }
 
 .mm-bg__alloc-row span {
@@ -395,6 +440,38 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* ---- Quick pay actions ------------------------------------- */
+.mm-bg__quickpay {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mm-budget .mm-bg__pay-deposit,
+.mm-budget .mm-bg__pay-full {
+  min-height: 0 !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--mm-border) !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  box-shadow: none !important;
+  font-size: 0.82rem;
+  font-weight: 650 !important;
+  cursor: pointer;
+}
+
+.mm-budget .mm-bg__pay-deposit:hover {
+  border-color: var(--mm-border-strong) !important;
+  background: var(--mm-surface-subtle) !important;
+}
+
+.mm-budget .mm-bg__pay-full {
+  border-color: var(--mm-green) !important;
+  background: var(--mm-green) !important;
+  color: #fff !important;
 }
 
 /* ---- Responsive -------------------------------------------- */
@@ -586,54 +663,4 @@
   font-size: 0.9rem;
   color: var(--mm-accent-strong);
   white-space: nowrap;
-}
-
-/* One clean card per budget row (was reading as two stacked cards). */
-.mm-budget .budget-row-card {
-  border: 1px solid var(--mm-border) !important;
-  border-radius: 14px !important;
-  background: var(--mm-surface) !important;
-  box-shadow: none !important;
-  overflow: hidden;
-}
-
-.mm-budget .budget-row-summary {
-  background: transparent !important;
-}
-
-.mm-budget .budget-row-summary:hover,
-.mm-budget .budget-row-summary:focus-visible {
-  background: var(--mm-surface-subtle) !important;
-}
-
-/* Pay actions live inside the expanded edit panel now. */
-.mm-bg__quickpay {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.mm-budget .mm-bg__pay-deposit,
-.mm-budget .mm-bg__pay-full {
-  min-height: 0 !important;
-  padding: 8px 14px !important;
-  border-radius: 999px !important;
-  border: 1px solid var(--mm-border) !important;
-  background: var(--mm-surface) !important;
-  color: var(--mm-text) !important;
-  box-shadow: none !important;
-  font-size: 0.82rem;
-  font-weight: 650 !important;
-  cursor: pointer;
-}
-
-.mm-budget .mm-bg__pay-deposit:hover {
-  border-color: var(--mm-border-strong) !important;
-  background: var(--mm-surface-subtle) !important;
-}
-
-.mm-budget .mm-bg__pay-full {
-  border-color: var(--mm-green) !important;
-  background: var(--mm-green) !important;
-  color: #fff !important;
 }

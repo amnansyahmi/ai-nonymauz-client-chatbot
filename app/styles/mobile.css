@@ -76,6 +76,7 @@ a.icon-only {
 /* ──────────────────────────────────────────────────────────────
  *  Sticky composer: pins to bottom of the visual viewport on
  *  mobile, accounting for the iOS keyboard via `interactiveWidget`.
+ *  Bottom padding accounts for the fixed mobile bottom nav (72px).
  * ────────────────────────────────────────────────────────────── */
 .chat-form,
 .menu-assistant-form {

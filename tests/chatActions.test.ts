@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { parseChatActions, __stripActionBlock, summarizeAction } from '../lib/planner/chatActions';
+import { parseChatActions, stripActionBlock, summarizeAction } from '../lib/planner/chatActions';
 
-function wrap(json) {
+function wrap(json: string) {
   return '<<<MM_ACTIONS' + String.fromCharCode(10) + json + String.fromCharCode(10) + 'MM_ACTIONS>>>';
 }
 

@@ -15,7 +15,7 @@
   --info-bg: #eff6ff;
   --surface-warm: #fffaf5;
   --shadow: 0 28px 70px rgba(36, 28, 24, 0.12);
-  --radius: 18px;
+  --radius: 6px;
   --font-sans: Aptos, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: "Aptos Display", Aptos, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -4456,8 +4456,8 @@ select {
   }
 
   .main-chat-panel.active-chat .messages {
-    padding: 18px 8px 18px !important;
-  }
+    padding: 4px 14px 4px !important;
+    }
 }
 
 /* UX polish pass: readability, professional icons, and responsive chat rhythm */
@@ -6467,7 +6467,7 @@ body {
 
 @media (max-width: 720px) {
   .main-chat-panel.active-chat .messages {
-    padding: 18px 12px 18px !important;
+    padding: 4px 14px 4px !important;
   }
 
   .main-chat-panel.active-chat .message {
@@ -7373,8 +7373,8 @@ button,
   }
 
   .main-chat-panel.active-chat .messages {
-    padding: 18px 12px 18px !important;
-  }
+    padding: 4px 14px 4px !important;
+    }
 
   .checklist-section-heading {
     grid-template-columns: 1fr;
@@ -9008,7 +9008,7 @@ button,
     top: 0 !important;
     z-index: 60 !important;
     display: grid !important;
-    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    grid-template-columns: 1fr auto !important;
     min-height: 56px !important;
     border-bottom: 1px solid var(--mm-border) !important;
     background: rgba(250, 247, 244, 0.97) !important;
@@ -16156,5 +16156,91 @@ a.vendor-search-nearby {
   .preview-paywall__plan::before {
     animation: none !important;
     opacity: 0 !important;
+  }
+}
+
+/* ══ Mobile: remove left sidebar, use bottom nav only ══════════════════
+ * On screens ≤ 760px the planner sidebar becomes redundant — the bottom
+ * nav handles all tab switching. We hide the sidebar, its backdrop, and
+ * the hamburger button that opens it. The titlebar shrinks to just the
+ * logo + right-side actions since there's no hamburger column anymore.
+ * ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 760px) {
+  /* 1. Hide the left drawer and its dimming backdrop completely */
+  .planner-sidebar,
+  .sidebar-backdrop {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  /* 2. Hide the hamburger / menu button in the titlebar */
+  .workspace-menu-button {
+    display: none !important;
+  }
+
+  /* 3. Titlebar: simple flex row — logo pinned left, actions pinned
+        right. No absolute centring (that overlapped the buttons). */
+  .workspace-titlebar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  /* Logo/brand on the left, allowed to shrink/truncate */
+  .workspace-title-center {
+    position: static !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    flex: 0 1 auto !important;
+    pointer-events: auto !important;
+  }
+
+  .workspace-title-center strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* Actions pinned right, never shrinking */
+  .workspace-title-actions {
+    position: relative !important;
+    z-index: 2 !important;
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    max-width: none !important;
+  }
+
+  /* Compact, icon-only AI button so it doesn't crowd the row */
+  .workspace-ai-button {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    overflow: hidden !important;
+    font-size: 0 !important;
+  }
+
+  .workspace-ai-button .workspace-ai-icon {
+    font-size: 1rem !important;
+  }
+
+  /* 4. Make sure opening the "sidebar" via JS never shifts layout */
+  .planner-body.sidebar-open .planner-content {
+    margin-left: 0 !important;
+    transform: none !important;
+  }
+
+  /* 5. Lock horizontal overflow */
+  .planner-body {
+    overflow-x: hidden !important;
   }
 }

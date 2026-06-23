@@ -27,8 +27,8 @@
   --mm-focus: 0 0 0 3px rgba(189, 125, 104, 0.22);
   --mm-shadow-soft: 0 10px 28px rgba(40, 31, 24, 0.045);
   --mm-shadow-panel: 0 22px 60px rgba(40, 31, 24, 0.1);
-  --mm-radius-card: 12px;
-  --mm-radius-control: 10px;
+  --mm-radius-card: 4px;
+  --mm-radius-control: 4px;
   --mm-radius-pill: 999px;
   --bg: var(--mm-bg);
   --bg-2: var(--mm-bg-soft);
@@ -817,7 +817,6 @@ textarea::placeholder {
 
 /* Rows, cards, and list items */
 .checklist-task-row,
-.budget-row-card,
 .guest-row-card,
 .vendor-card,
 .agenda-card,
@@ -832,8 +831,27 @@ textarea::placeholder {
   box-shadow: none !important;
 }
 
+/* Budget rows: borderless by default, no card-in-card */
+.budget-row-card {
+  border: none !important;
+  border-bottom: 1px solid var(--mm-border) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.budget-row-card:first-child {
+  border-top: 1px solid var(--mm-border) !important;
+}
+
+.budget-row-card.expanded {
+  border: 1px solid var(--mm-border-strong) !important;
+  border-radius: 12px !important;
+  background: var(--mm-surface) !important;
+  margin: 6px 0;
+}
+
 .checklist-task-row:hover,
-.budget-row-card:hover,
 .guest-row-card:hover,
 .vendor-card:hover,
 .agenda-card:hover,
@@ -842,6 +860,10 @@ textarea::placeholder {
   border-color: var(--mm-border-strong) !important;
   background: var(--mm-surface-subtle) !important;
   transform: none !important;
+}
+
+.budget-row-card:hover {
+  background: var(--mm-surface-subtle) !important;
 }
 
 .checklist-task-toggle[aria-checked='true'],
@@ -1052,7 +1074,6 @@ textarea::placeholder {
 }
 
 .budget-focus-grid article,
-.budget-row-card,
 .budget-insight-card,
 .budget-allocation-card {
   border-color: var(--mm-border) !important;
@@ -1613,10 +1634,24 @@ textarea::placeholder {
     white-space: nowrap !important;
   }
 
-  .budget-row-card,
   .guest-row-card {
-    border-radius: 18px !important;
-    overflow: hidden !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .guest-row-card.expanded {
+    border-radius: var(--mm-radius-card) !important;
+    margin: 6px 0 !important;
+  }
+
+  .budget-row-card {
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .budget-row-card.expanded {
+    border-radius: var(--mm-radius-card) !important;
+    margin: 6px 0 !important;
   }
 
   .budget-row-summary,
@@ -1771,22 +1806,16 @@ textarea::placeholder {
 /* Targeted mobile regression fixes */
 @media (max-width: 760px) {
   .sidebar-backdrop {
-    z-index: 70 !important;
-    background: rgba(16, 16, 16, 0.28) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    display: none !important;
   }
 
   .planner-sidebar {
-    z-index: 90 !important;
-    filter: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    display: none !important;
   }
 
   .planner-body.sidebar-open .planner-sidebar,
   .planner-body.sidebar-open .planner-sidebar * {
-    filter: none !important;
+    display: none !important;
   }
 
   .assistant-drawer-backdrop {
@@ -2058,14 +2087,26 @@ textarea::placeholder {
   }
 }
 
-/* Mobile budget rows: one card only, no nested pill frame. */
+/* Mobile budget rows: borderless by default, expanded gets subtle card */
 @media (max-width: 760px) {
   .budget-command-center .budget-row-card {
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 16px !important;
-    background: var(--mm-surface) !important;
+    border: none !important;
+    border-bottom: 1px solid var(--mm-border) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
     box-shadow: none !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+  }
+
+  .budget-command-center .budget-row-card:first-child {
+    border-top: 1px solid var(--mm-border) !important;
+  }
+
+  .budget-command-center .budget-row-card.expanded {
+    border: 1px solid var(--mm-border-strong) !important;
+    border-radius: 12px !important;
+    background: var(--mm-surface) !important;
+    margin: 6px 0 !important;
   }
 
   .budget-command-center .budget-row-card::before,
@@ -2089,10 +2130,14 @@ textarea::placeholder {
 
   .budget-command-center .budget-row-card:hover,
   .budget-command-center .budget-row-card:focus-within {
-    border-color: var(--mm-border) !important;
-    background: var(--mm-surface) !important;
+    border-color: var(--mm-border-strong) !important;
+    background: var(--mm-surface-subtle) !important;
     box-shadow: none !important;
     transform: none !important;
+  }
+
+  .budget-command-center .budget-row-card.expanded:hover {
+    background: var(--mm-surface) !important;
   }
 
   .budget-command-center .budget-row-meter {
@@ -2261,6 +2306,7 @@ textarea::placeholder {
 /* ═══ Mobile active-chat: flex layout pins composer to viewport bottom ═══
  * Root cause: position:sticky doesn't work inside overflow:hidden.
  * Fix: switch panel to flex column so chat-form is always at the bottom.
+ * Bottom padding (72px) accounts for the fixed mobile bottom nav.
  */
 @media (max-width: 760px) {
   /* Stop planner-content from scrolling when active chat is shown */
@@ -2273,7 +2319,7 @@ textarea::placeholder {
   .main-chat-panel.active-chat {
     display: flex !important;
     flex-direction: column !important;
-    height: calc(100dvh - 64px) !important;
+    height: calc(92dvh - 64px) !important;
     padding: 0 !important;
     overflow: hidden !important;
   }
@@ -2287,17 +2333,18 @@ textarea::placeholder {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     overscroll-behavior: contain;
-    padding: 12px 18px 16px !important;
+    padding: 4px 14px 4px !important;
   }
 
-  /* Composer pinned at bottom; padding clears the fixed bottom nav (≈82px) */
+  /* Composer pinned at bottom; padding clears the fixed bottom nav (72px + safe area) */
   .main-chat-panel.active-chat .chat-form {
     flex: 0 0 auto !important;
     position: static !important;
     bottom: auto !important;
     left: auto !important;
     right: auto !important;
-    margin: 0 !important;
-    padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(82px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)) !important;
+    margin: 0 auto !important;
+    width: min(100%, 860px) !important;
+    padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(72px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)) !important;
   }
 }
