@@ -1674,14 +1674,34 @@ body,
   }
 
   .workspace-ai-button {
+    display: inline-grid !important;
+    place-items: center !important;
+    place-content: center !important;
     width: 40px !important;
     min-width: 40px !important;
+    height: 40px !important;
     padding: 0 !important;
     font-size: 0 !important;
+    line-height: 0 !important;
   }
 
   .workspace-ai-button .workspace-ai-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     margin: 0 !important;
+  }
+
+  /* Checklist mode: swap hamburger for a 2×2 grid icon (category toggle).
+     Desktop keeps the standard hamburger regardless of tab. */
+  .workspace-menu-button.is-checklist-mode::before {
+    width: 14px !important;
+    height: 14px !important;
+    background:
+      linear-gradient(var(--mm-text), var(--mm-text)) 0    0    / 6px 6px no-repeat,
+      linear-gradient(var(--mm-text), var(--mm-text)) 8px  0    / 6px 6px no-repeat,
+      linear-gradient(var(--mm-text), var(--mm-text)) 0    8px  / 6px 6px no-repeat,
+      linear-gradient(var(--mm-text), var(--mm-text)) 8px  8px  / 6px 6px no-repeat !important;
   }
 
   .planner-panel,
@@ -5630,7 +5650,7 @@ body,
   border-radius: var(--mm-radius-pill);
 }
 
-.mm-cl__views button {
+.mm-cl__tab {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -5642,14 +5662,15 @@ body,
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  user-select: none;
   transition: all 0.15s ease;
 }
 
-.mm-cl__views button:hover {
+.mm-cl__tab:hover {
   color: var(--mm-text);
 }
 
-.mm-cl__views button.is-active {
+.mm-cl__tab.is-active {
   background: var(--mm-surface);
   color: var(--mm-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -5664,7 +5685,7 @@ body,
   border-radius: 10px;
 }
 
-.mm-cl__views button.is-active .mm-cl__view-count {
+.mm-cl__tab.is-active .mm-cl__view-count {
   background: var(--mm-surface);
 }
 

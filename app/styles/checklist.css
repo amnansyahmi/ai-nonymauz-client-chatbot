@@ -290,51 +290,190 @@
   margin: 5px 0;
 }
 
-/* ---- Quick add --------------------------------------------- */
+/* ---- Quick add (desktop card) -------------------------------- */
 .mm-cl__quickadd {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--mm-border);
+  border-radius: 16px;
+  background: var(--mm-surface);
+  box-shadow: 0 4px 20px rgba(36, 28, 24, 0.08);
   animation: mm-cl-slide 0.18s ease both;
 }
 
 @keyframes mm-cl-slide {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Handle bar — desktop: hidden */
+.mm-cl__quickadd-handle { display: none; }
+
+/* Header row */
+.mm-cl__quickadd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mm-cl__quickadd-header > span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--mm-text);
+}
+
+/* Close button — scoped to override global .checklist-panel button rule */
+.mm-cl__quickadd .mm-cl__quickadd-close {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: var(--mm-surface-muted, rgba(0,0,0,0.06)) !important;
+  color: var(--mm-text-muted) !important;
+  font-size: 1.1rem !important;
+  font-weight: 400 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  flex-shrink: 0;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-close:hover {
+  background: var(--mm-border) !important;
+  color: var(--mm-text) !important;
+}
+
+/* Input */
 .mm-cl__quickadd input {
-  flex: 1;
-  min-width: 0;
-  min-height: 46px;
-  padding: 0 15px;
-  border: 1px solid var(--mm-border);
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1.5px solid var(--mm-border);
   border-radius: 12px;
-  background: var(--mm-surface);
+  background: var(--mm-bg, var(--mm-surface-subtle));
   color: var(--mm-text);
   font-size: 0.95rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .mm-cl__quickadd input:focus {
   outline: none;
   border-color: var(--mm-accent);
-  box-shadow: var(--mm-focus);
+  box-shadow: var(--mm-focus, 0 0 0 3px rgba(180, 140, 100, 0.18));
 }
 
-.mm-cl__quickadd button {
-  flex-shrink: 0;
-  padding: 0 20px;
-  min-height: 46px;
-  border: 1px solid var(--mm-brand);
-  border-radius: 12px;
-  background: var(--mm-brand);
-  color: var(--mm-on-brand);
-  font-weight: 650;
-  cursor: pointer;
+/* Category section */
+.mm-cl__quickadd-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.mm-cl__quickadd button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.mm-cl__quickadd-cats-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--mm-text-muted);
+}
+
+.mm-cl__quickadd-autodetect {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--mm-accent);
+  opacity: 0.8;
+}
+
+.mm-cl__quickadd-cats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Category chip — override global button rule with specific selector */
+.mm-cl__quickadd .mm-cl__quickadd-cat {
+  flex-shrink: 0 !important;
+  padding: 5px 12px !important;
+  border: 1.5px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  min-height: 0 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease !important;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-cat:hover {
+  border-color: var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-cat.is-active {
+  background: var(--mm-brand) !important;
+  border-color: var(--mm-brand) !important;
+  color: #ffffff !important;
+}
+
+/* Action buttons row */
+.mm-cl__quickadd-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Cancel */
+.mm-cl__quickadd .mm-cl__quickadd-actions button:first-child {
+  padding: 0 18px !important;
+  min-height: 38px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-actions button:first-child:hover {
+  background: var(--mm-surface-muted, rgba(0,0,0,0.04)) !important;
+}
+
+/* Submit */
+.mm-cl__quickadd .mm-cl__quickadd-actions button:last-child {
+  padding: 0 20px !important;
+  min-height: 38px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--mm-brand) !important;
+  color: #ffffff !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-actions button:last-child:hover {
+  opacity: 0.9 !important;
+}
+
+.mm-cl__quickadd .mm-cl__quickadd-actions button:last-child:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
 }
 
 /* ---- Category chips ---------------------------------------- */
@@ -575,11 +714,6 @@
     min-width: 0;
     overflow: hidden;
   }
-  /* Override global `.checklist-panel button { padding: 0 14px }` */
-  .checklist-panel.mm-checklist .mm-cl__views button {
-    padding: 6px 8px !important;
-    white-space: nowrap;
-  }
   .mm-cl__view-count {
     font-size: 0.62rem;
   }
@@ -620,32 +754,11 @@
   .mm-cl__quickadd { animation: none; }
 }
 
-/* =============================================================
- * Override the global `.checklist-panel button { …!important }`
- * planner theme for the redesigned controls.
- * Uses `.checklist-panel.mm-checklist` (both classes on the same
- * element — specificity 0,3,1) to beat the (0,1,1) global rule
- * even when Next.js App Router doesn't guarantee CSS file order.
- * ============================================================= */
-.checklist-panel.mm-checklist .mm-cl__views button {
-  min-height: 0 !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: transparent !important;
-  color: var(--mm-text-muted) !important;
-  box-shadow: none !important;
-  font-weight: 650 !important;
-}
-
-.checklist-panel.mm-checklist .mm-cl__views button:hover {
-  background: transparent !important;
-  color: var(--mm-text) !important;
-}
-
-.mm-checklist .mm-cl__views button.is-active {
-  background: var(--mm-surface) !important;
-  color: var(--mm-text) !important;
-  box-shadow: 0 1px 3px rgba(36, 28, 24, 0.12) !important;
+/* View tabs are now div[role=tab] — not buttons — so no global
+   .checklist-panel button rule can touch them. */
+.mm-cl__tab {
+  cursor: pointer;
+  user-select: none;
 }
 
 .mm-checklist .mm-cl__add {
@@ -733,6 +846,47 @@
 
 .mm-checklist .mm-cl__quickadd button:disabled {
   opacity: 0.45 !important;
+}
+
+/* ---- Quickadd specific overrides (0,3,0 beats generic button rule above) */
+.mm-checklist .mm-cl__quickadd .mm-cl__quickadd-close {
+  background: var(--mm-surface-muted, rgba(0,0,0,0.07)) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: var(--mm-text-muted) !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+}
+
+.mm-checklist .mm-cl__quickadd .mm-cl__quickadd-cat {
+  background: transparent !important;
+  border: 1.5px solid var(--mm-border) !important;
+  border-radius: 999px !important;
+  color: var(--mm-text-muted) !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+  padding: 5px 12px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+.mm-checklist .mm-cl__quickadd .mm-cl__quickadd-cat:hover {
+  border-color: var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
+}
+
+.mm-checklist .mm-cl__quickadd .mm-cl__quickadd-cat.is-active {
+  background: var(--mm-brand) !important;
+  border-color: var(--mm-brand) !important;
+  color: #ffffff !important;
+}
+
+.mm-checklist .mm-cl__quickadd .mm-cl__quickadd-actions button:first-child {
+  background: transparent !important;
+  border-color: var(--mm-border) !important;
+  color: var(--mm-text-muted) !important;
+  box-shadow: none !important;
 }
 
 .mm-checklist .mm-cl__chips button {
@@ -1291,72 +1445,82 @@
     background: var(--mm-accent) !important;
   }
 
-  /* ── Toolbar: segmented control + tools on one row ── */
+  /* ── Toolbar: tools only on mobile (views moved to own row) ── */
   .mm-cl__toolbar {
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
+    flex-direction: column !important;
     gap: 10px !important;
     padding: 0 !important;
+    border: 0 !important;
+    margin: 0 !important;
   }
 
-  /* iOS-style segmented control pill track */
+  /* ── Segmented view tabs: full-width pill track ── */
   .mm-cl__views {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
+    width: 100% !important;
     display: flex !important;
     flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 2px !important;
-    padding: 3px !important;
-    background: rgba(0, 0, 0, 0.07) !important;
-    border-radius: 12px !important;
+    gap: 3px !important;
+    padding: 4px !important;
+    background: rgba(0, 0, 0, 0.065) !important;
+    border-radius: 14px !important;
     overflow: visible !important;
   }
 
-  /* Each tab: equal-width pill inside the track.
-     .checklist-panel.mm-checklist (0,3,1) beats the global
-     .checklist-panel button (0,1,1) even if file order shifts. */
-  .checklist-panel.mm-checklist .mm-cl__views button {
+  /* Each div[role=tab] — no button conflict, full control */
+  .mm-cl__tab {
     flex: 1 !important;
-    flex-shrink: 1 !important;
-    min-width: 0 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    padding: 7px 6px !important;
-    border-radius: 9px !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.78rem !important;
-    font-weight: 650 !important;
-    min-height: 0 !important;
-    height: auto !important;
-    box-shadow: none !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 1px !important;
+    justify-content: center !important;
+    gap: 2px !important;
+    padding: 8px 4px !important;
+    border-radius: 10px !important;
+    color: var(--mm-text-muted) !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    touch-action: manipulation !important;
+    transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease !important;
   }
-  .checklist-panel.mm-checklist .mm-cl__views button.is-active {
+
+  .mm-cl__tab.is-active {
     background: var(--mm-surface) !important;
     color: var(--mm-text) !important;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.14) !important;
-    border: 0 !important;
-  }
-  .checklist-panel.mm-checklist .mm-cl__views button .mm-cl__view-count {
-    display: block !important;
-    font-size: 0.65rem !important;
     font-weight: 700 !important;
-    opacity: 0.55 !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.13) !important;
+  }
+
+  .mm-cl__tab-label {
+    font-size: 0.8rem !important;
+    font-weight: inherit !important;
     line-height: 1 !important;
-    color: inherit !important;
+  }
+
+  .mm-cl__view-count {
+    font-size: 0.62rem !important;
+    font-weight: 700 !important;
+    opacity: 0.5 !important;
+    line-height: 1 !important;
     background: none !important;
     border: none !important;
     border-radius: 0 !important;
     padding: 0 !important;
+  }
+
+  .mm-cl__tab.is-active .mm-cl__view-count {
+    opacity: 0.7 !important;
+  }
+
+  /* Tools row: + button and menu, right-aligned */
+  .mm-cl__tools {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    margin: 0 !important;
   }
 
   /* Tools: right of the segmented control */
@@ -1548,112 +1712,159 @@
   }
 }
 
-/* ── Add task popup sheet (mobile only) ─────────────────────────── */
+/* ── Add task full-screen overlay (mobile only) ──────────────────── */
 .mm-cl__quickadd-backdrop {
   display: none;
 }
 
+@keyframes mm-cl-page-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 @media (max-width: 760px) {
+  /* Backdrop hidden — the form IS the full screen */
   .mm-cl__quickadd-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 440;
-    background: rgba(0, 0, 0, 0.4);
-    animation: cl-backdrop-in 0.18s ease both;
+    display: none !important;
   }
 
+  /* Full-screen page overlay */
   .mm-cl__quickadd {
     position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
+    inset: 0 !important;
     z-index: 450 !important;
-    background: var(--mm-surface) !important;
-    border-radius: 20px 20px 0 0 !important;
-    border-top: none !important;
-    padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: var(--mm-bg) !important;
+    box-shadow: none !important;
+    padding: 0 !important;
     gap: 0 !important;
-    flex-direction: column !important;
-    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18) !important;
-    animation: cl-sheet-in 0.22s cubic-bezier(0.32, 0.72, 0, 1) both !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    animation: mm-cl-page-in 0.26s cubic-bezier(0.32, 0.72, 0, 1) both !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
   }
 
+  /* No handle bar — full page, not a sheet */
   .mm-cl__quickadd-handle {
-    width: 36px;
-    height: 4px;
-    border-radius: 999px;
-    background: var(--mm-border-strong);
-    margin: 10px auto 14px;
-    flex-shrink: 0;
+    display: none !important;
   }
 
+  /* Sticky header */
   .mm-cl__quickadd-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1 !important;
+    background: var(--mm-bg) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    margin-bottom: 14px !important;
-    font-weight: 700 !important;
-    font-size: 1rem !important;
+    padding: 20px 20px 16px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .mm-cl__quickadd-header > span {
+    font-size: 1.5rem !important;
+    font-weight: 800 !important;
     color: var(--mm-text) !important;
+    letter-spacing: -0.02em !important;
   }
 
-  .mm-cl__quickadd-close {
-    width: 30px !important;
-    height: 30px !important;
-    min-height: 0 !important;
-    min-width: 0 !important;
-    border: 0 !important;
-    border-radius: 999px !important;
-    background: var(--mm-surface-muted) !important;
-    color: var(--mm-text-muted) !important;
+  /* Close button — dark rounded square (3-class beats generic rule) */
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-close {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    border-radius: 12px !important;
+    background: rgba(0, 0, 0, 0.82) !important;
+    color: #ffffff !important;
     font-size: 1.2rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    cursor: pointer !important;
   }
 
+  /* Content area */
   .mm-cl__quickadd input {
+    display: block !important;
+    margin: 12px 20px 0 !important;
+    width: calc(100% - 40px) !important;
     min-height: 50px !important;
     font-size: 1rem !important;
-    border-radius: 12px !important;
-    margin-bottom: 12px !important;
+    padding: 14px 16px !important;
+    background: var(--mm-surface) !important;
+    border-radius: 14px !important;
+    border: 1.5px solid var(--mm-border) !important;
   }
 
+  /* Category section */
+  .mm-cl__quickadd-cats {
+    margin: 20px 20px 0 !important;
+    gap: 8px !important;
+  }
+
+  .mm-cl__quickadd-cats-label {
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.1em !important;
+    color: var(--mm-text-muted) !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Chips — wrap, appropriately sized, 3-class for specificity */
+  .mm-cl__quickadd-cats-row {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+    gap: 7px !important;
+  }
+
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-cat {
+    padding: 7px 14px !important;
+    font-size: 0.82rem !important;
+    border-radius: 10px !important;
+  }
+
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-cat.is-active {
+    background: var(--mm-brand) !important;
+    border-color: var(--mm-brand) !important;
+    color: #ffffff !important;
+  }
+
+  /* Actions — sticky at the bottom */
   .mm-cl__quickadd-actions {
-    display: flex !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--mm-bg) !important;
+    padding: 14px 20px !important;
+    margin-top: auto !important;
     gap: 10px !important;
+    justify-content: flex-start !important;
+    border-top: 1px solid var(--mm-border) !important;
   }
 
-  .mm-cl__quickadd-actions button:first-child {
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-actions button:first-child {
     flex: 1 !important;
     min-height: 46px !important;
     border: 1.5px solid var(--mm-border) !important;
     border-radius: 12px !important;
     background: transparent !important;
     color: var(--mm-text-muted) !important;
-    font-weight: 650 !important;
-    cursor: pointer !important;
-    box-shadow: none !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
   }
 
-  .mm-cl__quickadd-actions button:last-child {
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-actions button:last-child {
     flex: 2 !important;
     min-height: 46px !important;
-    border: 0 !important;
     border-radius: 12px !important;
     background: var(--mm-brand) !important;
+    border: 0 !important;
     color: #ffffff !important;
+    font-size: 0.9rem !important;
     font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    cursor: pointer !important;
-    box-shadow: none !important;
   }
 
-  .mm-cl__quickadd-actions button:last-child:disabled {
+  .mm-checklist .mm-cl__quickadd .mm-cl__quickadd-actions button:last-child:disabled {
     opacity: 0.4 !important;
-    cursor: not-allowed !important;
   }
 }
 

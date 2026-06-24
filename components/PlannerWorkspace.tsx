@@ -71,6 +71,7 @@ import {
 import {
   CHECKLIST_CATEGORIES,
   categorizeTask,
+  tryDetectCategory,
   getCategoryLabel,
   type ChecklistCategoryId
 } from '../lib/planner/checklistCategories';
@@ -277,6 +278,7 @@ export default function PlannerWorkspace() {
   const [checklistCategoryFilter, setChecklistCategoryFilter] = useState<ChecklistCategoryId | null>(null);
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [newItemCategory, setNewItemCategory] = useState<ChecklistCategoryId | null>(null);
+  const [categoryManuallySet, setCategoryManuallySet] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
@@ -541,6 +543,34 @@ export default function PlannerWorkspace() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, loading]);
+
+  // Auto-detect category from task text (only when user hasn't manually chosen one)
+  useEffect(() => {
+    if (categoryManuallySet) return;
+    const detected = tryDetectCategory(newChecklistItem);
+    setNewItemCategory(detected);
+  }, [newChecklistItem, categoryManuallySet]);
+
+  // Prevent iOS from scrolling the page behind the bottom sheet when keyboard opens
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!quickAddOpen) return;
+    if (!window.matchMedia('(max-width: 760px)').matches) return;
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo({ top: scrollY, behavior: 'instant' as ScrollBehavior });
+    };
+  }, [quickAddOpen]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -1149,6 +1179,7 @@ export default function PlannerWorkspace() {
     ]);
     setNewChecklistItem('');
     setNewItemCategory(null);
+    setCategoryManuallySet(false);
     setQuickAddOpen(false);
     addActivity('Checklist item added.');
   }
@@ -2859,10 +2890,17 @@ export default function PlannerWorkspace() {
           <div className="workspace-titlebar">
             <button
               type="button"
-              className={`workspace-menu-button ${activeTab === 'checklist' ? (catRailOpen ? 'active' : '') : (isSidebarOpen ? 'active' : '')}`}
-              aria-label={activeTab === 'checklist' ? (catRailOpen ? 'Tutup kategori' : 'Buka kategori') : (isSidebarOpen ? 'Close menu' : 'Open menu')}
-              aria-expanded={activeTab === 'checklist' ? catRailOpen : isSidebarOpen}
-              onClick={() => activeTab === 'checklist' ? setCatRailOpen((v) => !v) : setIsSidebarOpen((current) => !current)}
+              className={`workspace-menu-button${activeTab === 'checklist' ? ' is-checklist-mode' : ''} ${isSidebarOpen ? 'active' : ''}`}
+              aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isSidebarOpen}
+              onClick={() => {
+                const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches;
+                if (isMobile && activeTab === 'checklist') {
+                  setCatRailOpen((v) => !v);
+                } else {
+                  setIsSidebarOpen((current) => !current);
+                }
+              }}
             >
               Menu
             </button>
@@ -3150,19 +3188,21 @@ export default function PlannerWorkspace() {
 
           {checklistItems.length > 0 ? (
             <div className="mm-cl__toolbar">
+              {/* View tabs use div[role=tab] to avoid global .checklist-panel button overrides */}
               <div className="mm-cl__views" role="tablist" aria-label="Checklist views">
                 {checklistViewOptions.map((option) => (
-                  <button
+                  <div
                     key={option.value}
-                    type="button"
                     role="tab"
+                    tabIndex={0}
                     aria-selected={checklistView === option.value}
-                    className={checklistView === option.value ? 'is-active' : ''}
+                    className={`mm-cl__tab${checklistView === option.value ? ' is-active' : ''}`}
                     onClick={() => setChecklistView(option.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setChecklistView(option.value); } }}
                   >
-                    {option.label}
+                    <span className="mm-cl__tab-label">{option.label}</span>
                     <span className="mm-cl__view-count">{option.count}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
               <div className="mm-cl__tools">
@@ -3211,15 +3251,14 @@ export default function PlannerWorkspace() {
 
           {quickAddOpen && checklistItems.length > 0 ? (
             <>
-              <div className="mm-cl__quickadd-backdrop" onClick={() => setQuickAddOpen(false)} aria-hidden="true" />
+              <div className="mm-cl__quickadd-backdrop" onClick={() => setQuickAddOpen(false)} onTouchMove={(e) => e.preventDefault()} aria-hidden="true" />
               <form className="mm-cl__quickadd" onSubmit={addChecklistItem}>
                 <div className="mm-cl__quickadd-handle" aria-hidden="true" />
                 <div className="mm-cl__quickadd-header">
                   <span>{language === 'ms' ? 'Tambah Task Baru' : 'Add New Task'}</span>
-                  <button type="button" className="mm-cl__quickadd-close" aria-label="Tutup" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); }}>×</button>
+                  <button type="button" className="mm-cl__quickadd-close" aria-label="Tutup" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); setCategoryManuallySet(false); }}>×</button>
                 </div>
                 <input
-                  autoFocus
                   value={newChecklistItem}
                   onChange={(event) => setNewChecklistItem(event.target.value)}
                   placeholder={copy.addItem}
@@ -3227,14 +3266,19 @@ export default function PlannerWorkspace() {
                 />
                 {checklistCategoryChips.length > 1 ? (
                   <div className="mm-cl__quickadd-cats">
-                    <span className="mm-cl__quickadd-cats-label">{language === 'ms' ? 'Kategori' : 'Category'}</span>
+                    <span className="mm-cl__quickadd-cats-label">
+                    {language === 'ms' ? 'Kategori' : 'Category'}
+                    {newItemCategory && !categoryManuallySet ? (
+                      <span className="mm-cl__quickadd-autodetect">{language === 'ms' ? ' · dikesan' : ' · detected'}</span>
+                    ) : null}
+                  </span>
                     <div className="mm-cl__quickadd-cats-row">
                       {checklistCategoryChips.map((chip) => (
                         <button
                           key={chip.id}
                           type="button"
                           className={`mm-cl__quickadd-cat${newItemCategory === chip.id ? ' is-active' : ''}`}
-                          onClick={() => setNewItemCategory(newItemCategory === chip.id ? null : chip.id)}
+                          onClick={() => { setCategoryManuallySet(true); setNewItemCategory(newItemCategory === chip.id ? null : chip.id); }}
                         >
                           {chip.label}
                         </button>
@@ -3243,7 +3287,7 @@ export default function PlannerWorkspace() {
                   </div>
                 ) : null}
                 <div className="mm-cl__quickadd-actions">
-                  <button type="button" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); }}>{language === 'ms' ? 'Batal' : 'Cancel'}</button>
+                  <button type="button" onClick={() => { setQuickAddOpen(false); setNewItemCategory(null); setCategoryManuallySet(false); }}>{language === 'ms' ? 'Batal' : 'Cancel'}</button>
                   <button type="submit" disabled={newChecklistItem.trim().length === 0}>{language === 'ms' ? 'Tambah' : 'Add'}</button>
                 </div>
               </form>

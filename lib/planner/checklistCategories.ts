@@ -174,6 +174,26 @@ export function categorizeTask(text: string): ChecklistCategoryId {
   return bestId;
 }
 
+/**
+ * Like categorizeTask but returns null when no keyword matches (score = 0),
+ * so callers can distinguish "no match" from "default bucket".
+ */
+export function tryDetectCategory(text: string): ChecklistCategoryId | null {
+  if (!text || text.trim().length < 3) return null;
+  const haystack = ` ${text.toLowerCase()} `;
+  let bestId: ChecklistCategoryId | null = null;
+  let bestScore = 0;
+  for (const entry of COMPILED) {
+    let score = 0;
+    for (const re of entry.res) if (re.test(haystack)) score += 1;
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = entry.id;
+    }
+  }
+  return bestId;
+}
+
 export function getCategory(id: string | undefined): ChecklistCategory | undefined {
   return id ? CATEGORY_BY_ID.get(id as ChecklistCategoryId) : undefined;
 }

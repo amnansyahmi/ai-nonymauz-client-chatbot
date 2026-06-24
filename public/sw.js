@@ -1,4 +1,4 @@
-const CACHE_NAME = 'majlismate-pwa-v18';
+const CACHE_NAME = 'majlismate-pwa-v28';
 const STATIC_ASSETS = ['/manifest.webmanifest', '/icon.svg'];
 
 self.addEventListener('install', (event) => {
