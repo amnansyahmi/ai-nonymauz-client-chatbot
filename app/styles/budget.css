@@ -490,16 +490,26 @@
     flex-wrap: nowrap;
   }
   .mm-bg__add-label {
-    display: none;
+    display: none !important;
   }
-  .mm-budget .mm-bg__add {
+  /* Perfect circle — grid/place-items beats flex centering quirks;
+     min-height:0 overrides the 42px global min-height on .planner-panel button */
+  .mm-budget .mm-bg__add,
+  .mm-budget .mm-bg__add.is-open {
+    display: grid !important;
+    place-items: center !important;
     width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
     height: 38px !important;
+    min-height: 0 !important;
     padding: 0 !important;
-    justify-content: center;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
   }
   .mm-bg__add-plus {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
+    line-height: 1;
   }
   .mm-bg__addform-row {
     grid-template-columns: 1fr;

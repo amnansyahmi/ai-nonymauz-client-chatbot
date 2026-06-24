@@ -1,12 +1,15 @@
+/* ── Tokens ─────────────────────────────────────────────────────── */
 .page {
-  --rsvp-bg: #f7f3ec;
-  --rsvp-card: #fffdf9;
-  --rsvp-ink: #2a2420;
+  --rsvp-bg: #f5ede0;
+  --rsvp-ink: #1e1a17;
   --rsvp-muted: #8a8178;
-  --rsvp-accent: #8a2d4a;
-  --rsvp-accent-soft: #f3e4e9;
   --rsvp-gold: #b08a52;
-  --rsvp-border: #e7ddcf;
+  --rsvp-gold-soft: rgba(176, 138, 82, 0.15);
+  --rsvp-accent: #8a2d4a;
+  --rsvp-accent-soft: rgba(138, 45, 74, 0.1);
+  --rsvp-line: rgba(176, 138, 82, 0.3);
+  --rsvp-input-border: rgba(30, 26, 23, 0.2);
+  --rsvp-font-serif: Georgia, 'Times New Roman', 'Palatino Linotype', serif;
 
   min-height: 100dvh;
   margin: 0;
@@ -15,102 +18,166 @@
   font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   justify-content: center;
-  padding: 32px 18px 48px;
+  padding: 36px 20px 56px;
   box-sizing: border-box;
 }
 
+/* ── Shell ──────────────────────────────────────────────────────── */
 .shell {
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 32px;
 }
 
+/* ── Invitation header ──────────────────────────────────────────── */
 .invite {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding-top: 14px;
+  gap: 12px;
+  padding-top: 8px;
 }
 
 .eyebrow {
   margin: 0;
-  letter-spacing: 0.32em;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  font-size: 0.7rem;
   color: var(--rsvp-gold);
+  line-height: 1.6;
 }
 
-.couple {
-  margin: 4px 0;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2rem, 8vw, 2.9rem);
-  line-height: 1.1;
-  font-weight: 500;
-  color: var(--rsvp-ink);
+.coupleBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 8px 0 4px;
 }
 
-.ornament {
-  color: var(--rsvp-gold);
-  font-size: 1rem;
-  letter-spacing: 0.4em;
-}
-
-.meta {
+.coupleName {
   margin: 0;
-  font-size: 0.95rem;
+  font-family: var(--rsvp-font-serif);
+  font-size: clamp(2.4rem, 10vw, 3.6rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.1;
+  color: var(--rsvp-ink);
+  letter-spacing: -0.01em;
+}
+
+.ampersand {
+  font-family: var(--rsvp-font-serif);
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  font-style: normal;
+  color: var(--rsvp-gold);
+  line-height: 1.2;
+  margin: 6px 0;
+}
+
+/* Date / time */
+.dateLine {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.dateText {
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--rsvp-muted);
+}
+
+.diamond {
+  color: var(--rsvp-gold);
+  font-size: 0.55rem;
+}
+
+.timeLine {
+  margin: 0;
+  font-size: 0.82rem;
   color: var(--rsvp-muted);
   letter-spacing: 0.06em;
 }
 
-.metaStrong {
-  color: var(--rsvp-ink);
-  font-weight: 600;
+/* Venue separator */
+.divider {
+  width: 100%;
+  max-width: 280px;
+  height: 1px;
+  background: var(--rsvp-line);
+  margin: 4px 0;
 }
 
-.card {
-  background: var(--rsvp-card);
-  border: 1px solid var(--rsvp-border);
-  border-radius: 20px;
-  padding: 22px;
+.venue {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--rsvp-muted);
+}
+
+.ornament {
+  color: var(--rsvp-gold);
+  font-size: 0.7rem;
+  margin-top: 4px;
+}
+
+/* ── Form section ───────────────────────────────────────────────── */
+.form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 18px 40px -28px rgba(80, 40, 30, 0.4);
+  gap: 20px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 8px;
 }
 
-.field label {
-  font-size: 0.82rem;
+.label {
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--rsvp-ink);
+  letter-spacing: 0.01em;
 }
 
-.field input {
-  height: 46px;
-  border: 1px solid var(--rsvp-border);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0 14px;
-  font-size: 0.95rem;
+/* Underline-style inputs */
+.input {
+  height: 44px;
+  border: none;
+  border-bottom: 1.5px solid var(--rsvp-input-border);
+  border-radius: 0;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 1rem;
   color: var(--rsvp-ink);
+  transition: border-color 160ms ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.field input:focus {
+.input::placeholder {
+  color: var(--rsvp-muted);
+  opacity: 0.7;
+}
+
+.input:focus {
   outline: none;
-  border-color: var(--rsvp-accent);
-  box-shadow: 0 0 0 3px var(--rsvp-accent-soft);
+  border-bottom-color: var(--rsvp-gold);
 }
 
-.attendance {
+/* Attendance buttons */
+.attendGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -118,35 +185,47 @@
 
 .attendBtn {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border: 1.5px solid var(--rsvp-border);
-  border-radius: 14px;
-  background: #fff;
-  color: var(--rsvp-ink);
-  font-size: 0.9rem;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border: 1.5px solid var(--rsvp-input-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--rsvp-muted);
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 140ms ease, background 140ms ease;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
 }
 
-.attendBtn span {
-  font-size: 1.2rem;
+.attendBtn:hover {
+  border-color: var(--rsvp-gold);
+  color: var(--rsvp-ink);
+}
+
+.attendIcon {
+  font-size: 0.9rem;
   line-height: 1;
 }
 
-.attendBtn.active {
+.attendYes {
   border-color: var(--rsvp-accent);
   background: var(--rsvp-accent-soft);
   color: var(--rsvp-accent);
 }
 
+.attendNo {
+  border-color: var(--rsvp-muted);
+  background: rgba(138, 129, 120, 0.08);
+  color: var(--rsvp-muted);
+}
+
+/* Stepper */
 .stepper {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
 }
 
 .stepper button {
@@ -154,7 +233,7 @@
   height: 38px;
   border-radius: 999px;
   border: 1.5px solid var(--rsvp-accent);
-  background: #fff;
+  background: transparent;
   color: var(--rsvp-accent);
   font-size: 1.2rem;
   line-height: 1;
@@ -164,57 +243,144 @@
 .stepper strong {
   min-width: 28px;
   text-align: center;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
+  color: var(--rsvp-ink);
 }
 
+/* Submit */
 .submit {
-  height: 52px;
+  height: 54px;
   border: 0;
   border-radius: 14px;
   background: var(--rsvp-accent);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
   transition: opacity 140ms ease;
+  margin-top: 4px;
 }
 
 .submit:disabled {
-  opacity: 0.45;
+  opacity: 0.38;
   cursor: not-allowed;
-}
-
-.footer {
-  text-align: center;
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--rsvp-muted);
-}
-
-.thankyou {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 4px;
-}
-
-.thankyou .tick {
-  font-size: 2.4rem;
-  color: var(--rsvp-accent);
 }
 
 .hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--rsvp-muted);
-  line-height: 1.5;
+  line-height: 1.55;
+  text-align: center;
 }
 
+/* ── Thank-you state ────────────────────────────────────────────── */
+.thankyou {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0 8px;
+}
+
+.tickCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--rsvp-accent);
+  color: #fff;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thankyouTitle {
+  font-family: var(--rsvp-font-serif);
+  font-size: 1.6rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--rsvp-ink);
+}
+
+.changeBtn {
+  border: 1.5px solid var(--rsvp-input-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--rsvp-muted);
+  font-size: 0.85rem;
+  padding: 10px 22px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  font-size: 0.67rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rsvp-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.footerDot {
+  font-size: 0.45rem;
+}
+
+/* ── Invalid state ──────────────────────────────────────────────── */
 .invalid {
   margin: auto;
   text-align: center;
   max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 80px;
+}
+
+.invalidIcon {
+  font-size: 2rem;
+  color: var(--rsvp-gold);
+}
+
+.invalid h1 {
+  font-family: var(--rsvp-font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--rsvp-ink);
+  margin: 0;
+}
+
+.invalid p {
   color: var(--rsvp-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ── Mobile tweaks ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .page {
+    padding: 28px 22px 60px;
+  }
+
+  .attendBtn {
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 8px;
+    font-size: 0.82rem;
+  }
+
+  .submit {
+    height: 52px;
+  }
 }

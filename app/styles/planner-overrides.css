@@ -3055,6 +3055,19 @@ body,
   }
 }
 
+/* Re-apply mobile hide AFTER the global display:inline-grid rule (line ~2954)
+   that would otherwise win on mobile due to source-order with equal specificity. */
+@media (max-width: 760px) {
+  .workspace-menu-button {
+    display: none !important;
+  }
+
+  .workspace-menu-button.is-checklist-mode {
+    display: inline-grid !important;
+    place-items: center !important;
+  }
+}
+
 /* Checklist focus grouping: make Next read like now / week / later. */
 .checklist-focus-stack {
   display: grid !important;

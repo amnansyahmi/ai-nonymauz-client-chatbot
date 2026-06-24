@@ -781,50 +781,65 @@ export function RsvpPanel({
 
   return (
     <div className="planner-panel guest-command-center mm-guest">
+
+      {/* ── Header ── */}
       <header className="mm-gs__header">
         <div className="mm-gs__heading">
-          <span className="mm-gs__eyebrow">{language === 'ms' ? 'Senarai tetamu' : 'Guest list'}</span>
+          <span className="mm-gs__eyebrow">{language === 'ms' ? 'Senarai Tetamu' : 'Guest List'}</span>
           <h2 className="mm-gs__amount">
             {totalPax}
-            <em>{language === 'ms' ? ` pax · ${guests.length} rekod` : ` pax · ${guests.length} record${guests.length === 1 ? '' : 's'}`}</em>
+            {guests.length > 0 ? (
+              <em>{language === 'ms' ? ` pax · ${guests.length} rekod` : ` pax · ${guests.length} record${guests.length === 1 ? '' : 's'}`}</em>
+            ) : (
+              <em>{language === 'ms' ? ' pax' : ' pax'}</em>
+            )}
           </h2>
         </div>
-        <div className="mm-gs__breakdown">
-          <span className="is-confirmed">{confirmedGuests} {language === 'ms' ? 'hadir' : 'going'}</span>
-          <span className="mm-gs__breakdown-sep">·</span>
-          <span>{pendingGuests} pending</span>
-          <span className="mm-gs__breakdown-sep">·</span>
-          <span>{declinedGuests} {language === 'ms' ? 'tak hadir' : 'declined'}</span>
+        <div className="mm-gs__stats">
+          <span className="mm-gs__stat mm-gs__stat--confirmed">
+            <span className="mm-gs__stat-dot" aria-hidden="true" />
+            {confirmedGuests} {language === 'ms' ? 'hadir' : 'going'}
+          </span>
+          <span className="mm-gs__stat mm-gs__stat--pending">
+            {pendingGuests} pending
+          </span>
+          <span className="mm-gs__stat mm-gs__stat--declined">
+            {declinedGuests} {language === 'ms' ? 'tak hadir' : 'declined'}
+          </span>
         </div>
       </header>
 
+      {/* ── RSVP share card ── */}
       {isRsvpShareOpen ? (
-        <div className="rsvp-share-card">
-          <div className="rsvp-share-head">
-            <div>
+        <div className="mm-gs__rsvp-card">
+          <div className="mm-gs__rsvp-card-top">
+            <div className="mm-gs__rsvp-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div className="mm-gs__rsvp-card-info">
               <strong>{language === 'ms' ? 'Pautan RSVP anda' : 'Your RSVP link'}</strong>
               <p>
                 {usingOwnForm
                   ? language === 'ms'
-                    ? 'Menggunakan borang anda sendiri. Kongsi pautan dengan tetamu; import respons melalui "Import CSV".'
-                    : 'Using your own form. Share the link with guests; import responses via "Import CSV".'
+                    ? 'Borang anda sendiri aktif. Kongsi pautan dengan tetamu.'
+                    : 'Your own form is active. Share the link with guests.'
                   : language === 'ms'
-                    ? 'Halaman RSVP siap sedia dari butiran majlis anda. Kongsi dengan tetamu — jawapan mereka dihantar kepada anda melalui WhatsApp.'
-                    : 'A ready-made RSVP page from your wedding details. Share it with guests — their replies come to you via WhatsApp.'}
+                    ? 'Halaman RSVP siap pakai. Jawapan tetamu dihantar melalui WhatsApp.'
+                    : 'Ready-made RSVP page. Guest replies come via WhatsApp.'}
               </p>
             </div>
-            <button type="button" className="rsvp-share-close" aria-label={language === 'ms' ? 'Tutup' : 'Close'} onClick={() => setIsRsvpShareOpen(false)}>×</button>
+            <button type="button" className="mm-gs__rsvp-close" aria-label={language === 'ms' ? 'Tutup' : 'Close'} onClick={() => setIsRsvpShareOpen(false)}>×</button>
           </div>
 
-          <div className="rsvp-link-display" title={effectiveRsvpUrl}>{effectiveRsvpUrl || '…'}</div>
+          <div className="mm-gs__rsvp-link" title={effectiveRsvpUrl}>{effectiveRsvpUrl || '…'}</div>
 
-          <div className="rsvp-share-actions">
-            <a className="utility-action" href={effectiveRsvpUrl || '#'} target="_blank" rel="noopener noreferrer">
+          <div className="mm-gs__rsvp-actions">
+            <a className="mm-gs__rsvp-btn" href={effectiveRsvpUrl || '#'} target="_blank" rel="noopener noreferrer">
               {language === 'ms' ? 'Buka' : 'Open'}
             </a>
             <button
               type="button"
-              className="utility-action"
+              className={`mm-gs__rsvp-btn${rsvpCopied ? ' is-copied' : ''}`}
               disabled={!effectiveRsvpUrl}
               onClick={() => {
                 navigator.clipboard?.writeText(effectiveRsvpUrl).then(() => {
@@ -833,21 +848,22 @@ export function RsvpPanel({
                 });
               }}
             >
-              {rsvpCopied ? (language === 'ms' ? 'Disalin ✓' : 'Copied ✓') : (language === 'ms' ? 'Salin pautan' : 'Copy link')}
+              {rsvpCopied ? (language === 'ms' ? '✓ Disalin' : '✓ Copied') : (language === 'ms' ? 'Salin' : 'Copy')}
             </button>
             <a
-              className="primary-action"
+              className="mm-gs__rsvp-btn mm-gs__rsvp-btn--wa"
               href={buildWhatsAppShareUrl(buildRsvpInviteMessage({ coupleNames, weddingDate, venue, formUrl: effectiveRsvpUrl, language }))}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {language === 'ms' ? 'Kongsi WhatsApp' : 'Share on WhatsApp'}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              {language === 'ms' ? 'Kongsi' : 'Share'}
             </a>
           </div>
 
           <button
             type="button"
-            className="rsvp-ownform-toggle"
+            className="mm-gs__rsvp-ownform-toggle"
             aria-expanded={isOwnFormOpen}
             onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsOwnFormOpen((open) => !open); }}
           >
@@ -856,7 +872,7 @@ export function RsvpPanel({
 
           {isOwnFormOpen ? (
             <>
-              <div className="rsvp-share-row">
+              <div className="mm-gs__rsvp-url-row">
                 <input
                   type="url"
                   inputMode="url"
@@ -867,7 +883,6 @@ export function RsvpPanel({
                 />
                 <button
                   type="button"
-                  className="primary-action"
                   disabled={!isValidFormUrl(rsvpUrlDraft) || normalizeFormUrl(rsvpUrlDraft) === rsvpFormUrl}
                   onClick={() => onChangeRsvpFormUrl(normalizeFormUrl(rsvpUrlDraft))}
                 >
@@ -875,12 +890,12 @@ export function RsvpPanel({
                 </button>
               </div>
               {rsvpUrlDraft.trim() && !isValidFormUrl(rsvpUrlDraft) ? (
-                <p className="rsvp-share-error">{language === 'ms' ? 'Pautan tidak sah.' : 'That link looks invalid.'}</p>
+                <p className="mm-gs__rsvp-error">{language === 'ms' ? 'Pautan tidak sah.' : 'That link looks invalid.'}</p>
               ) : null}
               {usingOwnForm ? (
                 <button
                   type="button"
-                  className="rsvp-ownform-toggle"
+                  className="mm-gs__rsvp-ownform-toggle"
                   onClick={() => { onChangeRsvpFormUrl(''); setRsvpUrlDraft(''); }}
                 >
                   {language === 'ms' ? 'Kembali ke halaman lalai' : 'Back to the default page'}
@@ -891,6 +906,7 @@ export function RsvpPanel({
         </div>
       ) : null}
 
+      {/* ── Toolbar ── */}
       <div className="mm-gs__toolbar">
         <div className="mm-gs__views" role="tablist" aria-label="Guest views">
           {guestViewOptions.map((option) => (
@@ -914,17 +930,23 @@ export function RsvpPanel({
             aria-expanded={isGuestAddOpen}
             onClick={() => setIsGuestAddOpen((v) => !v)}
           >
-            <span className="mm-gs__add-plus" aria-hidden="true">+</span>
-            <span className="mm-gs__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
+            <span className="mm-gs__add-plus" aria-hidden="true">{isGuestAddOpen ? '×' : '+'}</span>
+            <span className="mm-gs__add-label">{isGuestAddOpen ? (language === 'ms' ? 'Batal' : 'Cancel') : (language === 'ms' ? 'Tambah' : 'Add')}</span>
           </button>
           <details className="mm-gs__menu">
             <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
             </summary>
             <div className="mm-gs__menu-pop">
-              <button type="button" onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsRsvpShareOpen((open) => !open); }}>{language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}</button>
-              <button type="button" onClick={() => guestImportRef.current?.click()}>{language === 'ms' ? 'Import CSV' : 'Import CSV'}</button>
-              <button type="button" onClick={exportGuestsCsv} disabled={guests.length === 0}>{language === 'ms' ? 'Eksport CSV' : 'Export CSV'}</button>
+              <button type="button" onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsRsvpShareOpen((open) => !open); }}>
+                {language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}
+              </button>
+              <button type="button" onClick={() => guestImportRef.current?.click()}>
+                {language === 'ms' ? 'Import CSV' : 'Import CSV'}
+              </button>
+              <button type="button" onClick={exportGuestsCsv} disabled={guests.length === 0}>
+                {language === 'ms' ? 'Eksport CSV' : 'Export CSV'}
+              </button>
             </div>
           </details>
           <input
@@ -940,6 +962,7 @@ export function RsvpPanel({
         </div>
       </div>
 
+      {/* ── Add form ── */}
       {isGuestAddOpen ? (
         <form
           className="mm-gs__addform"
@@ -949,10 +972,31 @@ export function RsvpPanel({
             if (shouldClose) setIsGuestAddOpen(false);
           }}
         >
-          <input value={guestDraft.name} onChange={(event) => setGuestDraft((current) => ({ ...current, name: event.target.value }))} placeholder={language === 'ms' ? 'Nama tetamu' : 'Guest name'} aria-label="Guest name" />
+          <div className="mm-gs__addform-header">
+            <span className="mm-gs__addform-title">{language === 'ms' ? 'Tetamu baharu' : 'New guest'}</span>
+          </div>
+          <input
+            value={guestDraft.name}
+            onChange={(event) => setGuestDraft((current) => ({ ...current, name: event.target.value }))}
+            placeholder={language === 'ms' ? 'Nama penuh tetamu' : 'Full name'}
+            aria-label="Guest name"
+          />
           <div className="mm-gs__addform-row">
-            <input value={guestDraft.phone} onChange={(event) => setGuestDraft((current) => ({ ...current, phone: event.target.value }))} placeholder={language === 'ms' ? 'Telefon' : 'Phone'} aria-label="Guest phone" />
-            <input type="number" min="1" value={guestDraft.pax} onChange={(event) => setGuestDraft((current) => ({ ...current, pax: Number(event.target.value) || 1 }))} placeholder="Pax" aria-label="Guest pax" />
+            <input
+              value={guestDraft.phone}
+              onChange={(event) => setGuestDraft((current) => ({ ...current, phone: event.target.value }))}
+              placeholder={language === 'ms' ? 'No. telefon' : 'Phone (optional)'}
+              aria-label="Guest phone"
+              inputMode="tel"
+            />
+            <input
+              type="number"
+              min="1"
+              value={guestDraft.pax}
+              onChange={(event) => setGuestDraft((current) => ({ ...current, pax: Number(event.target.value) || 1 }))}
+              placeholder="Pax"
+              aria-label="Guest pax"
+            />
           </div>
           <div className="mm-gs__addform-row">
             <select value={guestDraft.group} onChange={(event) => setGuestDraft((current) => ({ ...current, group: event.target.value }))} aria-label="Guest group">
@@ -973,68 +1017,78 @@ export function RsvpPanel({
         </form>
       ) : null}
 
-      <div className="guest-list-modern mm-gs__list">
-            {filteredGuests.length > 0 ? filteredGuests.map((guest) => {
-              const isExpanded = expandedGuestId === guest.id;
+      {/* ── Guest list ── */}
+      <div className="mm-gs__list">
+        {filteredGuests.length > 0 ? filteredGuests.map((guest) => {
+          const isExpanded = expandedGuestId === guest.id;
+          const initials = guest.name.trim().split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase();
+          return (
+            <article key={guest.id} className={`mm-gs__row${isExpanded ? ' is-expanded' : ''}`}>
+              <button
+                type="button"
+                className="mm-gs__row-summary"
+                aria-expanded={isExpanded}
+                onClick={() => setExpandedGuestId(isExpanded ? null : guest.id)}
+              >
+                <span className="mm-gs__avatar" aria-hidden="true">{initials}</span>
+                <span className="mm-gs__row-info">
+                  <strong className="mm-gs__row-name">{guest.name}</strong>
+                  <small className="mm-gs__row-meta">{guest.phone || (language === 'ms' ? 'Tiada telefon' : 'No phone')} · {guest.group}</small>
+                </span>
+                <span className="mm-gs__row-right">
+                  <span className="mm-gs__pax-badge">{guest.pax} pax</span>
+                  <span className={`mm-gs__status-badge mm-gs__status-badge--${guest.status}`}>{rsvpLabel(guest.status)}</span>
+                </span>
+              </button>
 
-              return (
-                <article key={guest.id} className={`guest-row-card ${isExpanded ? 'expanded' : ''}`}>
-                  <button
-                    type="button"
-                    className="guest-row-summary"
-                    aria-expanded={isExpanded}
-                    onClick={() => setExpandedGuestId(isExpanded ? null : guest.id)}
-                  >
-                    <span className="guest-avatar" aria-hidden="true">{guest.name.slice(0, 1).toUpperCase()}</span>
-                    <span className="guest-row-title">
-                      <strong>{guest.name}</strong>
-                      <small>{guest.phone || (language === 'ms' ? 'Tiada telefon' : 'No phone')} · {guest.group}</small>
-                    </span>
-                    <span className="guest-pax">{guest.pax} pax</span>
-                    <span className={`guest-status ${guest.status}`}>{rsvpLabel(guest.status)}</span>
-                  </button>
-
-                  {isExpanded ? (
-                    <div className="guest-edit-panel">
-                      <label>
-                        <span>{language === 'ms' ? 'Nama' : 'Name'}</span>
-                        <input value={guest.name} onChange={(event) => updateGuest(guest.id, { name: event.target.value })} aria-label="Guest name" />
-                      </label>
-                      <label>
-                        <span>{language === 'ms' ? 'Telefon' : 'Phone'}</span>
-                        <input value={guest.phone} onChange={(event) => updateGuest(guest.id, { phone: event.target.value })} aria-label="Guest phone" />
-                      </label>
-                      <label>
-                        <span>{language === 'ms' ? 'Kumpulan' : 'Group'}</span>
-                        <input value={guest.group} onChange={(event) => updateGuest(guest.id, { group: event.target.value })} aria-label="Guest group" />
-                      </label>
-                      <label>
-                        <span>Pax</span>
-                        <input type="number" min="1" value={guest.pax} onChange={(event) => updateGuest(guest.id, { pax: Number(event.target.value) || 1 })} aria-label="Guest pax" />
-                      </label>
-                      <label>
-                        <span>Status</span>
-                        <select value={guest.status} onChange={(event) => updateGuest(guest.id, { status: event.target.value as Guest['status'] })} aria-label={`RSVP status for ${guest.name}`}>
-                          <option value="pending">{language === 'ms' ? 'Belum Reply' : 'Pending'}</option>
-                          <option value="confirmed">{language === 'ms' ? 'Confirm Hadir' : 'Confirmed'}</option>
-                          <option value="declined">{language === 'ms' ? 'Tidak Hadir' : 'Declined'}</option>
-                        </select>
-                      </label>
-                      <div className="guest-edit-actions">
-                        <button type="button" onClick={() => setExpandedGuestId(null)}>{language === 'ms' ? 'Selesai edit' : 'Done editing'}</button>
-                        <button type="button" className="danger" onClick={() => removeGuest(guest.id)}>{language === 'ms' ? 'Buang' : 'Remove'}</button>
-                      </div>
-                    </div>
-                  ) : null}
-                </article>
-              );
-            }) : (
-              <div className="empty-state action-empty">
-                <strong>{language === 'ms' ? 'Tiada tetamu dalam paparan ini.' : 'No guests in this view.'}</strong>
-                <span>{language === 'ms' ? 'Tukar tab atau tambah tetamu baharu.' : 'Switch tabs or add a new guest.'}</span>
-                <button type="button" onClick={() => setIsGuestAddOpen(true)}>{language === 'ms' ? 'Tambah tetamu' : 'Add guest'}</button>
-              </div>
-            )}
+              {isExpanded ? (
+                <div className="mm-gs__edit">
+                  <label className="mm-gs__edit-field">
+                    <span>{language === 'ms' ? 'Nama' : 'Name'}</span>
+                    <input value={guest.name} onChange={(event) => updateGuest(guest.id, { name: event.target.value })} aria-label="Guest name" />
+                  </label>
+                  <label className="mm-gs__edit-field">
+                    <span>{language === 'ms' ? 'Telefon' : 'Phone'}</span>
+                    <input value={guest.phone} onChange={(event) => updateGuest(guest.id, { phone: event.target.value })} aria-label="Guest phone" />
+                  </label>
+                  <label className="mm-gs__edit-field">
+                    <span>{language === 'ms' ? 'Kumpulan' : 'Group'}</span>
+                    <input value={guest.group} onChange={(event) => updateGuest(guest.id, { group: event.target.value })} aria-label="Guest group" />
+                  </label>
+                  <label className="mm-gs__edit-field">
+                    <span>Pax</span>
+                    <input type="number" min="1" value={guest.pax} onChange={(event) => updateGuest(guest.id, { pax: Number(event.target.value) || 1 })} aria-label="Guest pax" />
+                  </label>
+                  <label className="mm-gs__edit-field">
+                    <span>Status</span>
+                    <select value={guest.status} onChange={(event) => updateGuest(guest.id, { status: event.target.value as Guest['status'] })} aria-label={`RSVP status for ${guest.name}`}>
+                      <option value="pending">{language === 'ms' ? 'Belum Reply' : 'Pending'}</option>
+                      <option value="confirmed">{language === 'ms' ? 'Confirm Hadir' : 'Confirmed'}</option>
+                      <option value="declined">{language === 'ms' ? 'Tidak Hadir' : 'Declined'}</option>
+                    </select>
+                  </label>
+                  <div className="mm-gs__edit-actions">
+                    <button type="button" className="mm-gs__edit-done" onClick={() => setExpandedGuestId(null)}>
+                      {language === 'ms' ? 'Selesai' : 'Done'}
+                    </button>
+                    <button type="button" className="mm-gs__edit-remove" onClick={() => removeGuest(guest.id)}>
+                      {language === 'ms' ? 'Buang' : 'Remove'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </article>
+          );
+        }) : (
+          <div className="mm-gs__empty">
+            <span className="mm-gs__empty-icon" aria-hidden="true">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </span>
+            <strong>{language === 'ms' ? 'Tiada tetamu dalam paparan ini.' : 'No guests in this view.'}</strong>
+            <span>{language === 'ms' ? 'Tukar tab atau tambah tetamu baharu.' : 'Switch tabs or add a new guest.'}</span>
+            <button type="button" onClick={() => setIsGuestAddOpen(true)}>{language === 'ms' ? '+ Tambah tetamu' : '+ Add guest'}</button>
+          </div>
+        )}
       </div>
 
       {topGroup ? (
