@@ -8,42 +8,48 @@ type InlineCitationsProps = {
   language?: 'ms' | 'en';
 };
 
-/**
- * Click-to-expand source citations. Renders as compact chips under the
- * assistant message. Clicking a chip opens a side panel with the source
- * title + category + a placeholder preview. (Full source text would come
- * from the backend in a future iteration.)
- */
 export default function InlineCitations({ sources, language = 'ms' }: InlineCitationsProps) {
+  const [expanded, setExpanded] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   if (!sources || sources.length === 0) return null;
   const isMs = language === 'ms';
 
   return (
     <>
-      <div className="inline-citations" aria-label={isMs ? 'Sumber' : 'Sources'}>
-        <span className="inline-citations__label">{isMs ? 'Berdasarkan' : 'Based on'}</span>
-        {sources.map((source, index) => {
-          const confidence = getSourceConfidence(source, index);
-          const label = isMs ? SOURCE_CONFIDENCE_LABEL[confidence].ms : SOURCE_CONFIDENCE_LABEL[confidence].en;
-          return (
-            <button
-              key={source.id}
-              type="button"
-              className={`inline-citations__chip inline-citations__chip--${confidence}`}
-              onClick={() => setOpenIndex(index)}
-              data-event={`citation_open_${source.id}`}
-              title={label}
-            >
-              <span aria-hidden="true">
-                {confidence === 'pasti' && '✓'}
-                {confidence === 'mungkin' && '~'}
-                {confidence === 'lazim' && '•'}
-              </span>
-              {source.title}
-            </button>
-          );
-        })}
+      <div className="inline-citations">
+        <button
+          type="button"
+          className="inline-citations__toggle"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+        >
+          {isMs ? `Lihat sumber (${sources.length})` : `View sources (${sources.length})`}
+        </button>
+        {expanded && (
+          <div className="inline-citations__chips">
+            {sources.map((source, index) => {
+              const confidence = getSourceConfidence(source, index);
+              const label = isMs ? SOURCE_CONFIDENCE_LABEL[confidence].ms : SOURCE_CONFIDENCE_LABEL[confidence].en;
+              return (
+                <button
+                  key={source.id}
+                  type="button"
+                  className={`inline-citations__chip inline-citations__chip--${confidence}`}
+                  onClick={() => setOpenIndex(index)}
+                  data-event={`citation_open_${source.id}`}
+                  title={label}
+                >
+                  <span aria-hidden="true">
+                    {confidence === 'pasti' && '✓'}
+                    {confidence === 'mungkin' && '~'}
+                    {confidence === 'lazim' && '•'}
+                  </span>
+                  {source.title}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       {openIndex !== null && sources[openIndex] ? (
         <CitationPanel

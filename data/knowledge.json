@@ -1,12 +1,18 @@
 {
   "clientName": "MajlisMate.ai",
-  "lastUpdated": "2026-06-16",
+  "lastUpdated": "2026-06-24-r2",
   "documents": [
     {
       "id": "majlis-overview",
       "title": "MajlisMate.ai Overview",
       "category": "company",
       "content": "MajlisMate.ai is an AI wedding planning assistant for couples, families, and wedding vendors. It helps with wedding checklists, majlis timelines, guest planning, vendor preparation, budget planning, ceremony and reception ideas, appointment scheduling, and bilingual English/Malay wedding planning guidance."
+    },
+    {
+      "id": "majlismate-features",
+      "title": "MajlisMate App Features — What You Can Do",
+      "category": "company",
+      "content": "MajlisMate is a personal wedding planner app with six core tools:\n\n1. CHECKLIST — Build and manage your wedding task list grouped by planning phase (12 months before, 6 months, 3 months, final month). Each task can have a deadline, category, and status (open/done). The AI can generate a personalised checklist based on your wedding date, guest count, and state.\n\n2. BUDGET — Track your full wedding budget across categories (venue, catering, photography, attire, decoration, doorgift, etc.). Each category shows planned vs actual vs paid amounts. The AI can suggest a budget breakdown based on your total budget and guest target, and update items when you report a quote or payment.\n\n3. VENDOR — Shortlist and manage wedding vendors. Browse vendors by category (photographer, caterer, MUA, venue, florist, etc.). The AI can suggest questions to ask each vendor, help draft WhatsApp messages to vendors, and add confirmed vendors to your budget tracker.\n\n4. GUEST & RSVP — Manage your guest list with name, pax count, group, and RSVP status (confirmed, pending, declined). Generate a shareable RSVP link that guests can open on their phone to confirm attendance via WhatsApp. The link shows couple names, date, and venue with a beautiful invitation layout.\n\n5. CALENDAR & APPOINTMENTS — Schedule and track wedding-related appointments such as venue viewing, food tasting, fitting sessions, vendor meetings, and makeup trials. The AI can create appointments directly into your calendar and optionally generate an ICS file to add to your phone's native calendar.\n\n6. AI ASSISTANT — A bilingual (Malay/English) AI chat that answers wedding planning questions, gives guidance on Malaysian nikah procedures and documents, drafts WhatsApp messages to vendors, generates checklists and budget plans, and takes actions directly in your planner (add checklist items, update budget, create appointments, add guests) with one-tap confirmation."
     },
     {
       "id": "planning-scope",
@@ -49,6 +55,24 @@
       "title": "Advice Boundaries",
       "category": "policy",
       "content": "MajlisMate.ai can provide planning guidance, templates, checklists, and suggested questions. It should not provide legal, medical, financial, religious rulings, or binding contract advice. For those topics, suggest consulting the relevant professional or authority."
+    },
+    {
+      "id": "jakim-overview",
+      "title": "JAKIM — Jabatan Kemajuan Islam Malaysia",
+      "category": "legal-procedure",
+      "content": "Source: jakim.gov.my and malaysia.gov.my (official government portals).\n\nJAKIM (Jabatan Kemajuan Islam Malaysia) is the federal body responsible for Islamic affairs in Malaysia. For marriage, JAKIM's key roles are:\n\n1. Managing SPPIM (Sistem Pengurusan Perkahwinan Islam Malaysia) — the official online portal at sppim.gov.my for kursus pra-perkahwinan registration, surat kebenaran berkahwin applications, and nikah status tracking.\n\n2. Setting national standards for Kursus Pra-Perkahwinan Islam — the mandatory pre-marriage course that all Muslim couples must complete before nikah. The course covers hak dan tanggungjawab suami isteri, undang-undang keluarga Islam, and guidance on building a household.\n\n3. JAKIM does NOT directly handle nikah solemnisation or registration — that is done by the respective state Jabatan Agama Islam (JAI) or Majlis Agama Islam Negeri (MAIN).\n\nJAKIM contact: Website www.jakim.gov.my | General enquiries via MyGovernment portal at malaysia.gov.my or call 603-8000 8000 (JDN). Always refer to SPPIM (sppim.gov.my) for the latest forms, requirements, and kursus schedules."
+    },
+    {
+      "id": "jai-negeri-direktori",
+      "title": "Jabatan Agama Islam Negeri — Direktori Rasmi 14 Negeri Malaysia",
+      "category": "legal-procedure",
+      "content": "Source: Official state government portals and SPPIM. Each Malaysian state has its own Islamic religious authority responsible for nikah registration, kebenaran berkahwin, and Islamic family law. Procedures and fees differ by state — always verify directly with the relevant authority.\n\nWilayah Persekutuan (KL, Putrajaya, Labuan): JAWI — Jabatan Agama Islam Wilayah Persekutuan | www.jawi.gov.my\n\nSelangor: JAIS — Jabatan Agama Islam Selangor | www.jais.gov.my\n\nJohor: JAJ — Jabatan Agama Islam Johor | www.jaj.gov.my\n\nMelaka: JAIM — Jabatan Agama Islam Melaka | www.jaim.gov.my\n\nNegeri Sembilan: JAINS — Jabatan Agama Islam Negeri Sembilan | www.jains.gov.my\n\nPerak: JAIPk — Jabatan Agama Islam Perak | www.jaipk.gov.my\n\nKedah: JAIK — Jabatan Agama Islam Kedah | www.jaik.gov.my\n\nPerlis: JAIP — Jabatan Agama Islam Perlis | www.jaip.gov.my\n\nPulau Pinang: JAIPP — Jabatan Agama Islam Pulau Pinang | www.jaipp.gov.my\n\nKelantan: JAHEAIK — Jabatan Hal Ehwal Agama Islam Kelantan | www.e-jaheaik.gov.my\n\nTerengganu: JHEAT — Jabatan Hal Ehwal Agama Terengganu | www.e-jheat.gov.my\n\nPahang: MUIP — Majlis Ugama Islam dan Adat Resam Melayu Pahang | www.muip.gov.my\n\nSabah: JHEAINS — Jabatan Hal Ehwal Agama Islam Negeri Sabah | www.jheains.sabah.gov.my\n\nSarawak: MAIS — Majlis Islam Sarawak | www.mais.gov.my\n\nFor each state: if the couple's negeri is set, direct them to the relevant authority above. All websites above are official government domains (.gov.my). Always recommend the couple verify current procedures and fees directly with their state JAI as requirements change."
+    },
+    {
+      "id": "syarat-nikah-negeri-perbezaan",
+      "title": "Perbezaan Syarat Nikah Mengikut Negeri — Merentas Negeri, Wali, dan Mas Kahwin",
+      "category": "legal-procedure",
+      "content": "Source: Malaysia.gov.my, SPPIM, and respective state JAI portals. Malaysian Islamic marriage law is administered at the state level, so requirements differ. Key differences to know:\n\nMERENTAS NEGERI (Cross-state marriage): If bride and groom are from different states, kebenaran berkahwin (marriage permission) must be obtained from BOTH states' JAI. The process takes longer — start at least 4-6 months before the nikah date. The groom's state JAI typically issues the primary kebenaran, and the bride's state JAI issues a surat keizinan merentas negeri. Requirements and processing time vary — contact both JAI offices early.\n\nMAS KAHWIN (Mahar/Mahr): The minimum mas kahwin amount is set by each state's Majlis Agama Islam and differs across states. Examples: Wilayah Persekutuan and Selangor set RM80; some states set RM22.50 or RM40 as historical minimums. However, most couples give more than the minimum as it is a gift to the bride. Always check current minimum with the relevant state JAI as amounts are updated periodically.\n\nWALI HAKIM: If the bride's father (or other wali nasab) is unavailable, deceased, or unknown, the wali hakim (a JAI-appointed representative) must solemnise the nikah instead. The bride must apply for wali hakim status through the state JAI before the nikah date. Requirements and processing time differ by state.\n\nKURSUS PRA-PERKAHWINAN EXEMPTIONS: Exemptions from the mandatory kursus may be granted to widows, widowers, and divorcees in some states. Rules differ — check with your state JAI or the SPPIM portal.\n\nSABAH AND SARAWAK: These states have their own Islamic family law enactments that differ from Peninsular Malaysia. Additional documentation and longer processing times may be required, especially for cross-state or cross-region marriages. Contact JHEAINS (Sabah) or MAIS (Sarawak) directly.\n\nIMPORTANT: Fees, processing times, and form requirements change periodically. Always verify current requirements with your state JAI or check sppim.gov.my for the latest information."
     },
     {
       "id": "prosedur-perkahwinan-islam-malaysia",

@@ -273,6 +273,7 @@ export default function PlannerWorkspace() {
   const [checklistTitle, setChecklistTitle] = useState('Checklist');
   const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([]);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [pendingChecklistGen, setPendingChecklistGen] = useState<string | null>(null);
   const [checklistView, setChecklistView] = useState<'timeline' | 'next' | 'completed'>('timeline');
   // null = show all categories. Secondary filter axis layered on top of the
   // phase/month timeline; does not affect AI context or other panels.
@@ -756,7 +757,6 @@ export default function PlannerWorkspace() {
       ensure(/conting|kecemasan|buffer/i, 'Contingency', Math.round(base * contingency));
       return next;
     });
-    setActiveTab('budget');
     addActivity(`AI suggested a full budget allocation from ${money(base)}.`);
     setStatusMessage(language === 'ms' ? 'Cadangan bajet penuh dimasukkan.' : 'Full budget suggestion applied.');
   }
@@ -764,14 +764,12 @@ export default function PlannerWorkspace() {
   function applyGuestPlanningFromText(text: string) {
     const parsedGuests = parseGuestList(text);
     if (parsedGuests.length === 0) {
-      setActiveTab('rsvp');
       setIsContextAssistantOpen(true);
       setMenuInputs((current) => ({ ...current, rsvp: text }));
       return false;
     }
 
     setGuests((current) => [...current, ...parsedGuests]);
-    setActiveTab('rsvp');
     addActivity(`AI added ${parsedGuests.length} guest${parsedGuests.length === 1 ? '' : 's'}.`);
     setStatusMessage(language === 'ms' ? 'Tetamu ditambah.' : 'Guest list updated.');
     return true;
@@ -890,10 +888,41 @@ export default function PlannerWorkspace() {
 
     updateConversationMemory(trimmed);
 
-    if (shouldCreateChecklist) {
-      if (!opts?.suppressTabSwitch) setActiveTab('checklist');
-      setChecklistTitle(language === 'ms' ? 'Checklist Perkahwinan' : 'Wedding Checklist');
-      setChecklistItems([]);
+    if (shouldCreateChecklist && !isMenuAssistant) {
+      const isMs = language === 'ms';
+      if (checklistItems.length > 0) {
+        // Existing checklist — confirm before overwriting
+        setMessages((current) => [
+          ...current,
+          { role: 'user', content: trimmed },
+          {
+            role: 'assistant',
+            content: isMs
+              ? `Anda sudah ada **${checklistItems.length} task** dalam checklist. Nak jana checklist baru dan gantikan semua yang sedia ada, atau kekalkan checklist semasa?`
+              : `You already have **${checklistItems.length} tasks** in your checklist. Generate a new one and replace everything, or keep your current list?`,
+            clarify: isMs
+              ? ['Jana checklist baru (gantikan)', 'Kekalkan checklist semasa']
+              : ['Generate new checklist', 'Keep my current checklist'],
+          }
+        ]);
+        setInput('');
+        setPendingChecklistGen(trimmed);
+        return null;
+      }
+      // No existing checklist — open setup wizard pre-filled with current profile
+      setMessages((current) => [
+        ...current,
+        { role: 'user', content: trimmed },
+        {
+          role: 'assistant',
+          content: isMs
+            ? 'Jom setup checklist perkahwinan anda! Isi atau semak maklumat majlis dalam wizard — ia sudah dipra-isi dengan data anda.'
+            : "Let's set up your wedding checklist! Review or update your wedding details in the wizard — your existing info is pre-filled.",
+        }
+      ]);
+      setInput('');
+      setSetupOpen(true);
+      return null;
     }
 
     if (shouldCreateAppointment) {
@@ -916,6 +945,20 @@ export default function PlannerWorkspace() {
       applyGuestPlanningFromText(trimmed);
     }
 
+    // Determine if a nav button should appear on the AI reply (instead of forced tab switch)
+    const pendingNavTab = (!isMenuAssistant && shouldApplyBudgetSuggestion && !didApplyBudgetUpdate)
+      ? 'budget'
+      : (!isMenuAssistant && shouldApplyGuestPlanning)
+        ? 'rsvp'
+        : undefined;
+    const pendingNavLabel = pendingNavTab === 'budget'
+      ? (language === 'ms' ? 'Lihat tab Bajet' : 'Open Budget tab')
+      : pendingNavTab === 'rsvp'
+        ? (language === 'ms' ? 'Lihat tab Tetamu & RSVP' : 'Open Guests & RSVP tab')
+        : undefined;
+
+    const initialAiMessage: Message = { role: 'assistant', content: '', ...(pendingNavTab ? { navTab: pendingNavTab, navLabel: pendingNavLabel } : {}) };
+
     if (targetTab) {
       setMenuMessages((current) => ({
         ...current,
@@ -924,7 +967,7 @@ export default function PlannerWorkspace() {
       setMenuInputs((current) => ({ ...current, [targetTab]: '' }));
       setMenuLoading(targetTab);
     } else {
-      setMessages([...nextMessages, { role: 'assistant', content: '' }]);
+      setMessages([...nextMessages, initialAiMessage]);
       setInput('');
       setLoading(true);
     }
@@ -1130,6 +1173,35 @@ export default function PlannerWorkspace() {
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
+    const trimmed = input.trim();
+
+    // If user types a single digit (e.g. "1"), resolve it to the matching numbered
+    // option from the last AI message's clarify chips or inline numbered list.
+    const digitMatch = /^([1-9])$/.exec(trimmed);
+    if (digitMatch) {
+      const num = parseInt(digitMatch[1], 10);
+      const lastAI = [...messages].reverse().find((m) => m.role === 'assistant');
+
+      // Prefer MM_CLARIFY chips (explicit quick-reply options)
+      if (lastAI?.clarify && lastAI.clarify.length >= num) {
+        answerClarify(messages.lastIndexOf(lastAI), lastAI.clarify[num - 1]);
+        setInput('');
+        return;
+      }
+
+      // Fall back to numbered list items in the message text
+      if (lastAI?.content) {
+        for (const line of lastAI.content.split('\n')) {
+          const m = line.match(/^\s*(\d+)[.)]\s+(.+)/);
+          if (m && parseInt(m[1], 10) === num) {
+            ask(m[2].trim());
+            setInput('');
+            return;
+          }
+        }
+      }
+    }
+
     ask(input);
   }
 
@@ -1674,6 +1746,40 @@ export default function PlannerWorkspace() {
     setMessages((current) =>
       current.map((message, index) => (index === messageIndex ? { ...message, clarifyAnswered: true } : message))
     );
+
+    // Handle checklist overwrite confirmation chips
+    if (pendingChecklistGen) {
+      const wantsNew = /jana|new|gantikan|replace/i.test(reply);
+      const wantsKeep = /kekalkan|keep/i.test(reply);
+      if (wantsNew || wantsKeep) {
+        const isMs = language === 'ms';
+        if (wantsNew) {
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content: isMs
+                ? 'Okay! Semak atau kemaskini maklumat majlis anda dalam wizard — ia sudah dipra-isi dengan data yang ada.'
+                : "Great! Review or update your wedding details in the wizard — your existing info is pre-filled.",
+            }
+          ]);
+          setSetupOpen(true);
+        } else {
+          setMessages((current) => [
+            ...current,
+            {
+              role: 'assistant',
+              content: isMs
+                ? 'Okay, checklist semasa dikekalkan. Apa lagi yang boleh saya bantu?'
+                : 'Got it, your current checklist is kept intact. Anything else I can help with?',
+            }
+          ]);
+        }
+        setPendingChecklistGen(null);
+        return;
+      }
+    }
+
     ask(reply);
   }
 
@@ -3088,6 +3194,7 @@ export default function PlannerWorkspace() {
             onApplyActions={applyMessageActions}
             onDismissActions={dismissMessageActions}
             onClarifyReply={answerClarify}
+            onNavigate={(tab) => setActiveTab(tab as ActiveTab)}
             onSubmit={onSubmit}
           />
         </div>

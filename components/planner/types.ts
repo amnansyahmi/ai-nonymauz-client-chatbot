@@ -10,6 +10,10 @@ export type Message = {
   clarify?: string[];
   /** Set once the user taps a clarify chip, so the chips collapse. */
   clarifyAnswered?: boolean;
+  /** If set, show a small "Go to [tab]" nav button below the assistant reply. */
+  navTab?: string;
+  /** Human-readable label for the navTab button. */
+  navLabel?: string;
 };
 
 export type StreamEvent = {

@@ -74,6 +74,7 @@ function buildDemoPlannerAnswer(
   const isAppointment = /\b(appointment|temujanji|schedule|jadual|booking|book|tempah)\b/i.test(userMessage);
   const isRsvp = /\b(rsvp|guest|tetamu|jemputan|headcount|pax)\b/i.test(userMessage);
   const isPlanning = /\b(what should i|where do i start|this month|next step|focus|priorit|apa.*(buat|patut)|bulan ini|mula|fokus|seterusnya)\b/i.test(userMessage);
+  const isHelpRequest = /\b(boleh tolong|tolong saya|help me|apa boleh|what can you|boleh buat apa|buat apa|boleh bantu|can you help|nak mula|where do i start|macam mana nak guna|how to use|feature|ciri|fungsi|capabilities|kemampuan)\b/i.test(userMessage);
   const isHivTest = /\bhiv\b/i.test(userMessage);
   const isKursusPra = /\b(kursus\s+pra|kppim|pra[\s-]perkahwinan)\b/i.test(userMessage);
 
@@ -97,6 +98,14 @@ function buildDemoPlannerAnswer(
   // ask whether they mean the same item instead of offering to add it again.
   if (!voiceMode && checklistDuplicate && !newEntryRequested) {
     return buildDuplicateClarifyMessage(checklistDuplicate, language);
+  }
+
+  // Feature discovery — show what the app can do with tappable entry points.
+  if (isHelpRequest && !voiceMode) {
+    if (language === 'en') {
+      return `Of course! Here's what I can help you with:\n\n**Planning Tools**\n- Checklist — build your task list by phase (12 months, 6 months, final month)\n- Budget — track planned vs actual spending across all categories\n- Calendar — schedule vendor appointments, fittings, and tastings\n\n**Guest & Vendor**\n- Guest list & RSVP link — manage guests and share a beautiful invite link\n- Vendor guidance — shortlist vendors, draft WhatsApp messages, ask the right questions\n\n**Malaysian Wedding Guide**\n- Nikah procedure, required documents, kursus pra-perkahwinan, and SPPIM\n- Pricing ranges, adat, and planning tips specific to Malaysia\n\nWhere would you like to start?\n${MM_CLARIFY_OPEN}\n["Build my wedding checklist", "Plan my budget", "Manage guests & RSVP", "Explain nikah procedure"]\n${MM_CLARIFY_CLOSE}`;
+    }
+    return `Boleh! Ini yang saya boleh bantu:\n\n**Alat Perancangan**\n- Checklist — susun task ikut fasa (12 bulan, 6 bulan, bulan terakhir)\n- Bajet — jejak perbelanjaan dirancang vs sebenar merentas semua kategori\n- Kalendar — jadualkan appointment vendor, fitting, dan food tasting\n\n**Tetamu & Vendor**\n- Senarai tetamu & pautan RSVP — urus tetamu dan kongsi pautan jemputan yang cantik\n- Panduan vendor — shortlist vendor, draf mesej WhatsApp, tanya soalan yang betul\n\n**Panduan Perkahwinan Malaysia**\n- Prosedur nikah, dokumen diperlukan, kursus pra-perkahwinan, dan SPPIM\n- Anggaran harga vendor, adat, dan tip perancangan khusus Malaysia\n\nNak mula dari mana?\n${MM_CLARIFY_OPEN}\n["Buat checklist majlis saya", "Rancang bajet perkahwinan", "Urus senarai tetamu & RSVP", "Terangkan prosedur nikah"]\n${MM_CLARIFY_CLOSE}`;
   }
 
   if (isHivTest || isKursusPra) {
@@ -160,7 +169,7 @@ function buildDemoPlannerAnswer(
     if (isBudget) return `Let’s keep the budget practical. Split it into confirmed, estimated, and optional costs.\n\nA simple structure:\n- Venue and catering\n- Outfit and makeup\n- Photo/video\n- Decoration and pelamin\n- Door gifts and invitation\n- Buffer, usually 8-12%\n\n${hasBudget && hasGuests ? 'I have your budget and guest target — want me to suggest a full allocation now?' : 'Tell me your total budget and guest count, and I’ll suggest a cleaner allocation.'}`;
     if (isAppointment) return 'Sure. For appointments, track three things: who, when, and what decision must be made.\n\nUseful notes:\n- Vendor name\n- Date and time\n- Location or call link\n- Questions to ask\n- Deposit or document needed\n\nGive me the date, time, and vendor, and I’ll help format it.';
     if (isRsvp) return 'For RSVP, separate guests by family side or group first. That makes follow-up easier.\n\nTrack:\n- Name and phone\n- Group\n- Pax count\n- Status: pending, confirmed, declined\n- Notes, such as kids or transport\n\nIf you already have a guest estimate, I can suggest a follow-up plan.';
-    return 'I’ve noted that. Here’s a practical next step: turn it into one clear planning action.\n\nTry this:\n- Decide whether it affects checklist, budget, vendor, guest list, or appointment\n- Add the key date or amount if there is one\n- Ask me to draft the next message, task, or reminder\n\nFor example: “Create a checklist for my final month” or “Draft a WhatsApp message to a caterer.”';
+    return `Got it — happy to help with that. Could you tell me a bit more so I can give you something useful? For example, you can ask me to build a checklist, suggest a budget breakdown, shortlist vendors, draft a WhatsApp message, or set up an appointment.`;
   }
 
   if (isChecklist) return `Boleh. Checklist kahwin paling senang bila susun ikut masa, bukan ikut kategori semata-mata.\n\nMula dengan:\n- 12-9 bulan: tarikh, dewan, bajet, vendor utama\n- 8-6 bulan: baju, photographer, katering, senarai tetamu\n- 5-3 bulan: kad jemputan, doorgift, dekorasi, dokumen\n- Bulan terakhir: confirm vendor, seating, baki bayaran, tentatif hari majlis\n\n${hasDate && hasGuests ? 'Saya dah ada tarikh dan guest target — nak saya jana checklist sekarang?' : 'Beritahu tarikh majlis dan anggaran tetamu, saya boleh susun lebih tepat.'}`;
@@ -168,7 +177,7 @@ function buildDemoPlannerAnswer(
   if (isBudget) return `Jom kemaskan bajet. Pecahkan kepada kos confirm, kos anggaran, dan kos optional.\n\nStruktur mudah:\n- Dewan dan katering\n- Baju dan makeup\n- Photo/video\n- Dekorasi dan pelamin\n- Doorgift dan jemputan\n- Buffer sekitar 8-12%\n\n${hasBudget && hasGuests ? 'Saya dah ada bajet dan guest target — nak saya cadangkan pecahan penuh sekarang?' : 'Beritahu jumlah bajet dan jumlah tetamu, saya boleh cadangkan pecahan yang lebih sesuai.'}`;
   if (isAppointment) return 'Boleh. Untuk appointment, simpan tiga benda: siapa, bila, dan keputusan apa yang perlu dibuat.\n\nNota appointment yang berguna:\n- Nama vendor\n- Tarikh dan masa\n- Lokasi atau link call\n- Soalan yang nak ditanya\n- Deposit atau dokumen yang perlu dibawa\n\nBagi tarikh, masa, dan vendor, saya boleh formatkan untuk calendar.';
   if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut side keluarga atau group dulu. Nanti follow-up lebih mudah.\n\nTrack benda ini:\n- Nama dan nombor telefon\n- Group tetamu\n- Bilangan pax\n- Status: belum reply, confirm, tidak hadir\n- Nota seperti anak kecil atau transport\n\nKalau ada anggaran tetamu, saya boleh cadangkan cara follow-up.';
-  return 'Saya dah noted. Langkah terbaik sekarang ialah tukarkan perkara ini kepada satu tindakan planning yang jelas.\n\nCuba pilih kategori:\n- Checklist\n- Bajet\n- Vendor\n- Tetamu\n- Appointment\n\nContoh: “Buat checklist untuk bulan terakhir” atau “Draft mesej WhatsApp untuk caterer.”';
+  return `Okay, boleh cerita sikit lagi? Saya boleh bantu lebih tepat kalau tahu apa yang anda fikir. Contohnya, boleh minta saya buat checklist, cadangkan pecahan bajet, cari vendor, draftkan mesej WhatsApp, atau tetapkan appointment.`;
 }
 
 /**
@@ -458,6 +467,8 @@ Rules:
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
+9a. GREETINGS: If the user's message is just a greeting (hi, hello, hai, hye, salam, assalamualaikum, selamat pagi/petang/malam, good morning/evening, etc.), respond warmly and naturally in 1-2 sentences — introduce yourself briefly and invite them to ask anything about their wedding. Do NOT output a category menu, bullet list, or action block in response to a greeting.
+9b. FEATURE DISCOVERY: When the user asks what you can do, how to use MajlisMate, asks for help getting started, or asks "boleh tolong?", "boleh bantu?", "apa yang awak boleh buat?", "what can you do?", "where do I start?" — respond with a brief structured list of MajlisMate's six features (Checklist, Budget, Vendor, Guest & RSVP, Calendar/Appointments, AI guidance) then append a MM_CLARIFY block with exactly 4 tappable entry points so the user can jump straight into the tool they need. Do NOT hallucinate features that do not exist in the app.
 10. When answering questions about official Islamic marriage procedures in Malaysia — including prosedur nikah, kursus pra-perkahwinan, kebenaran berkahwin, SPPIM, or pendaftaran nikah — use the internal knowledge context which is sourced from the official Malaysia government portal (malaysia.gov.my). Cite the source as "Sumber: malaysia.gov.my" and always remind the couple that procedures and fees differ by state, so they should verify with their state Jabatan Agama Islam (JAI) or Pejabat Agama Islam Daerah (PAID).${voiceMode ? '\n11. This is a voice conversation. Answer in 1–3 short spoken sentences only. No markdown, no bullet lists, no numbered lists, no headings, no asterisks. Speak naturally and conversationally as if talking aloud.' : ''}${actionsRule}${clarifyRule}
 
 PLANNER STATE SUMMARY (read this first and reason from it — it reflects the couple's live workspace):

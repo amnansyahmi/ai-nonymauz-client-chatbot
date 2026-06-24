@@ -36,6 +36,7 @@ type ChatWidgetProps = {
   onImageError?: (message: string) => void;
   onStopGenerating?: () => void;
   onHighlightAsk?: (prompt: string) => void;
+  onNavigate?: (tab: string) => void;
   onSubmit: (event: FormEvent) => void;
 };
 
@@ -243,6 +244,7 @@ export default function ChatWidget({
   onImageError,
   onStopGenerating,
   onHighlightAsk,
+  onNavigate,
   onSubmit
 }: ChatWidgetProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -299,6 +301,18 @@ export default function ChatWidget({
                       disabled={loading}
                       onReply={onClarifyReply}
                     />
+                  ) : null}
+                  {message.navTab && !isStreaming ? (
+                    <div className="chat-nav-hint">
+                      <button
+                        type="button"
+                        className="chat-nav-hint__btn"
+                        onClick={() => onNavigate?.(message.navTab!)}
+                      >
+                        <span className="chat-nav-hint__arrow" aria-hidden="true">↗</span>
+                        {message.navLabel ?? (language === 'ms' ? 'Buka tab' : 'Open tab')}
+                      </button>
+                    </div>
                   ) : null}
                 </div>
               ) : (
