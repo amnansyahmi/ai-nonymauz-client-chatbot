@@ -166,7 +166,7 @@ function buildDemoPlannerAnswer(
   if (language === 'en') {
     if (isChecklist) return `I can help with that. A clean wedding checklist should be grouped by timing, not just category.\n\nStart with:\n- 12-9 months: date, venue, budget, main vendors\n- 8-6 months: outfits, photographer, catering, guest list\n- 5-3 months: invitation, doorgift, decoration, documents\n- Final month: vendor confirmations, seating, payment balance, day schedule\n\n${hasDate && hasGuests ? 'I have your date and guest target — want me to generate the checklist now?' : 'Tell me your wedding date and guest estimate so I can make it more specific.'}`;
     if (isVendor) return 'Good idea. For vendors, shortlist by fit before price.\n\nCompare each vendor on:\n- Availability for your date\n- Package inclusions and hidden charges\n- Deposit and cancellation terms\n- Recent portfolio or reviews\n- Travel fee and setup timing\n\nShare the vendor type and negeri, and I can prepare questions or a WhatsApp message.';
-    if (isBudget) return `Let’s keep the budget practical. Split it into confirmed, estimated, and optional costs.\n\nA simple structure:\n- Venue and catering\n- Outfit and makeup\n- Photo/video\n- Decoration and pelamin\n- Door gifts and invitation\n- Buffer, usually 8-12%\n\n${hasBudget && hasGuests ? 'I have your budget and guest target — want me to suggest a full allocation now?' : 'Tell me your total budget and guest count, and I’ll suggest a cleaner allocation.'}`;
+    if (isBudget) return `Here’s a realistic Malaysian wedding budget structure.\n\nFor most weddings in Malaysia, **venue + catering takes 50–60%** of the total. Many dewan offer all-in *pakej majlis* (RM60–120/pax) bundling hall, food, basic decor, and PA — always ask what is included before comparing prices separately.\n\nTypical breakdown:\n- **Venue + Catering**: 50–60% (pakej dewan RM60–120/pax · hotel RM90–200/pax · or separate hall + caterer RM25–55/pax)\n- **Pelamin + Dekorasi**: 8–12%\n- **Photography + Videography**: 6–8% (RM4,500–14,000 combined)\n- **Baju Pengantin + MUA**: 6–8%\n- **Kad + Cenderahati**: 3–5%\n- **Hantaran + lain-lain**: 5–8%\n- **Buffer / Contingency**: min 10–15%\n\nAll-in benchmark per pax: RM80–140 (budget) · RM140–220 (mid-range) · RM220–450+ (premium).\n\n${hasBudget && hasGuests ? 'I have your budget and guest target — want me to suggest a full allocation now?' : 'Tell me your total budget, guest count, and negeri so I can give you a realistic breakdown.'}`;
     if (isAppointment) return 'Sure. For appointments, track three things: who, when, and what decision must be made.\n\nUseful notes:\n- Vendor name\n- Date and time\n- Location or call link\n- Questions to ask\n- Deposit or document needed\n\nGive me the date, time, and vendor, and I’ll help format it.';
     if (isRsvp) return 'For RSVP, separate guests by family side or group first. That makes follow-up easier.\n\nTrack:\n- Name and phone\n- Group\n- Pax count\n- Status: pending, confirmed, declined\n- Notes, such as kids or transport\n\nIf you already have a guest estimate, I can suggest a follow-up plan.';
     return `Got it — happy to help with that. Could you tell me a bit more so I can give you something useful? For example, you can ask me to build a checklist, suggest a budget breakdown, shortlist vendors, draft a WhatsApp message, or set up an appointment.`;
@@ -174,7 +174,7 @@ function buildDemoPlannerAnswer(
 
   if (isChecklist) return `Boleh. Checklist kahwin paling senang bila susun ikut masa, bukan ikut kategori semata-mata.\n\nMula dengan:\n- 12-9 bulan: tarikh, dewan, bajet, vendor utama\n- 8-6 bulan: baju, photographer, katering, senarai tetamu\n- 5-3 bulan: kad jemputan, doorgift, dekorasi, dokumen\n- Bulan terakhir: confirm vendor, seating, baki bayaran, tentatif hari majlis\n\n${hasDate && hasGuests ? 'Saya dah ada tarikh dan guest target — nak saya jana checklist sekarang?' : 'Beritahu tarikh majlis dan anggaran tetamu, saya boleh susun lebih tepat.'}`;
   if (isVendor) return 'Bagus. Untuk vendor, shortlist ikut kesesuaian dulu sebelum harga.\n\nBandingkan setiap vendor pada:\n- Available atau tidak pada tarikh majlis\n- Apa yang termasuk dalam pakej\n- Caj tambahan tersembunyi\n- Deposit dan syarat cancel\n- Portfolio atau review terkini\n- Caj travel dan masa setup\n\nBagi jenis vendor dan negeri, saya boleh bantu sediakan soalan atau mesej WhatsApp.';
-  if (isBudget) return `Jom kemaskan bajet. Pecahkan kepada kos confirm, kos anggaran, dan kos optional.\n\nStruktur mudah:\n- Dewan dan katering\n- Baju dan makeup\n- Photo/video\n- Dekorasi dan pelamin\n- Doorgift dan jemputan\n- Buffer sekitar 8-12%\n\n${hasBudget && hasGuests ? 'Saya dah ada bajet dan guest target — nak saya cadangkan pecahan penuh sekarang?' : 'Beritahu jumlah bajet dan jumlah tetamu, saya boleh cadangkan pecahan yang lebih sesuai.'}`;
+  if (isBudget) return `Ini struktur bajet perkahwinan Malaysia yang realistik.\n\nUntuk kebanyakan majlis di Malaysia, **dewan + katering ambil 50–60%** daripada jumlah bajet. Ramai pasangan ambil *pakej majlis* all-in (RM60–120/pax) yang dah termasuk dewan, makanan, dekorasi asas, dan PA — tanya dulu apa yang termasuk sebelum bandingkan harga berasingan.\n\nPecahan biasa:\n- **Dewan + Katering**: 50–60% (pakej dewan RM60–120/pax · hotel RM90–200/pax · atau dewan + caterer berasingan RM25–55/pax)\n- **Pelamin + Dekorasi**: 8–12%\n- **Fotografi + Videografi**: 6–8% (RM4,500–14,000 pakej)\n- **Baju Pengantin + MUA + Andaman**: 6–8%\n- **Kad + Cenderahati**: 3–5%\n- **Hantaran + lain-lain**: 5–8%\n- **Buffer / Kontingensi**: min 10–15%\n\nAnggaran kos semua-sekali per pax: RM80–140 (bajet) · RM140–220 (sederhana) · RM220–450+ (premium).\n\n${hasBudget && hasGuests ? 'Saya dah ada bajet dan guest target — nak saya cadangkan pecahan penuh sekarang?' : 'Beritahu jumlah bajet, bilangan tetamu, dan negeri supaya saya boleh cadangkan pecahan yang realistik.'}`;
   if (isAppointment) return 'Boleh. Untuk appointment, simpan tiga benda: siapa, bila, dan keputusan apa yang perlu dibuat.\n\nNota appointment yang berguna:\n- Nama vendor\n- Tarikh dan masa\n- Lokasi atau link call\n- Soalan yang nak ditanya\n- Deposit atau dokumen yang perlu dibawa\n\nBagi tarikh, masa, dan vendor, saya boleh formatkan untuk calendar.';
   if (isRsvp) return 'Untuk RSVP, asingkan tetamu ikut side keluarga atau group dulu. Nanti follow-up lebih mudah.\n\nTrack benda ini:\n- Nama dan nombor telefon\n- Group tetamu\n- Bilangan pax\n- Status: belum reply, confirm, tidak hadir\n- Nota seperti anak kecil atau transport\n\nKalau ada anggaran tetamu, saya boleh cadangkan cara follow-up.';
   return `Okay, boleh cerita sikit lagi? Saya boleh bantu lebih tepat kalau tahu apa yang anda fikir. Contohnya, boleh minta saya buat checklist, cadangkan pecahan bajet, cari vendor, draftkan mesej WhatsApp, atau tetapkan appointment.`;
@@ -414,6 +414,52 @@ function buildPriorConversationNotes(messages: ChatMessage[], keepRecent: number
   return notes.join('\n');
 }
 
+const MALAYSIAN_WEDDING_PRICING = `
+MALAYSIAN WEDDING MARKET PRICING (use these as realistic benchmarks when giving budget estimates):
+
+VENUE + CATERING — the biggest cost, often 50-60% of total budget:
+Important: In Malaysia, many couples book a "pakej majlis" where venue and catering are bundled together.
+- Dewan Orang Ramai / Community Hall (MPAJ, MBPJ, MPKj, etc.): Hall rental RM3,000–15,000 + separate caterer at RM25–55/pax
+- Dewan Besar / Private Convention Hall: Pakej all-in RM60–120/pax (includes hall, catering, basic decor, PA)
+- Hotel Ballroom (3-4 star): Pakej RM90–160/pax (includes catering, basic decor, bridal suite)
+- Hotel Ballroom (5 star / premium): Pakej RM160–300/pax
+- Garden / Resort / Outdoor: Pakej RM100–250/pax (varies widely)
+- Tent at home / Kenduri Kampung style: Caterer RM20–45/pax + tent & equipment rental RM5,000–15,000
+
+State-specific price context (300 pax, mid-range):
+- Selangor / KL: RM30,000–80,000 for venue+catering (community halls cheaper; hotels expensive)
+- Johor: RM25,000–65,000
+- Pulau Pinang: RM35,000–85,000 (higher due to tourism demand)
+- Negeri Sembilan / Melaka: RM18,000–50,000
+- Perak / Pahang / Kedah / Perlis: RM15,000–45,000
+- Kelantan / Terengganu: RM12,000–35,000 (strong community culture, lower vendor costs)
+- Sabah / Sarawak: RM20,000–55,000
+
+Other vendor market averages (Peninsula Malaysia, 2024-2025):
+- Photographer (full day, edited album): RM2,500–8,000
+- Videographer (cinematic edit): RM2,000–6,000
+- MUA + Andaman (akad + sanding): RM1,500–5,000
+- Pelamin + Dekorasi: RM3,500–18,000 (depends on scale, fresh flowers cost more)
+- Baju Pengantin (rental package): RM800–3,000 | Custom tailored: RM2,000–10,000
+- Kad Jemputan: RM0.80–3.00/card (digital saves RM500–1,500)
+- Cenderahati / Doorgift: RM3–15/pax
+- Kompang: RM500–1,500
+- PA System + Lighting: RM1,500–5,000
+- Wedding Coordinator (full service): RM2,000–8,000
+- Hantaran (gubahan dulang): RM300–600/tray (typically 7–11 trays each side)
+
+Cost-per-pax benchmarks (all-in, full wedding):
+- Budget (community dewan, simple setup): RM80–140/pax
+- Mid-range (private hall or pakej dewan): RM140–220/pax
+- Premium (hotel ballroom, floral decor): RM220–450+/pax
+
+Key realities to always mention:
+- Always add 10–15% buffer/contingency (last-minute additions are common)
+- Many caterers bundle makanan + khemah + equipment + wait staff — always ask what is included
+- Get minimum 3 quotations; prices vary by availability date and location
+- Hantaran, pelamin nikah, and pre-wedding expenses (photoshoot, door gift design) add RM5,000–20,000 on top
+`;
+
 function buildSystemPrompt(
   language: AppLanguage,
   plannerContext: ChatRequest['plannerContext'],
@@ -463,7 +509,7 @@ Rules:
 3. If the user asks for nearby venues or vendors and no exact location is available, ask for the city/negeri or use the workspace Negeri if it is set. Do not reject the question.
 4. Never create or explain code, HTML, CSS, JavaScript, scripts, apps, websites, APIs, or software, even when the subject is wedding-related. Briefly redirect to non-code wedding planning help.
 5. If the user asks to create generic prompts, copy, wording, or templates that are not related to wedding, majlis, kahwin, vendor, event, or planning work, do not fulfill it. Briefly redirect them to a wedding-planning version of the request.
-6. KNOWLEDGE BOUNDARY: For factual questions about Malaysian wedding procedures, costs, legal requirements, Islamic marriage rules, government fees, or specific vendor prices — answer ONLY from the Internal knowledge context below. If the provided context does not contain a clear answer, say you do not have that specific detail and direct the user to the relevant authority (JAI/PAID for nikah procedures, JPN for registration, their chosen vendor for pricing). Do NOT infer, extrapolate, or answer from general training knowledge for these factual topics.
+6. KNOWLEDGE BOUNDARY: For factual questions about Malaysian wedding procedures, legal requirements, Islamic marriage rules, and government fees — answer ONLY from the Internal knowledge context below and direct the user to the relevant authority (JAI/PAID for nikah, JPN for registration) if the context is silent. EXCEPTION: For vendor price estimates and wedding budget ranges, use the MALAYSIAN WEDDING MARKET PRICING reference below — always frame these as market averages and advise getting actual vendor quotations.
 7. Do not invent vendor prices, legal advice, medical advice, financial advice, religious rulings, or binding contract advice. If current/local vendor availability is needed, ask for location and suggest what to compare.
 8. Be warm, concise, and practical. Prefer 3-6 short bullets unless the user asks for details.
 9. The user selected ${languageName} in the app language toggle. Reply in ${languageName} for all assistant messages, labels, headings, and bullets, even if the user typed in another language. Do not translate or rewrite the user's own typed text when quoting it.
@@ -475,6 +521,7 @@ PLANNER STATE SUMMARY (read this first and reason from it — it reflects the co
 ${plannerContext?.stateSummary || 'not available yet'}
 Use this summary to make replies smart and specific: lead with what is urgent given days-left, flag budget risk when planned exceeds the budget, nudge on pending guests, and reference the vendor shortlist when relevant. Do not repeat the whole summary back — use it to prioritise.
 
+${MALAYSIAN_WEDDING_PRICING}
 Internal knowledge context:
 ${context}
 
