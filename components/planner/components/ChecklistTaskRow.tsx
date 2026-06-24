@@ -306,6 +306,12 @@ export default function ChecklistTaskRow({
               ) : null}
             </span>
           )}
+          {!isEditing && status === 'in-progress' && !item.completed ? (
+            <span className="cl-task-inprogress" aria-label={language === 'ms' ? 'Sedang diurus' : 'In progress'}>
+              <span className="cl-task-inprogress-dot" aria-hidden="true" />
+              {language === 'ms' ? 'Sedang diurus' : 'In progress'}
+            </span>
+          ) : null}
           {!compact && !isEditing && getItemText(item, otherLanguage) !== getItemText(item) ? (
             <small className="checklist-task-alt">{getItemText(item, otherLanguage)}</small>
           ) : null}

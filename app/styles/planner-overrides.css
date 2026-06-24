@@ -2063,8 +2063,16 @@ body,
     gap: 6px !important;
   }
 
+  /* Hide hamburger on mobile for all tabs — only the checklist category toggle needs it */
   .workspace-menu-button {
     display: none !important;
+  }
+
+  /* Show it only on checklist tab (used to open the category rail) */
+  .workspace-menu-button.is-checklist-mode {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   .workspace-chat-action,
@@ -3037,7 +3045,7 @@ body,
     padding-right: 20px !important;
   }
 
-  .workspace-menu-button {
+  .workspace-menu-button.is-checklist-mode {
     width: 40px !important;
     min-width: 40px !important;
     height: 40px !important;

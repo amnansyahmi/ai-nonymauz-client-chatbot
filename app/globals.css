@@ -14241,6 +14241,36 @@ textarea:focus {
   max-width: 340px;
 }
 
+/* ── Checklist: in-progress badge ────────────────── */
+.cl-task-inprogress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--mm-accent) 12%, transparent);
+  color: var(--mm-accent-strong, var(--mm-accent));
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  width: fit-content;
+}
+
+.cl-task-inprogress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  flex-shrink: 0;
+  animation: cl-dot-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes cl-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
+}
+
 /* ── Checklist: note button ───────────────────────── */
 .checklist-note-btn {
   display: inline-flex;

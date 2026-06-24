@@ -27,6 +27,7 @@ import RiskAlerts from './planner/components/RiskAlerts';
 import { detectRisks } from './planner/riskDetector';
 import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
 import ChecklistTaskSheet from './planner/components/ChecklistTaskSheet';
+import ScheduleTaskModal from './planner/components/ScheduleTaskModal';
 import VendorMessageSheet from './planner/components/VendorMessageSheet';
 import NotificationToggle from './planner/components/NotificationToggle';
 import ThemeToggle from './planner/ThemeToggle';
@@ -284,6 +285,7 @@ export default function PlannerWorkspace() {
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
   const [expandedChecklistItem, setExpandedChecklistItem] = useState<ChecklistItem | null>(null);
+  const [schedulingItem, setSchedulingItem] = useState<ChecklistItem | null>(null);
   const [activeChecklistId, setActiveChecklistId] = useState<string | null>(null);
   const [isEditingChecklistTitle, setIsEditingChecklistTitle] = useState(false);
   const [checklistTitleDraft, setChecklistTitleDraft] = useState('');
@@ -2642,15 +2644,7 @@ export default function PlannerWorkspace() {
           return next;
         });
       } : undefined}
-      onSchedule={!options?.compact ? () => {
-        setActiveTab('calendar');
-        setIsContextAssistantOpen(true);
-        setAppointmentAssistantActive(true);
-        setMenuInputs((current) => ({
-          ...current,
-          calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(item)} on ${item.deadline || selectedDate} at `
-        }));
-      } : undefined}
+      onSchedule={!options?.compact ? () => setSchedulingItem(item) : undefined}
       isCardActive={activeChecklistId === item.id}
       onExpand={() => {
         if (activeChecklistId === item.id) {
@@ -2680,6 +2674,17 @@ export default function PlannerWorkspace() {
     <section className="planner-workspace" aria-label="MajlisMate.ai planner workspace">
       <ViewportLock />
 
+      {schedulingItem ? (
+        <ScheduleTaskModal
+          item={schedulingItem}
+          language={language}
+          getItemText={getItemText}
+          onConfirm={(apt) => setAppointments((prev) => [...prev, apt])}
+          onAddToPhone={(apt) => addAppointmentToPhoneCalendar(apt)}
+          onClose={() => setSchedulingItem(null)}
+        />
+      ) : null}
+
       {expandedChecklistItem ? (
         <ChecklistTaskSheet
           item={expandedChecklistItem}
@@ -2695,16 +2700,7 @@ export default function PlannerWorkspace() {
           onUpdateText={(text) => { updateChecklistItemText(expandedChecklistItem.id, text); setExpandedChecklistItem((i) => i ? { ...i, text } : null); }}
           onUpdateDeadline={(deadline) => { updateChecklistDeadline(expandedChecklistItem.id, deadline); setExpandedChecklistItem((i) => i ? { ...i, deadline } : null); }}
           onUpdateNote={(note) => { updateChecklistNote(expandedChecklistItem.id, note); setExpandedChecklistItem((i) => i ? { ...i, note } : null); }}
-          onSchedule={() => {
-            setActiveTab('calendar');
-            setIsContextAssistantOpen(true);
-            setAppointmentAssistantActive(true);
-            setMenuInputs((current) => ({
-              ...current,
-              calendar: `${language === 'ms' ? 'Buat appointment untuk' : 'Create an appointment for'} ${getItemText(expandedChecklistItem)} on ${expandedChecklistItem.deadline || selectedDate} at `
-            }));
-            setExpandedChecklistItem(null);
-          }}
+          onSchedule={() => { setSchedulingItem(expandedChecklistItem); setExpandedChecklistItem(null); }}
         />
       ) : null}
 
@@ -3041,15 +3037,7 @@ export default function PlannerWorkspace() {
           onViewAllTasks={() => setActiveTab('checklist')}
           activity={activity}
           language={language}
-          onAskToday={() => {
-            setActiveTab('chat');
-            setInput(language === 'ms' ? 'Apa yang patut saya buat hari ini untuk planning majlis?' : 'What should I work on today for my wedding planning?');
-          }}
           briefing={weeklyBriefing}
-          isSpeaking={liveVoice.phase === 'speaking'}
-          canSpeak={liveVoice.support !== 'unavailable'}
-          onSpeak={() => liveVoice.speakNow(weeklyBriefing.speech)}
-          onStopSpeak={() => liveVoice.cancelTts()}
         />
         {proactiveSuggestions.length > 0 ? (
           <ProactiveSuggestionCard

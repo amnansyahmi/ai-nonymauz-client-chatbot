@@ -26,13 +26,8 @@ type DashboardPanelProps = {
   urgentChecklist: Array<{ id: string; text: string; deadline?: string; phase?: string }>;
   onViewAllTasks: () => void;
   activity: ActivityItem[];
-  onAskToday: () => void;
   language?: AppLanguage;
   briefing: Briefing;
-  isSpeaking: boolean;
-  canSpeak: boolean;
-  onSpeak: () => void;
-  onStopSpeak: () => void;
 };
 
 const dashboardCopy = {
@@ -132,40 +127,15 @@ export function DashboardPanel({
   urgentChecklist,
   onViewAllTasks,
   activity,
-  onAskToday,
   language = 'ms',
   briefing,
-  isSpeaking,
-  canSpeak,
-  onSpeak,
-  onStopSpeak
 }: DashboardPanelProps) {
   const t = dashboardCopy[language];
   const isMs = language === 'ms';
   const locale = isMs ? 'ms-MY' : 'en-MY';
 
-  // Live ticking clock for the countdown tile — keeps the delightful
-  // seconds-level countdown without a separate oversized card.
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
   const target = plannerProfile.majlisDate ? new Date(`${plannerProfile.majlisDate}T08:00:00`) : null;
   const validTarget = target && !Number.isNaN(target.getTime()) ? target : null;
-  let clock: { h: string; m: string; s: string } | null = null;
-  if (validTarget && now) {
-    const diff = validTarget.getTime() - now.getTime();
-    if (diff > 0) {
-      clock = {
-        h: String(Math.floor((diff / 3_600_000) % 24)).padStart(2, '0'),
-        m: String(Math.floor((diff / 60_000) % 60)).padStart(2, '0'),
-        s: String(Math.floor((diff / 1000) % 60)).padStart(2, '0')
-      };
-    }
-  }
   const weddingDateLabel = validTarget
     ? validTarget.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
     : t.setDateHint;
@@ -180,27 +150,6 @@ export function DashboardPanel({
           <h2 className="mm-dash__greeting">{briefing.greeting}</h2>
           <p className="mm-dash__headline">{briefing.headline}</p>
         </div>
-        <div className="mm-dash__actions">
-          {canSpeak ? (
-            isSpeaking ? (
-              <button type="button" className="mm-dash__btn" onClick={onStopSpeak}>
-                <span className="mm-dash__pulse" aria-hidden="true" />
-                {isMs ? 'Berhenti' : 'Stop'}
-              </button>
-            ) : (
-              <button type="button" className="mm-dash__btn" onClick={onSpeak}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M11 5 6 9H2v6h4l5 4z" />
-                  <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
-                </svg>
-                {isMs ? 'Dengar' : 'Listen'}
-              </button>
-            )
-          ) : null}
-          <button type="button" className="mm-dash__btn mm-dash__btn--primary" onClick={onAskToday}>
-            {t.askToday}
-          </button>
-        </div>
       </header>
 
       <div className="mm-dash__stats">
@@ -210,13 +159,6 @@ export function DashboardPanel({
             {daysLeft === null ? '—' : daysLeft >= 0 ? daysLeft : 0}
             <em>{daysLeft === null ? t.setDate : daysLeft >= 0 ? (isMs ? 'hari' : 'days') : t.majlisPassed}</em>
           </span>
-          {clock ? (
-            <span className="mm-stat__clock" title={isMs ? 'Masa berbaki ke hari majlis' : 'Time left until the big day'}>
-              <span><b>{clock.h}</b>{isMs ? 'j' : 'h'}</span>
-              <span><b>{clock.m}</b>m</span>
-              <span><b>{clock.s}</b>s</span>
-            </span>
-          ) : null}
           <span className="mm-stat__meta">{weddingDateLabel}</span>
         </article>
 
