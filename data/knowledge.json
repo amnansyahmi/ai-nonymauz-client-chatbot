@@ -96,7 +96,7 @@
       "id": "vendor-pricing-guide",
       "title": "Vendor Pricing Ranges (Malaysia 2025-2026)",
       "category": "pricing",
-      "content": "Typical Malaysian wedding vendor pricing ranges (actual prices vary by location, season, and package): Venue rental: RM2,000-RM15,000+ depending on hotel, hall, or restaurant. Catering per pax: RM30-RM80 for standard, RM80-RM200 for premium. Photography half-day: RM1,500-RM4,000, full-day RM3,000-RM8,000. Videography: RM2,000-RM6,000. MUA (makeup artist): RM500-RM2,500. Pelamin/decor: RM2,000-RM10,000. Baju pengantin rental: RM500-RM3,000. DJ/entertainment: RM800-RM3,000. MC: RM500-RM2,000. Always get written quotations and compare at least 3 vendors per category."
+      "content": "For detailed, up-to-date vendor pricing, refer to the Malaysian Wedding Market Pricing reference in the system context. Key ranges (Peninsula Malaysia, 2024-2025): Photographer full-day: RM2,500–8,000. Videographer cinematic: RM2,000–6,000. MUA + Andaman: RM1,500–5,000. Pelamin + Dekorasi: RM3,500–18,000. Baju pengantin rental: RM800–3,000, custom: RM2,000–10,000. Kad jemputan: RM0.80–3.00/card. Cenderahati: RM3–15/pax. Kompang: RM500–1,500. PA + Lighting: RM1,500–5,000. Wedding coordinator: RM2,000–8,000. Hantaran gubahan: RM300–600/tray. Venue + catering varies by type: community hall pakej RM60–120/pax, hotel RM90–300/pax, tent/kenduri RM20–45/pax + equipment. All prices are market averages — always get written quotations and compare at least 3 vendors per category."
     },
     {
       "id": "adat-perkahwinan-melayu",
@@ -108,7 +108,7 @@
       "id": "budget-breakdown-guide",
       "title": "Budget Breakdown by Wedding Size",
       "category": "pricing",
-      "content": "Suggested budget allocation for Malaysian weddings: For 50-100 guests (budget RM15,000-RM30,000): venue 25%, catering 30%, photography 12%, attire 10%, decor 10%, miscellaneous 13%. For 100-200 guests (budget RM30,000-RM60,000): venue 25%, catering 30%, photography 10%, attire 8%, decor 12%, entertainment 5%, miscellaneous 10%. For 200-500 guests (budget RM60,000-RM150,000): venue 20%, catering 30%, photography 8%, attire 7%, decor 15%, entertainment 8%, coordination 5%, miscellaneous 7%. Always keep 5-10% contingency for unexpected costs."
+      "content": "For detailed budget allocation, refer to the Malaysian Wedding Market Pricing reference in the system context. General allocation: Venue + Catering takes 50–60% of total budget (the biggest cost). Pelamin + Dekorasi: 8–12%. Photography + Videography: 6–8% (RM4,500–14,000 combined). Baju Pengantin + MUA: 6–8%. Kad + Cenderahati: 3–5%. Hantaran + lain-lain: 5–8%. Always keep 10–15% buffer/contingency. All-in cost per pax benchmarks: RM80–140 (budget), RM140–220 (mid-range), RM220–450+ (premium). State-specific venue+catering costs for 300 pax mid-range: Selangor/KL RM30,000–80,000, Johor RM25,000–65,000, Pulau Pinang RM35,000–85,000, Kelantan/Terengganu RM12,000–35,000."
     },
     {
       "id": "catering-guide",
@@ -205,6 +205,18 @@
       "title": "Malay Wedding Terms Glossary",
       "category": "reference",
       "content": "Malay wedding terminology: Merisik — introductory visit by groom's family to bride's family. Meminang — formal marriage proposal. Bertunang — engagement ceremony. Hantaran — gift exchange and dowry. Mas kahwin — bride's mahr/dowry (mandatory in Islam). Akad nikah — marriage solemnisation ceremony. Bersanding — wedding reception/sitting-in-state ceremony. Tepung tawar — blessing ceremony with flour and water. Inai — henna application ceremony. Kompang — traditional hand drum ensemble. Cucuk sanggul — hair pinning ceremony. Mandi bunga — floral bath pre-wedding ritual. Kalung bemban — garland exchange. Sirih junjung — betel leaf arrangement gift."
+    },
+    {
+      "id": "common-misconceptions",
+      "title": "Common Wedding Planning Misconceptions in Malaysia",
+      "category": "corrections",
+      "content": "CORRECTIONS — do not repeat these common mistakes:\n\n1. HIV test is NOT done at the nikah ceremony — it is done at a government health clinic BEFORE nikah registration, as part of kursus pra-perkahwinan requirements.\n\n2. SPPIM does NOT handle nikah solemnisation — SPPIM handles kursus registration and kebenaran berkahwin applications only. Actual nikah is done by the state JAI's jurunikah.\n\n3. Mas kahwin is NOT the same as duit hantaran — mas kahwin is the mandatory Islamic dowry given directly to the bride; duit hantaran is a separate customary gift negotiated between families.\n\n4. The kebenaran berkahwin is NOT valid indefinitely — it expires after 90 days from issuance.\n\n5. Kursus pra-perkahwinan is NOT optional for first-time Muslim brides and grooms — it is mandatory. Exemptions only apply in some states for widows/widowers/divorcees.\n\n6. Cross-state marriage (merentas negeri) does NOT require only one state's permission — BOTH states' JAI must issue permission.\n\n7. Venue + catering is NOT always separate — in Malaysia, many dewan offer all-in pakej majlis bundling hall, food, decor, and PA. Always ask what is included.\n\n8. Vendor prices are NOT fixed nationwide — they vary significantly by state, season, and day of the week. Always advise getting 3+ quotations."
+    },
+    {
+      "id": "response-guidelines",
+      "title": "Response Quality Guidelines",
+      "category": "policy",
+      "content": "When responding to wedding planning questions:\n\n1. NEVER invent specific vendor names, phone numbers, addresses, or website URLs unless they appear in the knowledge context.\n\n2. NEVER give a specific price as a guaranteed cost — always use ranges and say 'market average' or 'typical range'.\n\n3. For legal/procedural questions (nikah, documents, JAI requirements), ALWAYS cite the source and remind the user that procedures differ by state.\n\n4. For medical questions (HIV test, health screening), ONLY state what is in the knowledge context — do not give medical advice.\n\n5. If the user asks about a topic not in your knowledge base, say: 'I don't have specific information about that. I recommend checking with [relevant authority].' Do NOT fill the gap with plausible-sounding but unverified information.\n\n6. When suggesting budget allocations, always include the contingency/buffer line item (10-15%).\n\n7. When mentioning vendor categories, always suggest getting multiple quotations and checking reviews."
     }
   ]
 }

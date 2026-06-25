@@ -42,7 +42,9 @@ Target user utama:
 
 ### Status Semasa Projek
 
-Status semasa: **MVP / in development**
+Status semasa: **Ongoing / Phase 1**
+
+Projek masih dalam fasa 1 dan sedang dibangunkan secara berperingkat. Banyak ciri utama sudah dibina untuk MVP, tetapi pengesahan production-ready dan pengembangan lanjut masih dalam proses.
 
 Aplikasi sudah mempunyai struktur utama, UI planner, chat streaming, voice mode, PWA support, local storage persistence, retrieval local knowledge dan widget embed. Namun, ia belum lengkap sebagai production SaaS kerana masih belum mempunyai:
 
@@ -246,7 +248,7 @@ Fungsi:
 
 ### 8. Live Voice Mode
 
-**Status:** Built / MVP ready
+**Status:** On hold / paused
 
 Fungsi:
 
@@ -262,6 +264,11 @@ Fungsi:
 - Support voice selection.
 - Support barge-in, iaitu user boleh interrupt TTS ketika assistant sedang bercakap.
 - TTS distrim sentence-by-sentence untuk latency yang lebih rendah.
+
+Catatan:
+- Ciri voicechat kini ditangguhkan kerana memerlukan usaha dan kos yang tinggi.
+- Fasa ini menumpukan pada pembinaan modul AI chat, planner workspace, checklist, budget, guest/RSVP, calendar dan vendor.
+- Voicechat mungkin dibuang jika tidak boleh disokong dalam terma kos dan jadual pembangunan.
 
 Komponen / files:
 
@@ -420,6 +427,54 @@ Dependencies:
 
 ---
 
+### Phase 1 Scope
+
+- **In-scope (Phase 1):** AI chat streaming via SSE, Planner workspace (checklist, budget, guests/RSVP, calendar, basic vendor list), PWA support, Embeddable widget, Local knowledge retrieval, Demo fallback mode, Health endpoint, and core test/lint/typecheck verification.
+- **Out-of-scope / Deferred (Phase 1):** Server persistence/database, Authentication, Admin dashboard, Multi-tenant support, Semantic retrieval (embeddings/vector DB), Full analytics/telemetry, Advanced widget multi-tenant features, Full vendor marketplace, Marketing/affiliate pages, and Live voicechat (on hold — may be removed due to cost and effort).
+
+Notes:
+
+- The project is focusing on stabilizing the Phase 1 surface area listed above before expanding to platform and growth features.
+- Voicechat is explicitly paused given high engineering and operational cost; keep it in backlog but off the critical path for Phase 1.
+
+### Phase 1 — User Feature Summary (requested)
+
+- **User (Phase 1 core):**
+  1. Dashboard
+  2. Chat (AI streaming)
+  3. Checklist
+  4. Calendar
+  5. Guest / RSVP
+  6. Vendor (basic list — treat full vendor marketplace as Phase 2)
+  7. User profile
+
+- **Marketing:**
+  1. Landing page
+  2. Payment page
+
+- **Admin (Phase 1 minimal):**
+  1. Dashboard (admin overview)
+  2. User profile management
+  3. Client details
+  4. Knowledge management ("knowledge owl")
+
+- **Vendor (Phase 2):**
+  - Full vendor marketplace and advanced vendor management (deferred to Phase 2)
+
+- **Affiliate (Phase 1):**
+  - Minimal placeholder / affiliate page (basic tracking and signup)
+
+Quick checklist — possible items to consider adding or confirming:
+
+- Authentication and user accounts (required if you want server persistence or cross-device sync).
+- Server-side persistence (database) for planner data and chat history.
+- Payment integration details (gateway, plans) if monetizing via payment page.
+- Analytics/telemetry to track usage, fallback rates and widget metrics.
+- Clear product/feature ownership: which features are MVP vs growth (marketing, affiliate, vendor marketplace).
+
+If you want, I can: (a) fold this summary into the `Priority` roadmap, (b) generate a minimal admin wireframe list, or (c) mark these sections in the doc with TODO anchors for implementation planning.
+
+
 ### 2. External Widget Improvement
 
 **Status:** In progress / basic built
@@ -538,6 +593,19 @@ Cadangan:
 - Track most common wedding planning topics
 
 ---
+
+### 7. Vendor System, Admin, Marketing dan Affiliate
+
+**Status:** Planned
+
+Cadangan:
+
+- Vendor system lengkap dengan pengurusan vendor, kategori, dan status.
+- Admin dashboard untuk konfigurasi, pengguna, widget dan pentadbiran client.
+- Marketing pages untuk mempromosi MajlisMate.ai, landing pages dan content pemasaran.
+- Affiliate page / program untuk sokongan rakan kongsi dan pengendali vendor.
+
+Ini adalah ciri tambahan yang penting untuk skala produk tetapi masih berada di luar skop fasa 1.
 
 ### 7. Operational Hardening
 

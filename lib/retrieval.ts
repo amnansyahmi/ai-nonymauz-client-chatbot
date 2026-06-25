@@ -17,6 +17,14 @@ const STOPWORDS = new Set([
   'the', 'and', 'for', 'with', 'this', 'that', 'you', 'your', 'apa', 'yang', 'dan', 'untuk', 'saya', 'kami', 'awak', 'boleh', 'atau', 'dengan', 'how', 'what', 'when', 'where', 'why', 'can', 'do', 'does', 'is', 'are'
 ]);
 
+/** Conservative English plural stemmer. Strips trailing -s when the stem is >= 4 chars and the word doesn't end in -ss, -us, -is, -os. */
+function stem(word: string): string {
+  if (word.length >= 5 && word.endsWith('s') && !/(?:ss|us|is|os)$/.test(word)) {
+    return word.slice(0, -1);
+  }
+  return word;
+}
+
 const bundle = knowledge as KnowledgeBundle;
 
 // Domain synonym groups (Malay <-> English + common variants) so a query in one
@@ -52,9 +60,10 @@ const SYNONYM_GROUPS: string[][] = [
 const SYNONYM_INDEX: Map<string, Set<string>> = (() => {
   const index = new Map<string, Set<string>>();
   for (const group of SYNONYM_GROUPS) {
-    for (const term of group) {
+    const stemmed = [...new Set(group.map(stem))];
+    for (const term of stemmed) {
       const set = index.get(term) ?? new Set<string>();
-      for (const other of group) if (other !== term) set.add(other);
+      for (const other of stemmed) if (other !== term) set.add(other);
       index.set(term, set);
     }
   }
@@ -66,7 +75,8 @@ function tokenize(text: string): string[] {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
-    .filter((word) => word.length > 2 && !STOPWORDS.has(word));
+    .filter((word) => word.length > 2 && !STOPWORDS.has(word))
+    .map(stem);
 }
 
 // Inverse document frequency: how many docs each token appears in. Ubiquitous
