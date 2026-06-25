@@ -1185,9 +1185,9 @@ body,
 .budget-main-list .budget-row-summary,
 
 .guest-main-list .guest-row-summary {
-  border: 1px solid var(--mm-border) !important;
-  border-radius: var(--mm-radius-pill) !important;
-  background: var(--mm-surface) !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 
@@ -2677,57 +2677,7 @@ body,
   box-shadow: none !important;
 }
 
-.assistant-drawer .menu-assistant-form.chat-form .composer-send-button,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-voice-button {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  justify-self: end !important;
-  align-self: center !important;
-  width: 42px !important;
-  min-width: 42px !important;
-  height: 42px !important;
-  min-height: 42px !important;
-  border: 0 !important;
-  border-radius: var(--mm-radius-pill) !important;
-  background: #0d0d0d !important;
-  color: #ffffff !important;
-  padding: 0 !important;
-  font-size: 0 !important;
-  line-height: 0 !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-send-button::before,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-send-button::after,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-voice-button::before,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-voice-button::after {
-  display: none !important;
-  content: none !important;
-}
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-send-button svg,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-voice-button svg {
-  display: block !important;
-  width: 19px !important;
-  height: 19px !important;
-  fill: none !important;
-  stroke: currentColor !important;
-  stroke-width: 1.9 !important;
-}
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-send-button:disabled,
-
-.assistant-drawer .menu-assistant-form.chat-form .composer-voice-button:disabled {
-  background: #f1f1ef !important;
-  color: #b4b4ad !important;
-}
+/* Send button inherits global .composer-voice-button styles. */
 
 /* Calendar refinement: quieter event count and inline edit mode. */
 

@@ -110,6 +110,11 @@
   gap: 12px;
   flex-wrap: wrap;
   padding-top: 4px;
+  padding-bottom: 10px;
+}
+
+.mm-toolbar--nowrap {
+  flex-wrap: nowrap !important;
 }
 
 .mm-toolbar__tools {
@@ -117,6 +122,7 @@
   align-items: center;
   gap: 8px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* ── Unified View Tabs (.mm-views) ─────────────────────────────── */
@@ -167,9 +173,10 @@
 
 @media (max-width: 760px) {
   .mm-views {
-    flex: 1 1 auto !important;
+    flex: 0 1 auto !important;
     flex-wrap: wrap !important;
     min-width: 0 !important;
+    width: fit-content !important;
   }
   .mm-views__btn {
     padding: 6px 10px !important;
@@ -3951,18 +3958,47 @@ select {
 }
 
 .composer-voice-button {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  background: #0d0d0d;
-  transition: transform 140ms ease, background 140ms ease;
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #0d0d0d !important;
+  color: #ffffff !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: transform 140ms ease, background 140ms ease !important;
 }
 
 .composer-voice-button:hover,
 
 .composer-voice-button:focus-visible {
-  background: #2b2b2b;
+  background: #2b2b2b !important;
   outline: none;
+}
+
+.composer-voice-button:disabled {
+  background: #e8e8e8 !important;
+  color: #b0b0b0 !important;
+  cursor: default !important;
+}
+
+.composer-voice-button svg {
+  display: block !important;
+  width: 19px !important;
+  height: 19px !important;
+  color: currentColor !important;
+}
+
+.composer-voice-button::before,
+
+.composer-voice-button::after {
+  content: none !important;
+  display: none !important;
 }
 
 .composer-voice-button svg {
@@ -8830,11 +8866,26 @@ button,
 
 .dashboard-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
+.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn):not(.settings-close-button),
 
 .vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
+.assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn) {
+  min-height: var(--mm-control-h);
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 0 !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text) !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease,
+    box-shadow 140ms ease !important;
+}
 
 .workspace-command-button,
 
@@ -8869,7 +8920,7 @@ button,
 
 .dashboard-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
+.settings-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn):not(.settings-close-button),
 
 .vendor-detail-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
@@ -11572,6 +11623,7 @@ textarea:focus {
   overflow-x: auto !important;
   padding: 14px 28px !important;
   scrollbar-width: none !important;
+  border-radius: 2px !important;
 }
 
 .assistant-drawer .menu-assistant-actions::-webkit-scrollbar {

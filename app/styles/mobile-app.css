@@ -4526,11 +4526,15 @@
 @media (max-width: 390px) {
   .planner-content > .dashboard-panel,
   .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
   .planner-content > .calendar-panel,
+  .planner-content > .vendor-discovery-panel,
   .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
+  .planner-content > .guest-command-center {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .planner-content > .checklist-panel {
     padding-left: 0px !important;
     padding-right: 0px !important;
   }
@@ -4797,11 +4801,24 @@
 @media (max-width: 760px) {
   .planner-content > .dashboard-panel,
   .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
   .planner-content > .calendar-panel,
+  .planner-content > .vendor-discovery-panel,
   .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
+  .planner-content > .guest-command-center {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .planner-content > .checklist-panel {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+  }
+
+  .planner-content > .checklist-panel {
     width: 100% !important;
     max-width: none !important;
     padding-left: 0px !important;
@@ -5861,6 +5878,22 @@
     width: 100%;
     justify-content: center;
   }
+
+  .mm-guest .mm-gs__toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+
+  .mm-guest .mm-gs__views {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mm-guest .mm-gs__tools {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* ── From majlismate-theme.css ─────────────────────────────────────── */
@@ -6250,14 +6283,30 @@
 
 @media (max-width: 420px) {
   .workspace-ai-button {
+    display: inline-grid !important;
+    place-items: center !important;
     width: 42px !important;
+    min-width: 42px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    padding: 0 !important;
     overflow: hidden !important;
     color: transparent !important;
     font-size: 0 !important;
+    line-height: 0 !important;
   }
 
   .workspace-ai-button .workspace-ai-icon {
+    display: inline-grid !important;
+    place-items: center !important;
+    width: 22px !important;
+    height: 22px !important;
     color: var(--mm-on-brand) !important;
+  }
+
+  .workspace-ai-button .workspace-ai-icon svg {
+    display: block !important;
+    margin: 0 !important;
   }
 
   .budget-focus-grid,
@@ -6330,14 +6379,14 @@
     position: sticky !important;
     bottom: 0 !important;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 42px !important;
+    grid-template-columns: 1fr 42px !important;
     align-items: center !important;
     gap: 8px !important;
-    width: 100% !important;
+    width: calc(100% - 20px) !important;
     margin-top: auto !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding: 8px 8px 8px 16px !important;
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+    padding: 8px 10px !important;
     border-radius: 999px !important;
   }
 
@@ -6346,31 +6395,7 @@
     color: var(--mm-text) !important;
   }
 
-  .assistant-drawer .menu-assistant-form .composer-send-button,
-  .assistant-drawer .menu-assistant-form .composer-voice-button {
-    display: inline-grid !important;
-    place-items: center !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    border: 0 !important;
-    border-radius: 999px !important;
-    background: #0d0d0d !important;
-    color: #ffffff !important;
-    opacity: 1 !important;
-  }
-
-  .assistant-drawer .menu-assistant-form .composer-send-button.has-input,
-  .assistant-drawer .menu-assistant-form .composer-voice-button.has-input {
-    background: #0d0d0d !important;
-    color: #ffffff !important;
-  }
-
-  .assistant-drawer .menu-assistant-form .composer-send-button svg,
-  .assistant-drawer .menu-assistant-form .composer-voice-button svg {
-    opacity: 1 !important;
-  }
+  /* Send button inherits global .composer-voice-button styles */
 
   .dashboard-panel .today-command-center {
     display: block !important;
@@ -6757,21 +6782,17 @@
     position: sticky !important;
     bottom: 10px !important;
     box-sizing: border-box !important;
-    width: auto !important;
+    width: calc(100% - 20px) !important;
     max-width: none !important;
-    margin: auto 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
-    padding: 8px 8px 8px 16px !important;
-    border-radius: 26px !important;
+    margin: auto 10px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 8px 10px 8px 10px !important;
+    border-radius: 999px !important;
+    grid-template-columns: 1fr 42px !important;
   }
 
   .assistant-drawer .menu-assistant-form .composer-input {
     min-width: 0 !important;
     padding-right: 6px !important;
-  }
-
-  .assistant-drawer .menu-assistant-form .composer-send-button,
-  .assistant-drawer .menu-assistant-form .composer-voice-button {
-    margin-left: 6px !important;
   }
 }
 

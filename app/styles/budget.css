@@ -159,7 +159,7 @@
 /* ---- Toolbar ----------------------------------------------- */
 .mm-bg__toolbar {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
@@ -173,6 +173,7 @@
   border-radius: 999px;
   background: var(--mm-surface-muted);
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .mm-bg__view-count {
@@ -300,7 +301,7 @@
 .mm-budget .budget-row-card.expanded {
   border-color: var(--mm-border-strong) !important;
   background: var(--mm-surface) !important;
-  border-radius: 12px !important;
+  border-radius: 2px !important;
   margin: 6px 0;
   border: 1px solid var(--mm-border-strong) !important;
 }
@@ -481,9 +482,10 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .mm-bg__views {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     flex-wrap: wrap;
     min-width: 0;
+    width: fit-content;
   }
   .mm-budget .mm-bg__views button {
     padding: 6px 10px !important;

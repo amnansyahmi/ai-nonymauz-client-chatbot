@@ -766,8 +766,8 @@ export function RsvpPanel({
   const filteredGuests = guests.filter((guest) => guestView === 'all' || guest.status === guestView);
   const guestViewOptions = [
     { value: 'all' as const, label: language === 'ms' ? 'Semua' : 'All', count: guests.length },
-    { value: 'pending' as const, label: language === 'ms' ? 'Pending' : 'Pending', count: guests.filter((guest) => guest.status === 'pending').length },
     { value: 'confirmed' as const, label: language === 'ms' ? 'Hadir' : 'Confirmed', count: guests.filter((guest) => guest.status === 'confirmed').length },
+    { value: 'pending' as const, label: language === 'ms' ? 'Pending' : 'Pending', count: guests.filter((guest) => guest.status === 'pending').length },
     { value: 'declined' as const, label: language === 'ms' ? 'Tak hadir' : 'Declined', count: guests.filter((guest) => guest.status === 'declined').length }
   ];
   const topGroup = guestGroups
@@ -905,8 +905,8 @@ export function RsvpPanel({
       ) : null}
 
       {/* ── Toolbar ── */}
-      <div className="mm-toolbar">
-        <div className="mm-views" role="tablist" aria-label="Guest views">
+      <div className="mm-toolbar mm-toolbar--nowrap">
+        <div className="mm-views mm-views--compact" role="tablist" aria-label="Guest views">
           {guestViewOptions.map((option) => (
             <button
               key={option.value}
@@ -917,7 +917,6 @@ export function RsvpPanel({
               onClick={() => setGuestView(option.value)}
             >
               {option.label}
-              <span className="mm-views__count">{option.count}</span>
             </button>
           ))}
         </div>

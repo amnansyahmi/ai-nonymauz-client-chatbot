@@ -85,18 +85,18 @@ export default function Composer({
   inputAriaLabel,
   submitLabel = 'Send',
   dictateLabel = 'Dictate',
-  voiceLabel = 'Voice',
+  voiceLabel: _voiceLabel = 'Voice',
   language = 'ms',
   disabled = false,
   minSubmitLength = 2,
   commandSuggestions = [],
   showDictate = true,
-  showVoiceWhenEmpty = true,
+  showVoiceWhenEmpty: _showVoiceWhenEmpty = true,
   showImageUpload = false,
   attachedImage = null,
   onInputChange,
   onCommandSuggestion,
-  onVoiceMode,
+  onVoiceMode: _onVoiceMode,
   onAttachImage,
   onClearImage,
   onImageError,
@@ -171,14 +171,6 @@ export default function Composer({
     recognition.start();
   }
 
-  function handleVoiceMode() {
-    if (onVoiceMode) {
-      onVoiceMode();
-      return;
-    }
-    setVoiceNotice(language === 'en' ? 'Voice chat is coming soon. Use dictation for now.' : 'Voice chat akan datang. Buat masa ini guna dictation dulu.');
-  }
-
   return (
     <form ref={formRef} className={className} onSubmit={onSubmit}>
       {commandSuggestions.length > 0 ? (
@@ -240,11 +232,10 @@ export default function Composer({
       <button
         type={canSubmit ? 'submit' : 'button'}
         className={`composer-voice-button composer-send-button ${canSubmit ? 'has-input' : ''}`}
-        disabled={disabled || (!showVoiceWhenEmpty && !hasInput)}
-        aria-label={canSubmit ? submitLabel : voiceLabel}
-        onClick={canSubmit ? undefined : handleVoiceMode}
+        disabled={disabled || !hasInput}
+        aria-label={submitLabel}
       >
-        {canSubmit ? <SendIcon /> : showVoiceWhenEmpty ? <VoiceIcon /> : <SendIcon />}
+        <SendIcon />
       </button>
       {voiceNotice ? <p className="composer-notice">{voiceNotice}</p> : null}
     </form>
