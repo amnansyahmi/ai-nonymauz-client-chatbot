@@ -20,6 +20,7 @@ import '../styles/calendar.css';
 import '../styles/guest.css';
 import '../styles/vendor.css';
 import '../styles/datepicker.css';
+import '../styles/mobile-app.css';
 
 /**
  * Layout for the actual application surfaces (/chat, /embed, ...).

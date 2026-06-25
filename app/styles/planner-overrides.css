@@ -1,4 +1,11 @@
+/*
+ * planner-overrides.css — Desktop planner subsystem overrides
+ *
+ * Mobile @media blocks extracted to mobile-app.css.
+ */
+
 /* Budget row and mobile template correction: flatter rows, one mobile template picker. */
+
 .checklist-template-desktop {
   display: contents !important;
 }
@@ -38,20 +45,25 @@
 }
 
 .budget-row-card::before,
+
 .budget-row-card::after,
+
 .budget-row-summary::before,
+
 .budget-row-summary::after {
   display: none !important;
   content: none !important;
 }
 
 .budget-row-card:hover,
+
 .budget-row-card:focus-within {
   border-color: var(--mm-border-strong) !important;
   box-shadow: none !important;
 }
 
 /* Expanded state gets a subtle treatment - flat, not curved */
+
 .budget-row-card.expanded {
   border: 1px solid var(--mm-border-strong) !important;
   border-radius: 0 !important;
@@ -77,6 +89,7 @@
 }
 
 .budget-row-summary:hover,
+
 .budget-row-summary:focus-visible {
   background: var(--mm-surface-subtle) !important;
   transform: none !important;
@@ -104,6 +117,7 @@
 }
 
 .budget-row-title small,
+
 .budget-row-amount small {
   color: var(--mm-text-muted) !important;
   font-size: 0.86rem !important;
@@ -160,704 +174,14 @@
   background: var(--mm-brand) !important;
 }
 
-@media (max-width: 760px) {
-  .checklist-template-row {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 8px !important;
-    overflow: visible !important;
-    padding: 14px 0 0 !important;
-  }
-
-  .checklist-template-row > span {
-    min-width: 0 !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-  }
-
-  .checklist-template-desktop {
-    display: none !important;
-  }
-
-  .checklist-template-mobile {
-    position: relative !important;
-    display: block !important;
-    width: 100% !important;
-  }
-
-  .checklist-template-mobile summary {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    min-height: 46px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 4px !important;
-    background: var(--mm-surface) !important;
-    color: var(--mm-text) !important;
-    padding: 0 14px !important;
-    font-size: 0.95rem !important;
-    font-weight: 740 !important;
-  }
-
-  .checklist-template-mobile summary::after {
-    content: "" !important;
-    width: 8px !important;
-    height: 8px !important;
-    border-right: 2px solid currentColor !important;
-    border-bottom: 2px solid currentColor !important;
-    transform: rotate(45deg) translateY(-2px) !important;
-    opacity: 0.65 !important;
-  }
-
-  .checklist-template-mobile[open] summary::after {
-    transform: rotate(225deg) translateY(-2px) !important;
-  }
-
-  .checklist-template-mobile > div {
-    display: grid !important;
-    gap: 8px !important;
-    margin-top: 8px !important;
-    padding: 10px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 4px !important;
-    background: var(--mm-surface) !important;
-    box-shadow: none !important;
-  }
-
-  .checklist-template-mobile button {
-    justify-content: flex-start !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 42px !important;
-    border-radius: 4px !important;
-    padding: 0 12px !important;
-    text-align: left !important;
-    white-space: normal !important;
-  }
-
-  .budget-row-summary {
-    grid-template-columns: 10px minmax(0, 1fr) auto !important;
-    grid-template-areas:
-      "dot title amount"
-      "dot title status" !important;
-    gap: 8px 12px !important;
-    min-height: 88px !important;
-    padding: 14px 14px !important;
-  }
-
-  .budget-category-dot {
-    grid-area: dot !important;
-    align-self: center !important;
-  }
-
-  .budget-row-title {
-    grid-area: title !important;
-  }
-
-  .budget-row-amount {
-    grid-area: amount !important;
-    justify-items: end !important;
-  }
-
-  .budget-status {
-    grid-area: status !important;
-    justify-self: end !important;
-    min-width: 0 !important;
-    min-height: 30px !important;
-    padding: 0 10px !important;
-    font-size: 0.78rem !important;
-  }
-
-  .budget-row-title strong {
-    font-size: 0.96rem !important;
-  }
-
-  .budget-row-title small,
-  .budget-row-amount small {
-    font-size: 0.8rem !important;
-  }
-}
-
 /* Mobile checklist final correction: no clipped tabs, no template/quick-add collision. */
-@media (max-width: 760px) {
-  .checklist-command-center .checklist-toolbelt {
-    display: grid !important;
-    gap: 12px !important;
-    margin: 18px 0 14px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    overflow: visible !important;
-  }
-
-  .checklist-command-center .checklist-view-tabs {
-    display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 4px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: #f6f6f3 !important;
-    padding: 4px !important;
-  }
-
-  .checklist-command-center .checklist-view-tabs button {
-    min-width: 0 !important;
-    width: 100% !important;
-    min-height: 46px !important;
-    border: 0 !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: transparent !important;
-    padding: 0 6px !important;
-    overflow: hidden !important;
-    color: var(--mm-text-muted) !important;
-    font-size: clamp(0.76rem, 3.1vw, 0.9rem) !important;
-    font-weight: 760 !important;
-    line-height: 1 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .checklist-command-center .checklist-view-tabs button span {
-    margin-left: 3px !important;
-    color: inherit !important;
-    font-size: 0.82em !important;
-  }
-
-  .checklist-command-center .checklist-view-tabs button.active {
-    background: #111111 !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
-  }
-
-  .checklist-command-center .checklist-export-actions {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow: visible !important;
-  }
-
-  .checklist-command-center .checklist-export-actions .checklist-select-mode-btn {
-    flex: 1 1 auto !important;
-    min-height: 42px !important;
-  }
-
-  .checklist-command-center .checklist-export-actions .checklist-export-menu summary {
-    min-height: 42px !important;
-  }
-
-  .checklist-command-center .checklist-template-row {
-    position: relative !important;
-    z-index: 4 !important;
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 8px !important;
-    width: 100% !important;
-    margin: 18px 0 18px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    border-top: 0 !important;
-    border-bottom: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  .checklist-command-center .checklist-template-row > span {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.82rem !important;
-    font-weight: 720 !important;
-    line-height: 1.2 !important;
-  }
-
-  .checklist-command-center .checklist-template-desktop {
-    display: none !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile summary {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    min-height: 48px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    color: var(--mm-text) !important;
-    padding: 0 14px !important;
-    box-shadow: none !important;
-    font-size: 0.95rem !important;
-    font-weight: 760 !important;
-    list-style: none !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile summary::-webkit-details-marker {
-    display: none !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile summary::after {
-    content: "" !important;
-    flex: 0 0 auto !important;
-    width: 8px !important;
-    height: 8px !important;
-    border-right: 2px solid currentColor !important;
-    border-bottom: 2px solid currentColor !important;
-    opacity: 0.62 !important;
-    transform: rotate(45deg) translateY(-2px) !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile[open] summary::after {
-    transform: rotate(225deg) translateY(-2px) !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile > div {
-    position: static !important;
-    display: grid !important;
-    gap: 8px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-height: none !important;
-    margin-top: 8px !important;
-    padding: 10px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  .checklist-command-center .checklist-template-mobile button {
-    justify-content: flex-start !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 42px !important;
-    border-radius: var(--mm-radius-control) !important;
-    padding: 0 12px !important;
-    text-align: left !important;
-    white-space: normal !important;
-  }
-
-  .checklist-command-center .checklist-workspace-grid {
-    display: grid !important;
-    gap: 18px !important;
-    margin-top: 0 !important;
-  }
-
-  .checklist-command-center .checklist-side-panel {
-    display: grid !important;
-    gap: 14px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .checklist-command-center .checklist-quick-add {
-    position: relative !important;
-    z-index: 1 !important;
-    margin: 0 !important;
-    border-radius: var(--mm-radius-card) !important;
-  }
-}
 
 /* Mobile calendar correction: remove floating AI button and make the flow agenda-first. */
-@media (max-width: 760px) {
-  .calendar-panel {
-    display: grid !important;
-    gap: 16px !important;
-  }
-
-  .calendar-panel .calendar-toolbar {
-    gap: 12px !important;
-  }
-
-  .calendar-panel .calendar-actions {
-    display: grid !important;
-    grid-template-columns: 44px 1fr 44px !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  .calendar-panel .calendar-actions button {
-    position: static !important;
-    z-index: auto !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    border-radius: var(--mm-radius-pill) !important;
-    padding: 0 12px !important;
-    overflow: hidden !important;
-    color: var(--mm-text) !important;
-    box-shadow: none !important;
-    white-space: nowrap !important;
-  }
-
-  .calendar-panel .calendar-actions button::before,
-  .calendar-panel .calendar-actions button::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .calendar-panel .calendar-actions .primary-action {
-    grid-column: 1 / -1 !important;
-    position: static !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    background: #111111 !important;
-    border-color: #111111 !important;
-    color: #ffffff !important;
-    border-radius: var(--mm-radius-pill) !important;
-  }
-
-  .calendar-panel .calendar-actions .utility-action {
-    display: none !important;
-  }
-
-  .calendar-panel .calendar-actions button:nth-child(3),
-  .calendar-panel .calendar-actions button:nth-child(5) {
-    display: none !important;
-  }
-
-  .calendar-overview-row {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-
-  .calendar-overview-row article {
-    min-width: 0 !important;
-    min-height: 94px !important;
-    border-radius: var(--mm-radius-card) !important;
-    padding: 14px !important;
-  }
-
-  .calendar-overview-row article span {
-    font-size: 0.78rem !important;
-  }
-
-  .calendar-overview-row article strong {
-    font-size: 1.35rem !important;
-  }
-
-  .calendar-overview-row article p {
-    overflow: hidden !important;
-    font-size: 0.82rem !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .calendar-suggestion-strip {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 8px !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-
-  .calendar-suggestion-strip button {
-    flex: initial !important;
-    width: 100% !important;
-    min-height: 62px !important;
-    border-radius: var(--mm-radius-card) !important;
-    padding: 12px 14px !important;
-  }
-
-  .calendar-suggestion-strip button:nth-child(n + 2) {
-    display: none !important;
-  }
-
-  .calendar-panel .mobile-calendar-agenda {
-    display: grid !important;
-    gap: 12px !important;
-    margin: 0 !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 18px !important;
-    background: var(--mm-surface) !important;
-    padding: 16px !important;
-    box-shadow: none !important;
-  }
-
-  .mobile-agenda-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    gap: 12px !important;
-  }
-
-  .mobile-agenda-header h4 {
-    margin: 6px 0 0 !important;
-    font-size: 1.18rem !important;
-    line-height: 1.15 !important;
-  }
-
-  .mobile-agenda-header button {
-    flex: 0 0 auto !important;
-    min-height: 40px !important;
-    border-radius: var(--mm-radius-pill) !important;
-    padding: 0 16px !important;
-  }
-
-  .mobile-agenda-card {
-    display: grid !important;
-    gap: 6px !important;
-    width: 100% !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    padding: 14px !important;
-    text-align: left !important;
-    box-shadow: none !important;
-  }
-
-  .mobile-agenda-card.wedding {
-    border-color: rgba(123, 63, 95, 0.18) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: #fff8fb !important;
-  }
-
-  .mobile-agenda-card span,
-  .mobile-agenda-card small {
-    color: var(--mm-text-muted) !important;
-    font-size: 0.84rem !important;
-    font-weight: 700 !important;
-  }
-
-  .mobile-agenda-card strong {
-    color: var(--mm-text) !important;
-    font-size: 1.02rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .calendar-panel .calendar-workspace {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 14px !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-
-  .calendar-panel .calendar-grid {
-    display: none !important;
-  }
-
-  .calendar-panel .day-agenda {
-    display: grid !important;
-    gap: 14px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-height: none !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-  }
-
-  .calendar-panel .day-agenda-header,
-  .calendar-panel .agenda-cards,
-  .calendar-panel .agenda-card,
-  .calendar-panel .empty-state.action-empty {
-    display: none !important;
-  }
-
-  .calendar-panel .appointment-form {
-    display: grid !important;
-    gap: 12px !important;
-    width: 100% !important;
-    margin: 0 !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 18px !important;
-    background: var(--mm-surface) !important;
-    padding: 16px !important;
-    box-shadow: none !important;
-  }
-
-  .calendar-panel .appointment-form > div:first-child {
-    display: grid !important;
-    gap: 6px !important;
-  }
-
-  .calendar-panel .appointment-form h5 {
-    margin: 0 !important;
-    color: var(--mm-text) !important;
-    font-size: 1.1rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .calendar-panel .appointment-form-row {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px !important;
-  }
-
-  .calendar-panel .appointment-form input,
-  .calendar-panel .appointment-form select {
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 52px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    padding: 0 14px !important;
-    color: var(--mm-text) !important;
-    font-size: 0.96rem !important;
-    box-shadow: none !important;
-  }
-
-  .calendar-panel .appointment-form input:focus,
-  .calendar-panel .appointment-form select:focus {
-    border-color: var(--mm-brand) !important;
-    box-shadow: 0 0 0 3px rgba(123, 63, 95, 0.12) !important;
-  }
-
-  .calendar-panel .appointment-form button[type="submit"] {
-    width: 100% !important;
-    min-height: 48px !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: #111111 !important;
-    border-color: #111111 !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
-  }
-}
 
 /* Mobile icon/input final fix: visible Ask AI icon and contained native date/time fields. */
-@media (max-width: 760px) {
-  .workspace-ai-button {
-    display: inline-grid !important;
-    place-items: center !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: var(--mm-surface) !important;
-    color: #111111 !important;
-    padding: 0 !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .workspace-ai-button .workspace-ai-icon,
-  .workspace-ai-button > .workspace-ai-icon {
-    display: inline-grid !important;
-    place-items: center !important;
-    width: 24px !important;
-    height: 24px !important;
-    min-width: 24px !important;
-    margin: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: #111111 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .workspace-ai-button .workspace-ai-icon svg,
-  .workspace-ai-button svg {
-    display: block !important;
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    fill: none !important;
-    stroke: currentColor !important;
-    stroke-width: 1.9 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .calendar-panel .appointment-form,
-  .calendar-panel .appointment-form *,
-  .calendar-panel .appointment-form *::before,
-  .calendar-panel .appointment-form *::after {
-    box-sizing: border-box !important;
-  }
-
-  .calendar-panel .appointment-form {
-    max-width: 100% !important;
-    overflow: hidden !important;
-  }
-
-  .calendar-panel .appointment-form-row,
-  .calendar-panel .appointment-form label,
-  .calendar-panel .appointment-form > div,
-  .calendar-panel .appointment-form input,
-  .calendar-panel .appointment-form select {
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-
-  .calendar-panel .appointment-form input,
-  .calendar-panel .appointment-form select {
-    display: block !important;
-    inline-size: 100% !important;
-    width: 100% !important;
-    min-inline-size: 0 !important;
-    max-inline-size: 100% !important;
-    margin: 0 !important;
-    color: var(--mm-text) !important;
-    -webkit-text-fill-color: var(--mm-text) !important;
-    opacity: 1 !important;
-  }
-
-  .calendar-panel .appointment-form input[type="date"],
-  .calendar-panel .appointment-form input[type="time"] {
-    position: static !important;
-    inset: auto !important;
-    height: 52px !important;
-    min-height: 52px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background-color: var(--mm-surface) !important;
-    padding-inline: 14px 38px !important;
-    overflow: hidden !important;
-    text-align: left !important;
-  }
-
-  .calendar-panel .appointment-form input[type="date"]::-webkit-calendar-picker-indicator,
-  .calendar-panel .appointment-form input[type="time"]::-webkit-calendar-picker-indicator {
-    display: block !important;
-    width: 20px !important;
-    height: 20px !important;
-    margin: 0 !important;
-    opacity: 0.85 !important;
-    visibility: visible !important;
-    cursor: pointer !important;
-  }
-
-  .calendar-panel .appointment-form input[type="date"]::-webkit-date-and-time-value,
-  .calendar-panel .appointment-form input[type="time"]::-webkit-date-and-time-value {
-    min-height: 1.2em !important;
-    text-align: left !important;
-  }
-}
 
 /* Planner AI drawer refinement: compact side panel, full-height chat area, shared composer feel. */
+
 .planner-assistant-rail.assistant-drawer {
   width: min(420px, calc(100vw - 24px)) !important;
   max-width: 420px !important;
@@ -922,6 +246,7 @@
 }
 
 .assistant-drawer .menu-assistant-actions button:hover,
+
 .assistant-drawer .menu-assistant-actions button:focus-visible {
   border-color: var(--mm-border-strong) !important;
   background: #f7f7f7 !important;
@@ -1002,6 +327,7 @@
 }
 
 .assistant-drawer .menu-assistant-form .menu-assistant-submit::before,
+
 .assistant-drawer .menu-assistant-form .menu-assistant-submit::after {
   display: none !important;
   content: none !important;
@@ -1012,24 +338,8 @@
   color: #a8a8a8 !important;
 }
 
-@media (max-width: 560px) {
-  .planner-assistant-rail.assistant-drawer {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    box-shadow: none !important;
-  }
-
-  .assistant-drawer .menu-assistant-actions {
-    padding-inline: 14px !important;
-  }
-
-  .assistant-drawer .menu-assistant-form {
-    width: calc(100% - 24px) !important;
-    margin: 0 12px max(12px, env(safe-area-inset-bottom)) !important;
-  }
-}
-
 /* Minimalist product pass: one calmer visual system across the planner. */
+
 :root {
   --mm-brand: #7b3f5f;
   --mm-text: #111111;
@@ -1048,8 +358,11 @@
 }
 
 body,
+
 .planner-shell,
+
 .planner-content,
+
 .embed-page {
   background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
@@ -1089,12 +402,19 @@ body,
 }
 
 .workspace-menu-button,
+
 .workspace-command-button,
+
 .workspace-ai-button,
+
 .workspace-profile-button,
+
 .workspace-chat-action,
+
 .assistant-drawer-header button,
+
 .chat-history-header button,
+
 .settings-close-button {
   min-height: 40px !important;
   height: 40px !important;
@@ -1108,6 +428,7 @@ body,
 }
 
 .workspace-command-button,
+
 .workspace-ai-button {
   padding: 0 14px !important;
 }
@@ -1149,11 +470,17 @@ body,
 }
 
 .workspace-menu-button:hover,
+
 .workspace-command-button:hover,
+
 .workspace-ai-button:hover,
+
 .workspace-chat-action:hover,
+
 .assistant-drawer-header button:hover,
+
 .chat-history-header button:hover,
+
 .settings-close-button:hover {
   background: var(--mm-hover) !important;
 }
@@ -1167,16 +494,27 @@ body,
    Border-radius is intentionally split below so pill only applies to
    navigation/chrome — not to content rows inside budget, checklist, etc. */
 .planner-panel button,
+
 .checklist-panel button,
+
 .calendar-panel button,
+
 .dashboard-panel button,
+
 .settings-drawer button,
+
 .vendor-detail-drawer button,
+
 .assistant-drawer button,
+
 .workspace-command-button,
+
 .workspace-ai-button,
+
 .workspace-profile-button,
+
 .workspace-checklist-shortcut,
+
 .mobile-bottom-nav button {
   min-height: var(--mm-control-h);
   border: 1px solid var(--mm-border) !important;
@@ -1191,11 +529,17 @@ body,
 /* Panel content buttons — card radius keeps rows/items looking like cards,
    not capsules. Budget line items, checklist rows, etc. all benefit. */
 .planner-panel button,
+
 .checklist-panel button,
+
 .calendar-panel button,
+
 .dashboard-panel button,
+
 .settings-drawer button,
+
 .vendor-detail-drawer button,
+
 .assistant-drawer button {
   border-radius: var(--mm-radius-card) !important;
 }
@@ -1203,9 +547,13 @@ body,
 /* Navigation / workspace chrome buttons — pill is correct here (icon-only
    or short-label top-bar buttons look intentional as capsules). */
 .workspace-command-button,
+
 .workspace-ai-button,
+
 .workspace-profile-button,
+
 .workspace-checklist-shortcut,
+
 .mobile-bottom-nav button {
   border-radius: var(--mm-radius-pill) !important;
 }
@@ -1246,11 +594,17 @@ body,
 }
 
 .planner-panel,
+
 .dashboard-panel,
+
 .checklist-panel,
+
 .calendar-panel,
+
 .budget-command-center,
+
 .vendor-discovery-panel,
+
 .guest-command-center {
   width: min(1180px, calc(100vw - 48px)) !important;
   margin: 0 auto !important;
@@ -1259,10 +613,15 @@ body,
 }
 
 .planner-panel-header,
+
 .checklist-hero,
+
 .calendar-toolbar,
+
 .budget-hero-modern,
+
 .vendor-page-header,
+
 .guest-hero-modern {
   border: 0 !important;
   border-radius: 0 !important;
@@ -1272,10 +631,15 @@ body,
 }
 
 .planner-panel-header h3,
+
 .checklist-hero h3,
+
 .calendar-toolbar h3,
+
 .budget-hero-modern h3,
+
 .vendor-page-header h3,
+
 .guest-hero-modern h3 {
   font-size: clamp(1.75rem, 3vw, 2.45rem) !important;
   line-height: 1.08 !important;
@@ -1283,10 +647,15 @@ body,
 }
 
 .planner-panel-header p:not(.eyebrow),
+
 .checklist-hero p,
+
 .calendar-toolbar p,
+
 .budget-hero-modern p,
+
 .vendor-page-header p,
+
 .guest-hero-modern p {
   max-width: 68ch !important;
   color: var(--mm-text-muted) !important;
@@ -1294,7 +663,9 @@ body,
 }
 
 .eyebrow,
+
 .hero-eyebrow,
+
 .mini-eyebrow {
   border-radius: var(--mm-radius-pill) !important;
   background: #f2f2f0 !important;
@@ -1305,28 +676,47 @@ body,
 }
 
 .checklist-stat-row,
+
 .budget-focus-grid,
+
 .guest-focus-grid,
+
 .dashboard-grid,
+
 .today-card-grid {
   gap: 12px !important;
 }
 
 .checklist-stat-row article,
+
 .budget-focus-grid article,
+
 .guest-focus-grid article,
+
 .metric-card,
+
 .today-card-grid article,
+
 .guest-row-card,
+
 .vendor-card,
+
 .checklist-side-card,
+
 .budget-insight-card,
+
 .budget-suggestion-card,
+
 .guest-insight-card,
+
 .day-agenda,
+
 .calendar-grid,
+
 .mobile-calendar-agenda,
+
 .vendor-map-panel,
+
 .planner-section {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
@@ -1335,29 +725,45 @@ body,
 }
 
 .checklist-stat-row article,
+
 .budget-focus-grid article,
+
 .guest-focus-grid article,
+
 .metric-card,
+
 .today-card-grid article {
   padding: 18px !important;
 }
 
 .checklist-stat-row article p,
+
 .budget-focus-grid article p,
+
 .guest-focus-grid article p,
+
 .metric-card p,
+
 .today-card-grid article p {
   color: var(--mm-text-muted) !important;
 }
 
 .primary-action,
+
 .budget-hero-actions .primary-action,
+
 .guest-header-actions .primary-action,
+
 .vendor-actions .primary,
+
 .vendor-detail-actions .primary,
+
 .calendar-actions .primary-action,
+
 .checklist-side-card button,
+
 .budget-add-modern button[type="submit"],
+
 .guest-add-card button[type="submit"] {
   border: 1px solid #111111 !important;
   border-radius: 4px !important;
@@ -1367,18 +773,31 @@ body,
 }
 
 .utility-action,
+
 .calendar-actions button,
+
 .budget-hero-actions button,
+
 .guest-header-actions button,
+
 .checklist-export-actions button,
+
 .vendor-actions button,
+
 .vendor-actions a,
+
 .vendor-map-actions a,
+
 .vendor-detail-actions button,
+
 .vendor-detail-actions a,
+
 .budget-edit-actions button,
+
 .guest-edit-actions button,
+
 .checklist-template-row button,
+
 .calendar-suggestion-strip button {
   min-height: 38px !important;
   border: 1px solid var(--mm-border) !important;
@@ -1390,23 +809,37 @@ body,
 }
 
 .utility-action:hover,
+
 .calendar-actions button:hover,
+
 .budget-hero-actions button:hover,
+
 .guest-header-actions button:hover,
+
 .checklist-export-actions button:hover,
+
 .vendor-actions button:hover,
+
 .vendor-actions a:hover,
+
 .vendor-map-actions a:hover,
+
 .vendor-detail-actions button:hover,
+
 .vendor-detail-actions a:hover,
+
 .checklist-template-row button:hover,
+
 .calendar-suggestion-strip button:hover {
   background: var(--mm-hover) !important;
 }
 
 .checklist-toolbelt,
+
 .budget-view-tabs,
+
 .guest-view-tabs,
+
 .vendor-filter-bar {
   border: 0 !important;
   border-radius: 0 !important;
@@ -1416,7 +849,9 @@ body,
 }
 
 .checklist-view-tabs,
+
 .budget-view-tabs,
+
 .guest-view-tabs {
   width: fit-content !important;
   border: 1px solid var(--mm-border) !important;
@@ -1426,7 +861,9 @@ body,
 }
 
 .checklist-view-tabs button,
+
 .budget-view-tabs button,
+
 .guest-view-tabs button {
   border: 0 !important;
   border-radius: 2px !important;
@@ -1434,7 +871,9 @@ body,
 }
 
 .checklist-view-tabs button.active,
+
 .budget-view-tabs button.active,
+
 .guest-view-tabs button.active {
   background: var(--mm-surface) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
@@ -1448,6 +887,7 @@ body,
 }
 
 .checklist-task-list li,
+
 .checklist-task {
   border-radius: 0 !important;
   border: 0 !important;
@@ -1457,11 +897,13 @@ body,
 }
 
 .checklist-task-list li:last-child,
+
 .checklist-task:last-child {
   border-bottom: 0 !important;
 }
 
 .budget-row-summary,
+
 .guest-row-summary {
   border-radius: 0 !important;
 }
@@ -1472,6 +914,7 @@ body,
 }
 
 /* Budget edit panel: NO card nesting, just a simple container */
+
 .budget-edit-panel {
   border: none !important;
   border-top: 1px solid var(--mm-border) !important;
@@ -1482,7 +925,9 @@ body,
 }
 
 .guest-edit-panel,
+
 .budget-add-modern,
+
 .guest-add-card {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
@@ -1491,16 +936,27 @@ body,
 }
 
 .budget-edit-panel input,
+
 .budget-edit-panel select,
+
 .budget-add-modern input,
+
 .guest-edit-panel input,
+
 .guest-edit-panel select,
+
 .guest-add-card input,
+
 .guest-add-card select,
+
 .appointment-form input,
+
 .appointment-form select,
+
 .settings-form input,
+
 .settings-form select,
+
 .vendor-filter-bar select {
   border: 1px solid var(--mm-border) !important;
   border-radius: 4px !important;
@@ -1526,19 +982,25 @@ body,
 }
 
 .calendar-day.selected,
+
 .calendar-panel .calendar-day.selected {
   box-shadow: inset 0 0 0 2px #111111 !important;
 }
 
 .calendar-day.today,
+
 .calendar-panel .calendar-day.today {
   background: #faf5f8 !important;
 }
 
 .calendar-day.today .calendar-date,
+
 .calendar-panel .calendar-day.today .calendar-date,
+
 .calendar-count,
+
 .calendar-panel .calendar-count,
+
 .appointment-chip.wedding {
   background: var(--mm-brand) !important;
   color: #ffffff !important;
@@ -1563,23 +1025,31 @@ body,
 }
 
 .vendor-actions button,
+
 .vendor-actions a {
   min-height: 36px !important;
   padding: 0 12px !important;
 }
 
 .assistant-drawer-backdrop,
+
 .chat-history-backdrop,
+
 .settings-drawer-backdrop,
+
 .vendor-detail-backdrop,
+
 .sidebar-backdrop {
   background: rgba(0, 0, 0, 0.18) !important;
   backdrop-filter: blur(2px) !important;
 }
 
 .planner-assistant-rail.assistant-drawer,
+
 .chat-history-drawer,
+
 .settings-drawer,
+
 .vendor-detail-drawer {
   border-left: 1px solid var(--mm-border) !important;
   background: var(--mm-surface) !important;
@@ -1587,8 +1057,11 @@ body,
 }
 
 .assistant-drawer-header,
+
 .chat-history-header,
+
 .settings-drawer-header,
+
 .vendor-detail-header {
   border-bottom: 1px solid var(--mm-border) !important;
   background: rgba(255, 255, 255, 0.94) !important;
@@ -1654,796 +1127,12 @@ body,
   transform: translateX(-50%) !important;
 }
 
-@media (max-width: 760px) {
-  .workspace-command-button {
-    width: 40px !important;
-    min-width: 40px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    font-size: 0 !important;
-  }
-
-  .workspace-command-button::before {
-    content: "" !important;
-    width: 17px !important;
-    height: 17px !important;
-    border: 2px solid currentColor !important;
-    border-radius: 50% !important;
-    box-shadow: 7px 7px 0 -5px currentColor !important;
-    transform: rotate(45deg) !important;
-  }
-
-  .workspace-ai-button {
-    display: inline-grid !important;
-    place-items: center !important;
-    place-content: center !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    padding: 0 !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-  }
-
-  .workspace-ai-button .workspace-ai-icon {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    margin: 0 !important;
-  }
-
-  /* Checklist mode: swap hamburger for a 2×2 grid icon (category toggle).
-     Desktop keeps the standard hamburger regardless of tab. */
-  .workspace-menu-button.is-checklist-mode::before {
-    width: 14px !important;
-    height: 14px !important;
-    background:
-      linear-gradient(var(--mm-text), var(--mm-text)) 0    0    / 6px 6px no-repeat,
-      linear-gradient(var(--mm-text), var(--mm-text)) 8px  0    / 6px 6px no-repeat,
-      linear-gradient(var(--mm-text), var(--mm-text)) 0    8px  / 6px 6px no-repeat,
-      linear-gradient(var(--mm-text), var(--mm-text)) 8px  8px  / 6px 6px no-repeat !important;
-  }
-
-  .planner-panel,
-  .dashboard-panel,
-  .checklist-panel,
-  .calendar-panel,
-  .budget-command-center,
-  .vendor-discovery-panel,
-  .guest-command-center {
-    width: min(100%, calc(100vw - 28px)) !important;
-    padding: 18px 0 calc(88px + env(safe-area-inset-bottom)) !important;
-  }
-
-  .planner-panel-header,
-  .checklist-hero,
-  .calendar-toolbar,
-  .budget-hero-modern,
-  .vendor-page-header,
-  .guest-hero-modern {
-    gap: 14px !important;
-  }
-
-  .planner-panel-header h3,
-  .checklist-hero h3,
-  .calendar-toolbar h3,
-  .budget-hero-modern h3,
-  .vendor-page-header h3,
-  .guest-hero-modern h3 {
-    font-size: 1.55rem !important;
-  }
-
-  .checklist-stat-row,
-  .budget-focus-grid,
-  .guest-focus-grid {
-    display: flex !important;
-    gap: 10px !important;
-    overflow-x: auto !important;
-    padding-bottom: 2px !important;
-    scrollbar-width: none !important;
-  }
-
-  .checklist-stat-row::-webkit-scrollbar,
-  .budget-focus-grid::-webkit-scrollbar,
-  .guest-focus-grid::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .checklist-stat-row article,
-  .budget-focus-grid article,
-  .guest-focus-grid article {
-    flex: 0 0 74vw !important;
-  }
-
-  .calendar-workspace {
-    display: flex !important;
-    flex-direction: column-reverse !important;
-  }
-
-  .calendar-grid {
-    display: none !important;
-  }
-
-  .calendar-panel .mobile-calendar-agenda {
-    display: grid !important;
-  }
-
-  .calendar-suggestion-strip {
-    display: flex !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .calendar-suggestion-strip button {
-    flex: 0 0 78vw !important;
-  }
-
-  .budget-workspace,
-  .guest-workspace {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-  }
-
-  .budget-side-panel,
-  .guest-side-panel {
-    order: -1 !important;
-  }
-
-  .budget-side-panel:not(.add-open) .budget-suggestion-card,
-  .budget-side-panel:not(.add-open) .budget-insight-card {
-    display: none !important;
-  }
-
-  .vendor-map-panel {
-    display: none !important;
-  }
-
-  .vendor-filter-bar {
-    display: flex !important;
-    gap: 10px !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .vendor-filter-bar label {
-    flex: 0 0 70vw !important;
-  }
-
-  .vendor-card {
-    padding: 16px !important;
-  }
-
-  .vendor-actions {
-    display: flex !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .vendor-actions button,
-  .vendor-actions a {
-    flex: 0 0 auto !important;
-  }
-}
-
 /* Mobile clipping fix: header stays visible, every menu scrolls below it. */
-@media (max-width: 760px) {
-  .planner-content {
-    display: grid !important;
-    grid-template-rows: 56px minmax(0, 1fr) !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    padding: 0 !important;
-  }
-
-  .workspace-titlebar {
-    grid-row: 1 !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 80 !important;
-  }
-
-  .planner-content > .dashboard-panel,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    grid-row: 2 !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    padding: 12px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
-    scroll-padding-top: 18px !important;
-  }
-
-  .planner-panel-header,
-  .checklist-hero,
-  .calendar-toolbar,
-  .budget-hero-modern,
-  .vendor-page-header,
-  .guest-hero-modern,
-  .today-command-center {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    align-items: start !important;
-    gap: 14px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    overflow: visible !important;
-    padding: 0 0 12px !important;
-  }
-
-  .checklist-hero > div:first-child,
-  .planner-panel-header > div:first-child,
-  .calendar-toolbar > div:first-child,
-  .budget-hero-modern > div:first-child,
-  .vendor-page-header > div:first-child,
-  .guest-hero-modern > div:first-child {
-    order: 1 !important;
-    min-width: 0 !important;
-  }
-
-  .checklist-hero-progress,
-  .budget-hero-actions,
-  .calendar-actions,
-  .vendor-header-actions,
-  .guest-header-actions {
-    order: 2 !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .checklist-hero h3,
-  .planner-panel-header h3,
-  .calendar-toolbar h3,
-  .budget-hero-modern h3,
-  .vendor-page-header h3,
-  .guest-hero-modern h3,
-  .today-command-center h3 {
-    display: block !important;
-    max-width: 100% !important;
-    margin: 0 0 8px !important;
-    overflow: visible !important;
-    color: var(--mm-text) !important;
-    font-size: clamp(1.45rem, 7vw, 1.9rem) !important;
-    line-height: 1.12 !important;
-    white-space: normal !important;
-    text-overflow: clip !important;
-  }
-
-  .checklist-hero p,
-  .planner-panel-header p,
-  .calendar-toolbar p,
-  .budget-hero-modern p,
-  .vendor-page-header p,
-  .guest-hero-modern p,
-  .today-command-center p {
-    max-width: 100% !important;
-    margin-bottom: 0 !important;
-    overflow: visible !important;
-    white-space: normal !important;
-  }
-
-  .checklist-hero-progress {
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    padding: 16px !important;
-  }
-
-  .checklist-toolbelt {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-    overflow: visible !important;
-    padding: 10px 0 !important;
-  }
-
-  .checklist-view-tabs,
-  .budget-view-tabs,
-  .guest-view-tabs {
-    display: flex !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .checklist-view-tabs::-webkit-scrollbar,
-  .budget-view-tabs::-webkit-scrollbar,
-  .guest-view-tabs::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .checklist-view-tabs button,
-  .budget-view-tabs button,
-  .guest-view-tabs button {
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-  }
-
-  .checklist-export-actions {
-    display: flex !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .checklist-export-actions::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .checklist-template-row {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 8px 0 12px !important;
-    scrollbar-width: none !important;
-  }
-
-  .checklist-template-row::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .checklist-template-row > span,
-  .checklist-template-row button {
-    flex: 0 0 auto !important;
-    max-width: none !important;
-    white-space: nowrap !important;
-  }
-
-  .checklist-side-panel {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .checklist-side-card,
-  .checklist-quick-add,
-  .checklist-export-card {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .mobile-bottom-nav {
-    z-index: 90 !important;
-  }
-}
 
 /* Mobile usability polish: compact app chrome, prevent overlap, and simplify menu surfaces. */
-@media (max-width: 760px) {
-  .workspace-titlebar {
-    height: 56px !important;
-    min-height: 56px !important;
-    padding: 0 14px !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    border-bottom: 1px solid var(--mm-border) !important;
-    background: rgba(255, 255, 255, 0.96) !important;
-    backdrop-filter: blur(14px) !important;
-  }
-
-  .workspace-title-center {
-    min-width: 0 !important;
-    gap: 10px !important;
-  }
-
-  .workspace-title-center .sidebar-mark.small {
-    width: 30px !important;
-    height: 30px !important;
-    min-width: 30px !important;
-    font-size: 0.82rem !important;
-  }
-
-  .workspace-title-center .sidebar-logo-mark {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-  }
-
-  .workspace-title-center strong {
-    max-width: 36vw !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .workspace-title-actions {
-    gap: 6px !important;
-  }
-
-  /* Hide hamburger on mobile for all tabs — only the checklist category toggle needs it */
-  .workspace-menu-button {
-    display: none !important;
-  }
-
-  /* Show it only on checklist tab (used to open the category rail) */
-  .workspace-menu-button.is-checklist-mode {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .workspace-chat-action,
-  .workspace-ai-button,
-  .workspace-profile-button {
-    width: 38px !important;
-    min-width: 38px !important;
-    height: 38px !important;
-    min-height: 38px !important;
-    border-radius: 999px !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .workspace-ai-button span,
-  .workspace-chat-action span {
-    display: none !important;
-  }
-
-  .workspace-profile-button {
-    font-size: 0.82rem !important;
-  }
-
-  .planner-content > .dashboard-panel,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    padding: 12px 12px calc(88px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-
-  .mobile-bottom-nav {
-    left: 10px !important;
-    right: 10px !important;
-    bottom: max(10px, env(safe-area-inset-bottom, 0px)) !important;
-    width: auto !important;
-    height: 72px !important;
-    padding: 6px !important;
-    border-radius: 24px !important;
-    box-shadow: 0 12px 34px rgba(17, 17, 17, 0.14) !important;
-  }
-
-  .mobile-bottom-nav button {
-    min-width: 0 !important;
-    height: 60px !important;
-    padding: 6px 2px !important;
-    gap: 4px !important;
-    border-radius: 18px !important;
-  }
-
-  .mobile-bottom-nav svg {
-    width: 20px !important;
-    height: 20px !important;
-  }
-
-  .mobile-bottom-nav button span {
-    max-width: 100% !important;
-    overflow: hidden !important;
-    color: inherit !important;
-    font-size: 0.72rem !important;
-    font-weight: 650 !important;
-    line-height: 1.08 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .mobile-bottom-nav button.active {
-    background: #f1efec !important;
-    color: var(--mm-text) !important;
-  }
-
-  .checklist-hero,
-  .calendar-toolbar,
-  .budget-hero-modern,
-  .vendor-page-header,
-  .guest-hero-modern {
-    gap: 10px !important;
-    margin-bottom: 18px !important;
-    padding-bottom: 8px !important;
-  }
-
-  .checklist-hero h3,
-  .calendar-toolbar h3,
-  .budget-hero-modern h3,
-  .vendor-page-header h3,
-  .guest-hero-modern h3 {
-    font-size: clamp(1.82rem, 8vw, 2.35rem) !important;
-    letter-spacing: 0 !important;
-  }
-
-  .checklist-hero p,
-  .calendar-toolbar p,
-  .budget-hero-modern p,
-  .vendor-page-header p,
-  .guest-hero-modern p {
-    font-size: 1rem !important;
-    line-height: 1.55 !important;
-  }
-
-  .checklist-hero-progress {
-    margin-top: 8px !important;
-    padding: 18px !important;
-  }
-
-  .checklist-stat-row,
-  .budget-summary-grid,
-  .calendar-kpi-grid,
-  .guest-summary-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px !important;
-    margin: 18px 0 !important;
-  }
-
-  .checklist-stat-row > article,
-  .budget-summary-card,
-  .calendar-kpi-card,
-  .guest-summary-card {
-    min-height: 0 !important;
-    padding: 16px !important;
-    border-radius: 18px !important;
-  }
-
-  .checklist-toolbelt {
-    margin: 12px 0 10px !important;
-    padding: 10px 0 0 !important;
-    border-top: 1px solid var(--mm-border) !important;
-  }
-
-  .checklist-view-tabs,
-  .budget-view-tabs,
-  .guest-view-tabs {
-    border-radius: 18px !important;
-    padding: 4px !important;
-  }
-
-  .checklist-view-tabs button,
-  .budget-view-tabs button,
-  .guest-view-tabs button {
-    min-height: 42px !important;
-    padding: 0 16px !important;
-    border-radius: var(--mm-radius-card) !important;
-  }
-
-  .checklist-export-actions {
-    justify-content: flex-start !important;
-  }
-
-  .checklist-export-actions button {
-    min-height: 42px !important;
-    padding: 0 16px !important;
-  }
-
-  .checklist-template-row {
-    margin: 10px 0 12px !important;
-    padding: 6px 0 10px !important;
-  }
-
-  .checklist-template-row > span {
-    color: var(--mm-text-muted) !important;
-    font-size: 0.86rem !important;
-  }
-
-  .checklist-template-row button {
-    min-height: 40px !important;
-    padding: 0 14px !important;
-  }
-
-  .checklist-layout {
-    gap: 18px !important;
-  }
-
-  .checklist-side-panel {
-    order: -1 !important;
-    gap: 12px !important;
-  }
-
-  .checklist-side-card,
-  .checklist-export-card {
-    display: none !important;
-  }
-
-  .checklist-quick-add {
-    padding: 18px !important;
-    border-radius: 18px !important;
-    background: #fbfaf8 !important;
-  }
-
-  .checklist-quick-add form {
-    gap: 10px !important;
-  }
-
-  .checklist-quick-add input,
-  .checklist-quick-add button {
-    width: 100% !important;
-    min-height: 48px !important;
-  }
-
-  .checklist-section-header {
-    margin-top: 18px !important;
-  }
-
-  .calendar-panel .mobile-calendar-agenda {
-    margin-bottom: 22px !important;
-    padding: 18px !important;
-    border-radius: 18px !important;
-  }
-
-  .calendar-actions {
-    display: flex !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 2px 0 8px !important;
-    scrollbar-width: none !important;
-  }
-
-  .calendar-actions::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .calendar-actions button,
-  .calendar-actions .primary-action,
-  .calendar-actions .utility-action {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    height: 46px !important;
-    min-height: 46px !important;
-    padding: 0 16px !important;
-    border-radius: 999px !important;
-    white-space: nowrap !important;
-  }
-
-  .calendar-actions .primary-action {
-    background: #111111 !important;
-    color: #ffffff !important;
-  }
-
-  .calendar-actions .primary-action::before,
-  .calendar-actions .utility-action::before {
-    display: none !important;
-  }
-
-  .calendar-suggestion-strip {
-    display: flex !important;
-    gap: 10px !important;
-    margin: 8px 0 20px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding-bottom: 8px !important;
-    scrollbar-width: none !important;
-  }
-
-  .calendar-suggestion-strip::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .calendar-suggestion-strip button {
-    flex: 0 0 min(84vw, 360px) !important;
-    min-height: 104px !important;
-    padding: 18px !important;
-    border-radius: 18px !important;
-  }
-
-  .calendar-workspace {
-    display: none !important;
-  }
-
-  .vendor-filter-bar {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    margin: 18px 0 !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  .vendor-filter-bar label {
-    display: grid !important;
-    flex: initial !important;
-    min-width: 0 !important;
-    gap: 6px !important;
-  }
-
-  .vendor-filter-bar label span {
-    display: block !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.74rem !important;
-    font-weight: 700 !important;
-  }
-
-  .vendor-filter-bar select {
-    width: 100% !important;
-    min-height: 46px !important;
-    padding: 0 12px !important;
-    border-radius: var(--mm-radius-card) !important;
-  }
-
-  .vendor-result-count {
-    grid-column: 1 / -1 !important;
-    justify-self: start !important;
-    margin-top: 2px !important;
-  }
-
-  .vendor-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 14px !important;
-    padding-bottom: 28px !important;
-  }
-
-  .vendor-card {
-    margin: 0 !important;
-    padding: 18px !important;
-    border-radius: 18px !important;
-  }
-
-  .vendor-card-header {
-    align-items: start !important;
-    gap: 12px !important;
-  }
-
-  .vendor-rating {
-    min-width: 54px !important;
-    height: 38px !important;
-    border-radius: 999px !important;
-  }
-
-  .vendor-actions {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-    overflow: visible !important;
-  }
-
-  .vendor-actions button,
-  .vendor-actions a {
-    width: 100% !important;
-    min-height: 44px !important;
-    justify-content: center !important;
-  }
-}
-
-@media (max-width: 390px) {
-  .planner-content > .dashboard-panel,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-  }
-
-  .workspace-title-center strong {
-    max-width: 31vw !important;
-    font-size: 0.96rem !important;
-  }
-
-  .mobile-bottom-nav button span {
-    font-size: 0.68rem !important;
-  }
-}
 
 /* Budget scroll fix: make the budget page the scroll owner instead of clipping its inner workspace. */
+
 .planner-content > .budget-command-center {
   min-height: 0 !important;
   overflow-x: hidden !important;
@@ -2452,8 +1141,11 @@ body,
 }
 
 .budget-command-center,
+
 .budget-workspace,
+
 .budget-main-list,
+
 .budget-side-panel {
   min-height: 0 !important;
 }
@@ -2463,6 +1155,7 @@ body,
 }
 
 .budget-main-list,
+
 .budget-side-panel {
   overflow: visible !important;
 }
@@ -2475,29 +1168,10 @@ body,
   }
 }
 
-@media (max-width: 760px) {
-  .planner-content > .budget-command-center {
-    height: 100% !important;
-    max-height: 100% !important;
-    padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  .budget-command-center .budget-workspace {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 16px !important;
-  }
-
-  .budget-command-center .budget-main-list,
-  .budget-command-center .budget-side-panel {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
 /* Budget and guest rows should have one visible container, not a card inside another card. */
+
 .budget-main-list .budget-row-card,
+
 .guest-main-list .guest-row-card {
   border: 0 !important;
   border-radius: 0 !important;
@@ -2508,6 +1182,7 @@ body,
 }
 
 .budget-main-list .budget-row-summary,
+
 .guest-main-list .guest-row-summary {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-pill) !important;
@@ -2516,6 +1191,7 @@ body,
 }
 
 .budget-main-list .budget-row-card.expanded,
+
 .guest-main-list .guest-row-card.expanded {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
@@ -2524,6 +1200,7 @@ body,
 }
 
 .budget-main-list .budget-row-card.expanded .budget-row-summary,
+
 .guest-main-list .guest-row-card.expanded .guest-row-summary {
   border: 0 !important;
   border-bottom: 1px solid var(--mm-border) !important;
@@ -2531,7 +1208,9 @@ body,
 }
 
 /* Product upgrade surfaces: budget recommendation and vendor comparison. */
+
 .budget-allocation-card,
+
 .vendor-compare-panel {
   border: 1px solid var(--mm-border) !important;
   border-radius: var(--mm-radius-card) !important;
@@ -2546,6 +1225,7 @@ body,
 }
 
 .budget-allocation-card > span,
+
 .vendor-compare-panel .eyebrow {
   color: var(--mm-text-muted) !important;
   font-size: 0.78rem !important;
@@ -2587,6 +1267,7 @@ body,
 }
 
 .budget-allocation-list strong,
+
 .budget-allocation-list small {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -2634,6 +1315,7 @@ body,
 }
 
 .vendor-compare-header button,
+
 .vendor-compare-grid button {
   min-height: 38px !important;
   border: 1px solid var(--mm-border) !important;
@@ -2661,6 +1343,7 @@ body,
 }
 
 .vendor-compare-grid article > strong,
+
 .vendor-compare-grid article > span {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -2693,236 +1376,10 @@ body,
   font-weight: 650 !important;
 }
 
-@media (max-width: 900px) {
-  .vendor-compare-grid {
-    display: flex !important;
-    overflow-x: auto !important;
-    padding-bottom: 4px !important;
-    scrollbar-width: none !important;
-  }
-
-  .vendor-compare-grid::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .vendor-compare-grid article {
-    flex: 0 0 min(82vw, 320px) !important;
-  }
-}
-
-@media (max-width: 760px) {
-  .budget-allocation-card {
-    padding: 14px !important;
-  }
-
-  .budget-allocation-list div {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
-  .vendor-compare-panel {
-    margin-bottom: 14px !important;
-    padding: 14px !important;
-  }
-}
-
 /* Mobile calendar repair: one vertical scroll page with a compact month grid and selected-day editor below. */
-@media (max-width: 760px) {
-  .planner-content > .calendar-panel {
-    display: block !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    padding: 20px 16px calc(156px + env(safe-area-inset-bottom, 0px)) !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-  }
-
-  .calendar-panel .calendar-toolbar {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 14px !important;
-    margin: 0 0 16px !important;
-    padding: 0 !important;
-  }
-
-  .calendar-panel .calendar-toolbar h3 {
-    margin: 0 !important;
-    font-size: clamp(2rem, 9vw, 2.55rem) !important;
-    line-height: 1.05 !important;
-  }
-
-  .calendar-panel .calendar-toolbar p:not(.eyebrow) {
-    display: none !important;
-  }
-
-  .calendar-panel .calendar-actions {
-    display: flex !important;
-    gap: 8px !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 2px 0 8px !important;
-    scrollbar-width: none !important;
-  }
-
-  .calendar-panel .calendar-actions::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .calendar-panel .calendar-actions button,
-  .calendar-panel .calendar-actions .primary-action,
-  .calendar-panel .calendar-actions .utility-action {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    border-radius: var(--mm-radius-pill) !important;
-    padding: 0 15px !important;
-    white-space: nowrap !important;
-  }
-
-  .calendar-panel .calendar-overview-row {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    margin: 0 0 16px !important;
-    overflow: visible !important;
-  }
-
-  .calendar-panel .calendar-overview-row article {
-    min-height: 92px !important;
-    border-radius: 18px !important;
-    padding: 14px !important;
-  }
-
-  .calendar-panel .calendar-suggestion-strip {
-    display: flex !important;
-    gap: 10px !important;
-    margin: 0 0 16px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding-bottom: 6px !important;
-    scrollbar-width: none !important;
-  }
-
-  .calendar-panel .calendar-suggestion-strip::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .calendar-panel .calendar-suggestion-strip button {
-    flex: 0 0 min(82vw, 340px) !important;
-    min-height: 92px !important;
-    border-radius: 18px !important;
-    padding: 16px !important;
-  }
-
-  .calendar-panel .mobile-calendar-agenda {
-    display: grid !important;
-    gap: 12px !important;
-    margin: 0 0 18px !important;
-    padding: 16px !important;
-    border-radius: 18px !important;
-  }
-
-  .calendar-panel .calendar-workspace {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 16px !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow: visible !important;
-  }
-
-  .calendar-panel .calendar-grid {
-    display: grid !important;
-    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    border-radius: 18px !important;
-    overflow: hidden !important;
-  }
-
-  .calendar-panel .calendar-weekday {
-    min-height: 30px !important;
-    font-size: 0.64rem !important;
-  }
-
-  .calendar-panel .calendar-day {
-    min-height: 58px !important;
-    gap: 2px !important;
-    padding: 7px 5px !important;
-  }
-
-  .calendar-panel .calendar-date {
-    font-size: 0.78rem !important;
-  }
-
-  .calendar-panel .calendar-day.today .calendar-date {
-    min-width: 22px !important;
-    height: 22px !important;
-  }
-
-  .calendar-panel .calendar-count {
-    top: 5px !important;
-    right: 5px !important;
-    width: 19px !important;
-    min-width: 19px !important;
-    height: 19px !important;
-    font-size: 0.62rem !important;
-  }
-
-  .calendar-panel .calendar-day .appointment-chip,
-  .calendar-panel .calendar-day .appointment-more {
-    display: none !important;
-  }
-
-  .calendar-panel .day-agenda {
-    position: static !important;
-    display: grid !important;
-    width: 100% !important;
-    max-width: none !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    overflow: visible !important;
-    border-radius: 18px !important;
-    padding: 16px !important;
-  }
-
-  .calendar-panel .day-agenda-header {
-    gap: 10px !important;
-  }
-
-  .calendar-panel .appointment-form {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: none !important;
-    overflow: visible !important;
-    padding: 14px !important;
-  }
-
-  .calendar-panel .appointment-form-row {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  .calendar-panel .appointment-form input,
-  .calendar-panel .appointment-form select,
-  .calendar-panel .appointment-form button {
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-}
 
 /* Full-width planner normalization: remove nested gutters and legacy icon artifacts. */
+
 .planner-body {
   width: 100% !important;
   max-width: none !important;
@@ -2938,11 +1395,17 @@ body,
 }
 
 .planner-content > .dashboard-panel,
+
 .planner-content > .planner-panel,
+
 .planner-content > .checklist-panel,
+
 .planner-content > .calendar-panel,
+
 .planner-content > .budget-command-center,
+
 .planner-content > .guest-command-center,
+
 .planner-content > .vendor-discovery-panel {
   width: 100% !important;
   max-width: none !important;
@@ -2961,6 +1424,7 @@ body,
 }
 
 .workspace-menu-button::before,
+
 .workspace-menu-button::after {
   display: none !important;
   content: none !important;
@@ -3031,44 +1495,8 @@ body,
   }
 }
 
-@media (max-width: 760px) {
-  .planner-content > .dashboard-panel,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    width: 100% !important;
-    max-width: none !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-  }
-
-  .workspace-menu-button.is-checklist-mode {
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    border-color: transparent !important;
-    background-color: transparent !important;
-  }
-}
-
-/* Re-apply mobile hide AFTER the global display:inline-grid rule (line ~2954)
-   that would otherwise win on mobile due to source-order with equal specificity. */
-@media (max-width: 760px) {
-  .workspace-menu-button {
-    display: none !important;
-  }
-
-  .workspace-menu-button.is-checklist-mode {
-    display: inline-grid !important;
-    place-items: center !important;
-  }
-}
-
 /* Checklist focus grouping: make Next read like now / week / later. */
+
 .checklist-focus-stack {
   display: grid !important;
   gap: 16px !important;
@@ -3110,115 +1538,10 @@ body,
   font-weight: 750 !important;
 }
 
-@media (max-width: 760px) {
-  .checklist-focus-stack {
-    gap: 18px !important;
-  }
-
-  .checklist-focus-header {
-    align-items: start !important;
-  }
-}
-
 /* Mobile header/template polish: keep Ask AI icon visible and make templates usable. */
-@media (max-width: 760px) {
-  .workspace-ai-button {
-    display: inline-grid !important;
-    place-items: center !important;
-    width: 40px !important;
-    min-width: 40px !important;
-    height: 40px !important;
-    min-height: 40px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: var(--mm-surface) !important;
-    color: #111111 !important;
-    padding: 0 !important;
-    font-size: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .workspace-ai-button .workspace-ai-icon {
-    display: inline-grid !important;
-    place-items: center !important;
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    margin: 0 !important;
-    color: #111111 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .workspace-ai-button .workspace-ai-icon svg {
-    display: block !important;
-    width: 22px !important;
-    height: 22px !important;
-    fill: none !important;
-    stroke: currentColor !important;
-    stroke-linecap: round !important;
-    stroke-linejoin: round !important;
-    stroke-width: 1.9 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-  }
-
-  .workspace-ai-button:hover,
-  .workspace-ai-button:focus-visible {
-    background: #f4f4f2 !important;
-    border-color: var(--mm-border-strong) !important;
-  }
-
-  .checklist-template-row {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 16px 0 18px !important;
-    padding: 14px 0 0 !important;
-    border-top: 1px solid var(--mm-border) !important;
-    overflow: visible !important;
-  }
-
-  .checklist-template-row > span {
-    grid-column: 1 / -1 !important;
-    display: block !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    line-height: 1.2 !important;
-  }
-
-  .checklist-template-row button {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: 42px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    padding: 0 12px !important;
-    overflow: hidden !important;
-    color: var(--mm-text) !important;
-    font-size: 0.86rem !important;
-    font-weight: 650 !important;
-    line-height: 1.15 !important;
-    text-align: center !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-}
-
-@media (max-width: 390px) {
-  .checklist-template-row {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-}
 
 /* Desktop/sidebar date control: keep the mobile date-card markup from collapsing inline. */
+
 @media (min-width: 761px) {
   .sidebar-date {
     display: grid !important;
@@ -3308,299 +1631,9 @@ body,
 }
 
 /* Mobile sidebar refinement: clearer date entry, calmer drawer, no bottom-nav collision. */
-@media (max-width: 760px) {
-  /* Left sidebar — completely hidden on mobile. Use bottom nav instead. */
-  .planner-sidebar {
-    display: none !important;
-  }
-
-  .sidebar-backdrop {
-    display: none !important;
-  }
-
-  .planner-body.sidebar-open .mobile-bottom-nav {
-    display: flex !important;
-  }
-
-  .planner-body.sidebar-open::before {
-    display: none !important;
-  }
-
-  .sidebar-header {
-    display: grid !important;
-    grid-template-columns: 42px minmax(0, 1fr) 40px !important;
-    gap: 12px !important;
-    align-items: center !important;
-    padding: 0 !important;
-    min-height: 48px !important;
-    border: 0 !important;
-  }
-
-  .sidebar-header .sidebar-mark {
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: var(--mm-brand) !important;
-    color: #ffffff !important;
-    font-size: 1.05rem !important;
-    font-weight: 750 !important;
-  }
-
-  .sidebar-header strong {
-    display: block !important;
-    overflow: hidden !important;
-    color: var(--mm-text) !important;
-    font-size: 1.06rem !important;
-    font-weight: 750 !important;
-    line-height: 1.2 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .sidebar-close-button {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    border: 0 !important;
-    border-radius: var(--mm-radius-pill) !important;
-    background: transparent !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 1.35rem !important;
-    line-height: 1 !important;
-  }
-
-  .sidebar-close-button::before,
-  .sidebar-close-button::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .sidebar-close-button:hover,
-  .sidebar-close-button:focus-visible {
-    background: #f3f3f1 !important;
-    color: var(--mm-text) !important;
-  }
-
-  .sidebar-date {
-    display: grid !important;
-    gap: 8px !important;
-    margin: 22px 0 16px !important;
-    padding: 0 !important;
-  }
-
-  .sidebar-date span {
-    color: var(--mm-text-muted) !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    letter-spacing: 0 !important;
-    text-transform: none !important;
-  }
-
-  .sidebar-date .sidebar-date-control {
-    position: relative !important;
-    display: grid !important;
-    gap: 4px !important;
-    min-height: 54px !important;
-    align-content: center !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: #fafaf8 !important;
-    color: var(--mm-text) !important;
-    padding: 9px 44px 9px 14px !important;
-    overflow: hidden !important;
-  }
-
-  .sidebar-date .sidebar-date-control::after {
-    content: "" !important;
-    position: absolute !important;
-    right: 16px !important;
-    top: 50% !important;
-    width: 18px !important;
-    height: 18px !important;
-    border: 2px solid var(--mm-text-muted) !important;
-    border-radius: 5px !important;
-    transform: translateY(-50%) !important;
-    opacity: 0.75 !important;
-  }
-
-  .sidebar-date .sidebar-date-control strong {
-    overflow: hidden !important;
-    color: var(--mm-text) !important;
-    font-size: 0.98rem !important;
-    font-weight: 750 !important;
-    line-height: 1.15 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .sidebar-date input {
-    position: absolute !important;
-    inset: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    border: 0 !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: transparent !important;
-    color: transparent !important;
-    -webkit-text-fill-color: transparent !important;
-    box-shadow: none !important;
-    opacity: 0 !important;
-    padding: 0 !important;
-    font-size: 0.95rem !important;
-    font-weight: 650 !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-    cursor: pointer !important;
-  }
-
-  .sidebar-date input:focus {
-    outline: none !important;
-  }
-
-  .sidebar-date .sidebar-date-control:focus-within {
-    border-color: var(--mm-brand) !important;
-    background: var(--mm-surface) !important;
-    box-shadow: 0 0 0 3px rgba(137, 65, 99, 0.12) !important;
-  }
-
-  .sidebar-date small {
-    display: block !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.78rem !important;
-    font-weight: 650 !important;
-    line-height: 1.2 !important;
-  }
-
-  .planner-menu {
-    display: grid !important;
-    grid-auto-flow: row !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    align-content: start !important;
-    gap: 4px !important;
-    min-height: 0 !important;
-    padding: 4px 0 18px !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    scrollbar-width: none !important;
-  }
-
-  .planner-menu::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .planner-menu button {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    align-items: center !important;
-    justify-content: stretch !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    min-height: 48px !important;
-    border: 0 !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: transparent !important;
-    color: var(--mm-text) !important;
-    box-shadow: none !important;
-    padding: 0 12px !important;
-  }
-
-  .planner-menu button::before,
-  .planner-menu button::after {
-    display: none !important;
-    content: none !important;
-  }
-
-  .planner-menu button:hover,
-  .planner-menu button:focus-visible {
-    background: #f6f6f4 !important;
-  }
-
-  .planner-menu button.active {
-    background: #f1f0ed !important;
-    box-shadow: inset 3px 0 0 var(--mm-brand) !important;
-  }
-
-  .planner-menu .menu-label {
-    display: flex !important;
-    align-items: center !important;
-    gap: 14px !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    color: inherit !important;
-    font-size: 1rem !important;
-    font-weight: 740 !important;
-    line-height: 1.15 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .planner-menu .menu-label .menu-icon {
-    display: inline-grid !important;
-    place-items: center !important;
-    flex: 0 0 22px !important;
-    width: 22px !important;
-    height: 22px !important;
-    color: var(--mm-text-muted) !important;
-  }
-
-  .planner-menu .menu-label .menu-icon svg {
-    width: 21px !important;
-    height: 21px !important;
-    stroke-width: 1.9 !important;
-  }
-
-  .planner-menu button.active .menu-icon {
-    color: var(--mm-brand) !important;
-  }
-
-  .planner-menu button > span:last-child:not(.menu-label) {
-    max-width: 82px !important;
-    overflow: hidden !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.96rem !important;
-    font-weight: 700 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .couple-profile-card {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) auto !important;
-    gap: 8px !important;
-    align-items: center !important;
-    margin: 0 !important;
-    padding: 10px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 18px !important;
-    background: var(--mm-surface) !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
-  }
-
-  .couple-profile-main {
-    min-width: 0 !important;
-  }
-
-  .couple-avatar {
-    width: 38px !important;
-    height: 38px !important;
-    min-width: 38px !important;
-    font-size: 0.82rem !important;
-  }
-
-  .couple-profile-copy strong,
-  .couple-profile-copy span {
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .language-toggle.compact {
-    min-width: 92px !important;
-  }
-}
 
 /* Final minimalist system pass: consistent controls, quieter chips, and safer mobile layouts. */
+
 .planner-workspace {
   --mm-control-height: 44px;
   --mm-control-pad-x: 16px;
@@ -3608,10 +1641,15 @@ body,
 }
 
 .planner-workspace button,
+
 .planner-workspace a,
+
 .planner-workspace input,
+
 .planner-workspace select,
+
 .planner-workspace textarea,
+
 .composer-shell {
   transition:
     background-color var(--mm-ease),
@@ -3622,23 +1660,36 @@ body,
 }
 
 .planner-workspace button:focus-visible,
+
 .planner-workspace a:focus-visible,
+
 .planner-workspace input:focus-visible,
+
 .planner-workspace select:focus-visible,
+
 .planner-workspace textarea:focus-visible,
+
 .composer-shell:focus-within {
   outline: none !important;
   box-shadow: 0 0 0 3px rgba(123, 63, 95, 0.14) !important;
 }
 
 .primary-action,
+
 .planner-workspace button.primary,
+
 .checklist-empty-modern button:first-child,
+
 .action-empty button,
+
 .budget-add-modern button[type="submit"],
+
 .guest-add-card button[type="submit"],
+
 .budget-allocation-card > button,
+
 .assistant-drawer .menu-assistant-form .menu-assistant-submit:not(:disabled),
+
 .main-chat-panel .composer-voice-button {
   min-height: var(--mm-control-height) !important;
   border: 1px solid #111111 !important;
@@ -3651,13 +1702,21 @@ body,
 }
 
 .primary-action:hover,
+
 .planner-workspace button.primary:hover,
+
 .checklist-empty-modern button:first-child:hover,
+
 .action-empty button:hover,
+
 .budget-add-modern button[type="submit"]:hover,
+
 .guest-add-card button[type="submit"]:hover,
+
 .budget-allocation-card > button:hover,
+
 .assistant-drawer .menu-assistant-form .menu-assistant-submit:not(:disabled):hover,
+
 .main-chat-panel .composer-voice-button:hover {
   background: #2a2a2a !important;
   border-color: #2a2a2a !important;
@@ -3666,24 +1725,43 @@ body,
 }
 
 .utility-action,
+
 .calendar-actions button,
+
 .budget-hero-actions button,
+
 .guest-header-actions button,
+
 .checklist-export-actions button,
+
 .vendor-actions button,
+
 .vendor-detail-actions button,
+
 .budget-edit-actions button,
+
 .guest-edit-actions button,
+
 .checklist-template-row button,
+
 .checklist-template-more summary,
+
 .checklist-template-more button,
+
 .calendar-suggestion-strip button,
+
 .budget-view-tabs button,
+
 .guest-view-tabs button,
+
 .checklist-view-tabs button,
+
 .workspace-command-button,
+
 .workspace-ai-button,
+
 .workspace-chat-action,
+
 .assistant-drawer .menu-assistant-actions button {
   min-height: var(--mm-control-height) !important;
   border: 1px solid var(--mm-border) !important;
@@ -3695,24 +1773,43 @@ body,
 }
 
 .utility-action:hover,
+
 .calendar-actions button:hover,
+
 .budget-hero-actions button:hover,
+
 .guest-header-actions button:hover,
+
 .checklist-export-actions button:hover,
+
 .vendor-actions button:hover,
+
 .vendor-detail-actions button:hover,
+
 .budget-edit-actions button:hover,
+
 .guest-edit-actions button:hover,
+
 .checklist-template-row button:hover,
+
 .checklist-template-more summary:hover,
+
 .checklist-template-more button:hover,
+
 .calendar-suggestion-strip button:hover,
+
 .budget-view-tabs button:hover,
+
 .guest-view-tabs button:hover,
+
 .checklist-view-tabs button:hover,
+
 .workspace-command-button:hover,
+
 .workspace-ai-button:hover,
+
 .workspace-chat-action:hover,
+
 .assistant-drawer .menu-assistant-actions button:hover {
   background: #f6f6f4 !important;
   border-color: var(--mm-border-strong) !important;
@@ -3720,6 +1817,7 @@ body,
 }
 
 .planner-workspace button:disabled,
+
 .planner-workspace button[disabled] {
   cursor: not-allowed !important;
   transform: none !important;
@@ -3727,7 +1825,9 @@ body,
 }
 
 .checklist-view-tabs button.active,
+
 .budget-view-tabs button.active,
+
 .guest-view-tabs button.active {
   background: #111111 !important;
   border-color: #111111 !important;
@@ -3735,11 +1835,17 @@ body,
 }
 
 .status-pill,
+
 .priority-chip,
+
 .budget-status,
+
 .vendor-rating,
+
 .eyebrow,
+
 .hero-eyebrow,
+
 .mini-eyebrow {
   border: 0 !important;
   border-radius: var(--mm-radius-pill) !important;
@@ -3751,8 +1857,11 @@ body,
 }
 
 .empty-state,
+
 .action-empty,
+
 .checklist-empty-modern,
+
 .mobile-agenda-empty {
   border: 1px dashed var(--mm-border-strong) !important;
   border-radius: var(--mm-radius-card) !important;
@@ -3762,8 +1871,11 @@ body,
 }
 
 .empty-state strong,
+
 .action-empty strong,
+
 .checklist-empty-modern strong,
+
 .mobile-agenda-empty strong {
   color: var(--mm-text) !important;
 }
@@ -3930,6 +2042,7 @@ body,
 }
 
 /* connecting spine between nodes */
+
 .mm-timeline-phase::before {
   content: '';
   position: absolute;
@@ -3945,6 +2058,7 @@ body,
 }
 
 /* node = conic progress ring, coloured by phase state */
+
 .mm-timeline-node {
   position: absolute;
   left: 0;
@@ -3974,6 +2088,7 @@ body,
 }
 
 /* phase header card (summary) */
+
 .mm-timeline-summary {
   display: flex;
   align-items: center;
@@ -4020,6 +2135,7 @@ body,
 }
 
 .mm-timeline-date,
+
 .mm-timeline-count {
   white-space: nowrap;
 }
@@ -4077,63 +2193,52 @@ body,
 }
 
 /* per-state node colouring */
+
 .mm-timeline-phase.is-done .mm-timeline-node {
   --ring-color: #3f8f6b;
 }
+
 .mm-timeline-phase.is-done .mm-timeline-node-inner {
   color: #3f8f6b;
 }
+
 .mm-timeline-phase.is-overdue .mm-timeline-node {
   --ring-color: #c0492f;
 }
+
 .mm-timeline-phase.is-overdue .mm-timeline-node-inner {
   color: #c0492f;
 }
+
 .mm-timeline-phase.is-upcoming .mm-timeline-node {
   --ring-color: #d8d2c9;
 }
+
 .mm-timeline-phase.is-upcoming .mm-timeline-node-inner {
   color: var(--mm-text-muted);
 }
 
 /* per-state card emphasis */
+
 .mm-timeline-phase.is-active > .mm-timeline-summary {
   border-color: var(--mm-brand);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mm-brand) 10%, transparent);
 }
+
 .mm-timeline-phase.is-overdue > .mm-timeline-summary {
   border-color: #e7b9ac;
 }
+
 .mm-timeline-phase.is-done > .mm-timeline-summary {
   background: #fbfbfa;
 }
+
 .mm-timeline-phase.is-done .mm-timeline-phase-name {
   color: var(--mm-text-muted);
 }
 
-@media (max-width: 760px) {
-  .mm-timeline-phase {
-    padding-left: 46px;
-  }
-  .mm-timeline-phase::before {
-    left: 16px;
-  }
-  .mm-timeline-node {
-    width: 34px;
-    height: 34px;
-  }
-  .mm-timeline-node-inner {
-    width: 25px;
-    height: 25px;
-    font-size: 0.78rem;
-  }
-  .mm-timeline-summary {
-    padding: 11px 12px;
-    gap: 9px;
-  }
-}
-
 /* Wedding-day countdown chip in the checklist hero */
+
 .checklist-hero-progress .checklist-hero-countdown {
   display: inline-flex;
   align-items: center;
@@ -4202,322 +2307,70 @@ body,
 }
 
 .calendar-actions,
+
 .budget-hero-actions,
+
 .guest-header-actions,
+
 .checklist-export-actions,
+
 .vendor-actions,
+
 .vendor-detail-actions,
+
 .calendar-suggestion-strip,
+
 .checklist-template-row {
   scrollbar-width: none !important;
 }
 
 .calendar-actions::-webkit-scrollbar,
+
 .budget-hero-actions::-webkit-scrollbar,
+
 .guest-header-actions::-webkit-scrollbar,
+
 .checklist-export-actions::-webkit-scrollbar,
+
 .vendor-actions::-webkit-scrollbar,
+
 .vendor-detail-actions::-webkit-scrollbar,
+
 .calendar-suggestion-strip::-webkit-scrollbar,
+
 .checklist-template-row::-webkit-scrollbar {
   display: none !important;
 }
 
 /* Panel tab-switch fade-in — makes mobile navigation feel native */
+
 @keyframes panel-enter {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .planner-content > .dashboard-panel,
+
 .planner-content > .planner-panel,
+
 .planner-content > .checklist-panel,
+
 .planner-content > .calendar-panel,
+
 .planner-content > .budget-command-center,
+
 .planner-content > .guest-command-center,
+
 .planner-content > .vendor-discovery-panel,
+
 .planner-content > .main-chat-panel {
   animation: panel-enter 0.2s ease both;
 }
 
-@media (max-width: 760px) {
-  .planner-content > .dashboard-panel,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    padding-top: 4px !important;
-    /* Nav clearance is already reserved on `.planner-content`
-       (--mm-nav-space). This per-panel 108px stacked on top of that and
-       created a huge empty strip below the content — keep only the
-       safe-area inset here. */
-    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    overflow-x: hidden !important;
-  }
-}
-
-@media (max-width: 760px) {
-  .planner-panel-header,
-  .checklist-hero,
-  .calendar-toolbar,
-  .budget-hero-modern,
-  .vendor-page-header,
-  .guest-hero-modern {
-    gap: 14px !important;
-    padding-bottom: 14px !important;
-  }
-
-  .planner-panel-header h3,
-  .checklist-hero h3,
-  .calendar-toolbar h3,
-  .budget-hero-modern h3,
-  .vendor-page-header h3,
-  .guest-hero-modern h3 {
-    font-size: clamp(1.72rem, 8vw, 2.25rem) !important;
-    line-height: 1.06 !important;
-  }
-
-  .planner-panel-header p:not(.eyebrow),
-  .checklist-hero p,
-  .calendar-toolbar p,
-  .budget-hero-modern p,
-  .vendor-page-header p,
-  .guest-hero-modern p {
-    font-size: 0.98rem !important;
-    line-height: 1.45 !important;
-  }
-
-  .calendar-actions,
-  .budget-hero-actions,
-  .guest-header-actions,
-  .checklist-export-actions,
-  .vendor-actions,
-  .vendor-detail-actions,
-  .calendar-suggestion-strip {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    max-width: 100% !important;
-    padding-bottom: 2px !important;
-  }
-
-  .calendar-actions button,
-  .budget-hero-actions button,
-  .guest-header-actions button,
-  .checklist-export-actions button,
-  .vendor-actions button,
-  .vendor-detail-actions button,
-  .calendar-suggestion-strip button {
-    flex: 0 0 auto !important;
-    min-height: 40px !important;
-    padding: 0 14px !important;
-    white-space: nowrap !important;
-  }
-
-  /* Only two controls left here (select + export) so the scroll strip isn't
-     needed — keep overflow visible so the export dropdown isn't clipped. */
-  .checklist-export-actions {
-    overflow: visible !important;
-    flex-wrap: wrap !important;
-  }
-
-  .checklist-export-menu > div {
-    right: auto !important;
-    left: 0 !important;
-  }
-
-  .checklist-template-row {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    padding: 14px 0 2px !important;
-  }
-
-  .checklist-template-row > span {
-    flex: 0 0 auto !important;
-    align-self: center !important;
-    width: auto !important;
-    min-width: max-content !important;
-  }
-
-  .checklist-template-row button,
-  .checklist-template-more summary {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    max-width: 260px !important;
-    min-height: 40px !important;
-    white-space: nowrap !important;
-  }
-
-  .checklist-template-more > div {
-    position: fixed !important;
-    left: 16px !important;
-    right: 16px !important;
-    top: auto !important;
-    bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
-    min-width: 0 !important;
-    max-height: 42dvh !important;
-    overflow-y: auto !important;
-  }
-
-  .empty-state,
-  .action-empty,
-  .checklist-empty-modern,
-  .mobile-agenda-empty {
-    padding: 18px !important;
-  }
-
-  .planner-assistant-rail.assistant-drawer {
-    width: min(100vw, 430px) !important;
-    max-width: 100vw !important;
-    border-left: 0 !important;
-    border-radius: 22px 22px 0 0 !important;
-    box-shadow: 0 -18px 70px rgba(0, 0, 0, 0.18) !important;
-  }
-
-  .assistant-drawer .menu-assistant-copy {
-    padding: 16px 18px !important;
-  }
-
-  .assistant-drawer .menu-assistant-copy p:not(.assistant-kicker) {
-    max-width: none !important;
-  }
-
-  .assistant-drawer .menu-assistant-messages {
-    padding: 16px 18px !important;
-  }
-}
-
 /* True final mobile native-control fix: centered AI icon and contained date/time controls. */
-@media (max-width: 760px) {
-  .workspace-title-actions .workspace-ai-button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    height: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: 999px !important;
-    background: var(--mm-surface) !important;
-    color: #111111 !important;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .workspace-title-actions .workspace-ai-button .workspace-ai-icon {
-    position: static !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 22px !important;
-    min-width: 22px !important;
-    height: 22px !important;
-    min-height: 22px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: #111111 !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  .workspace-title-actions .workspace-ai-button .workspace-ai-icon svg {
-    display: block !important;
-    width: 21px !important;
-    height: 21px !important;
-    margin: 0 !important;
-    fill: none !important;
-    stroke: currentColor !important;
-    stroke-width: 1.9 !important;
-    transform: none !important;
-  }
-
-  .calendar-panel .appointment-form-row {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .calendar-panel .appointment-native-field {
-    position: relative !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    height: 52px !important;
-    border: 1px solid var(--mm-border) !important;
-    border-radius: var(--mm-radius-card) !important;
-    background: var(--mm-surface) !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-  }
-
-  .calendar-panel .appointment-native-field input {
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    height: 100% !important;
-    min-height: 100% !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    color: var(--mm-text) !important;
-    -webkit-text-fill-color: var(--mm-text) !important;
-    opacity: 1 !important;
-    padding: 0 42px 0 14px !important;
-    box-shadow: none !important;
-    box-sizing: border-box !important;
-  }
-
-  .calendar-panel .appointment-native-field input::-webkit-calendar-picker-indicator {
-    opacity: 0 !important;
-  }
-
-  .calendar-panel .appointment-native-field::after {
-    content: "" !important;
-    position: absolute !important;
-    right: 15px !important;
-    top: 50% !important;
-    width: 18px !important;
-    height: 18px !important;
-    pointer-events: none !important;
-    transform: translateY(-50%) !important;
-  }
-
-  .calendar-panel .appointment-native-field.date::after {
-    border: 2px solid #111111 !important;
-    border-radius: 5px !important;
-    box-shadow: inset 0 5px 0 -3px #111111 !important;
-  }
-
-  .calendar-panel .appointment-native-field.time::after {
-    border: 2px solid #111111 !important;
-    border-radius: 999px !important;
-    background:
-      linear-gradient(#111111, #111111) 50% 4px / 2px 6px no-repeat,
-      linear-gradient(#111111, #111111) 50% 50% / 6px 2px no-repeat !important;
-  }
-}
 
 /* AI workflow affordances: setup, budget, calendar, guests, and context-aware prompts. */
+
 .quick-pill-icon.setup::before {
   width: 14px !important;
   height: 14px !important;
@@ -4605,72 +2458,12 @@ body,
   padding: 0 14px !important;
 }
 
-@media (max-width: 760px) {
-  .main-chat-panel.empty-chat .starter-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .menu-assistant-insights {
-    padding-inline: 0 !important;
-  }
-}
-
 /* Mobile chat scroll repair: keep header/composer fixed in the app shell and let only messages scroll. */
-@media (max-width: 760px) {
-  .planner-content > .main-chat-panel {
-    display: grid !important;
-    grid-template-rows: auto auto minmax(0, 1fr) auto !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-    /* Use the dynamic nav clearance like other panels, not 0 */
-    padding-bottom: var(--mm-nav-space, 92px) !important;
-  }
-
-  .main-chat-panel.active-chat {
-    display: flex !important;
-    flex-direction: column !important;
-    height: calc(92vh - 65px) !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .main-chat-panel.active-chat .chat-welcome,
-  .main-chat-panel.active-chat .starter-grid {
-    display: none !important;
-  }
-
-
-  .main-chat-panel .chat-form {
-    position: relative !important;
-    flex: 0 0 auto !important;
-    /* Chat form sits at bottom of the grid row; nav clearance
-       is handled by the panel's padding-bottom. */
-    margin-bottom: 0 !important;
-  }
-
-  /* Keep messages panel compact on mobile so the chat input form is visible */
-  .main-chat-panel.active-chat .messages {
-    flex: 1 1 auto !important;
-    min-height: 0 !important;
-    height: 0px !important;
-    max-height: none !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    overscroll-behavior: contain;
-    padding: 5px 5px 5px !important;
-  }
-}
 
 /* Tighter message padding on narrower screens */
-@media (max-width: 720px) {
-  .main-chat-panel.active-chat .messages {
-    padding: 4px 14px 4px !important;
-  }
-}
 
 /* Empty chat centering: keep the first-load chat state centered like ChatGPT. */
+
 .planner-content > .main-chat-panel.empty-chat {
   display: grid !important;
   grid-template-areas:
@@ -4703,23 +2496,20 @@ body,
   justify-self: center !important;
 }
 
-@media (max-width: 760px) {
-  .planner-content > .main-chat-panel.empty-chat {
-    grid-template-rows: minmax(24px, 1fr) auto auto auto minmax(16px, 1fr) !important;
-    padding-top: 0 !important;
-    padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
 /* Checklist completion should not leave the page anchored to empty space. */
+
 .planner-content > .checklist-panel,
+
 .checklist-task-list,
+
 .checklist-task-row,
+
 .checklist-side-panel {
   overflow-anchor: none !important;
 }
 
 /* Desktop app shell lock: keep the titlebar/menu visible and scroll only the active panel. */
+
 @media (min-width: 761px) {
   html:has(.planner-workspace),
   body:has(.planner-workspace) {
@@ -4777,87 +2567,8 @@ body,
   }
 }
 
-@media (max-width: 768px) {
-  .planner-content,
-  .planner-workspace,
-  .dashboard-panel,
-  .planner-panel {
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-}
-
-/* Mobile app shell lock: same idea as desktop — the whole shell is a
- * fixed 101dvh frame that never scrolls. The titlebar (header) and the
- * fixed bottom nav (footer) stay put; ONLY the active panel's inner
- * content scrolls. Without this, the body scrolls and the header slides
- * away on overscroll. */
-@media (max-width: 760px) {
-  html:has(.planner-workspace),
-  body:has(.planner-workspace) {
-    height: 100% !important;
-    max-height: 100% !important;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-  }
-
-  .planner-workspace {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .planner-body {
-    height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  .planner-content {
-    display: grid !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
-    height: 101dvh !important;
-    max-height: 101dvh !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
-  }
-
-  /* Header pinned to row 1, never scrolls */
-  .workspace-titlebar {
-    grid-row: 1 !important;
-    position: relative !important;
-    z-index: 80 !important;
-  }
-
-  /* Active panel fills row 2 */
-  .planner-content > .dashboard-panel,
-  .planner-content > .dashboard-scroll,
-  .planner-content > .planner-panel,
-  .planner-content > .checklist-panel,
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    grid-row: 2 !important;
-    min-height: 0 !important;
-  }
-
-  /* Panels that don't have their own inner scroll container must scroll
-     themselves (checklist scrolls via .mm-cl__main, dashboard via
-     .dashboard-scroll — those are left to self-manage). */
-  .planner-content > .calendar-panel,
-  .planner-content > .budget-command-center,
-  .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
 /* Checklist checkbox is app-controlled, not native, to avoid browser scroll jumps. */
+
 .checklist-task-main {
   cursor: default !important;
 }
@@ -4885,6 +2596,7 @@ body,
 }
 
 /* In-progress: half-filled accent circle. One tap-cycle control, no dropdown. */
+
 .checklist-task-toggle[aria-checked="mixed"] {
   border-color: var(--mm-accent) !important;
   background: linear-gradient(90deg, var(--mm-accent) 0 50%, #ffffff 50% 100%) !important;
@@ -4892,6 +2604,7 @@ body,
 }
 
 .checklist-task-toggle:hover,
+
 .checklist-task-toggle:focus-visible {
   border-color: #171717 !important;
   transform: none !important;
@@ -4902,6 +2615,7 @@ body,
 }
 
 /* Planner AI drawer final polish: shared composer icon and full-height message rail. */
+
 .planner-assistant-rail.assistant-drawer {
   display: grid !important;
   grid-template-rows: auto minmax(0, 1fr) !important;
@@ -4963,6 +2677,7 @@ body,
 }
 
 .assistant-drawer .menu-assistant-form.chat-form .composer-send-button,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-voice-button {
   display: inline-flex !important;
   align-items: center !important;
@@ -4985,14 +2700,18 @@ body,
 }
 
 .assistant-drawer .menu-assistant-form.chat-form .composer-send-button::before,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-send-button::after,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-voice-button::before,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-voice-button::after {
   display: none !important;
   content: none !important;
 }
 
 .assistant-drawer .menu-assistant-form.chat-form .composer-send-button svg,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-voice-button svg {
   display: block !important;
   width: 19px !important;
@@ -5003,28 +2722,14 @@ body,
 }
 
 .assistant-drawer .menu-assistant-form.chat-form .composer-send-button:disabled,
+
 .assistant-drawer .menu-assistant-form.chat-form .composer-voice-button:disabled {
   background: #f1f1ef !important;
   color: #b4b4ad !important;
 }
 
-@media (max-width: 760px) {
-  .planner-assistant-rail.assistant-drawer {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-  }
-
-  .assistant-drawer .menu-assistant-messages {
-    padding: 18px 20px 14px !important;
-  }
-
-  .assistant-drawer .menu-assistant-form.chat-form {
-    width: calc(100% - 32px) !important;
-    margin: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
-  }
-}
-
 /* Calendar refinement: quieter event count and inline edit mode. */
+
 .calendar-panel .calendar-count {
   position: absolute !important;
   top: 12px !important;
@@ -5048,6 +2753,7 @@ body,
 }
 
 .calendar-panel .calendar-count strong,
+
 .calendar-panel .calendar-count small {
   display: inline !important;
   color: inherit !important;
@@ -5114,6 +2820,7 @@ body,
 }
 
 .calendar-view-switch,
+
 .calendar-agenda-filter {
   display: inline-flex !important;
   align-items: center !important;
@@ -5125,6 +2832,7 @@ body,
 }
 
 .calendar-view-switch button,
+
 .calendar-agenda-filter button {
   min-height: 36px !important;
   border: 0 !important;
@@ -5136,6 +2844,7 @@ body,
 }
 
 .calendar-view-switch button.active,
+
 .calendar-agenda-filter button.active {
   background: var(--mm-surface) !important;
   color: var(--mm-text) !important;
@@ -5148,7 +2857,9 @@ body,
 }
 
 .calendar-view-agenda .calendar-suggestion-strip,
+
 .calendar-view-agenda .mobile-calendar-agenda,
+
 .calendar-view-agenda .calendar-workspace {
   display: none !important;
 }
@@ -5223,6 +2934,7 @@ body,
 }
 
 .calendar-agenda-item:hover,
+
 .calendar-agenda-item:focus-visible {
   background: #fafaf8 !important;
   border-color: var(--mm-border-strong) !important;
@@ -5267,135 +2979,16 @@ body,
   color: #ffffff !important;
 }
 
-@media (max-width: 760px) {
-  .calendar-viewbar {
-    display: grid !important;
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 10px !important;
-  }
-
-  .calendar-view-switch,
-  .calendar-agenda-filter {
-    width: 100% !important;
-  }
-
-  .calendar-view-switch button,
-  .calendar-agenda-filter button {
-    flex: 1 1 0 !important;
-    padding: 0 10px !important;
-  }
-
-  .agenda-summary-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-  }
-
-  .agenda-summary-row article {
-    padding: 14px !important;
-  }
-
-  .calendar-agenda-item {
-    grid-template-columns: minmax(0, 1fr) !important;
-    gap: 5px !important;
-    min-height: 74px !important;
-    padding: 13px 14px !important;
-  }
-
-  .calendar-agenda-item small {
-    justify-self: start !important;
-    max-width: 100% !important;
-  }
-
-  .calendar-panel .calendar-count {
-    top: auto !important;
-    right: 6px !important;
-    bottom: 6px !important;
-    height: 8px !important;
-    min-height: 8px !important;
-    width: 8px !important;
-    min-width: 8px !important;
-    border-radius: 999px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    font-size: 0 !important;
-  }
-
-  .calendar-panel .calendar-count strong,
-  .calendar-panel .calendar-count small {
-    display: none !important;
-  }
-
-  .appointment-form-heading {
-    align-items: center !important;
-  }
-}
-
 /* Guest mobile summary repair: keep headcount widgets visible above the list. */
-@media (max-width: 760px) {
-  .planner-content > .guest-command-center {
-    display: block !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-  }
-
-  .guest-command-center .guest-focus-grid {
-    display: grid !important;
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 4px 0 18px !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    scrollbar-width: auto !important;
-  }
-
-  .guest-command-center .guest-focus-grid::-webkit-scrollbar {
-    display: none !important;
-  }
-
-  .guest-command-center .guest-focus-grid article {
-    display: grid !important;
-    flex: initial !important;
-    gap: 4px !important;
-    min-width: 0 !important;
-    min-height: 104px !important;
-    border-radius: var(--mm-radius-card) !important;
-    padding: 14px !important;
-  }
-
-  .guest-command-center .guest-focus-grid article span {
-    overflow: hidden !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.78rem !important;
-    font-weight: 720 !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .guest-command-center .guest-focus-grid article strong {
-    color: var(--mm-text) !important;
-    font-size: 1.5rem !important;
-    line-height: 1.05 !important;
-  }
-
-  .guest-command-center .guest-focus-grid article p {
-    display: -webkit-box !important;
-    overflow: hidden !important;
-    color: var(--mm-text-muted) !important;
-    font-size: 0.78rem !important;
-    line-height: 1.25 !important;
-    -webkit-box-orient: vertical !important;
-    -webkit-line-clamp: 2 !important;
-  }
-}
 
 /* Calendar AI suggestions: remove duplicate prompt cards from the calendar surface. */
+
 .calendar-panel .calendar-suggestion-strip {
   display: none !important;
 }
 
 .calendar-panel .calendar-suggestion-strip::before,
+
 .calendar-panel .calendar-suggestion-strip::after {
   display: none !important;
   content: none !important;
@@ -5406,6 +2999,7 @@ body,
 }
 
 /* Sidebar profile card — controls row (language toggle + theme toggle) */
+
 .couple-profile-controls {
   display: flex;
   align-items: center;
@@ -5437,6 +3031,7 @@ body,
 }
 
 /* ─── Personalized checklist: generate CTA + recommendations ──────── */
+
 .checklist-generate-btn {
   display: inline-flex !important;
   align-items: center;
@@ -5582,6 +3177,7 @@ body,
    ============================================================ */
 
 /* Simplified header */
+
 .mm-cl__header {
   display: flex;
   flex-direction: column;
@@ -5616,6 +3212,7 @@ body,
 }
 
 /* Compact progress bar */
+
 .mm-cl__progress {
   display: flex;
   flex-direction: column;
@@ -5652,6 +3249,7 @@ body,
 }
 
 /* Simplified toolbar */
+
 .mm-cl__toolbar {
   display: flex;
   align-items: center;
@@ -5841,6 +3439,7 @@ body,
 }
 
 /* Quick add form */
+
 .mm-cl__quickadd {
   display: flex;
   gap: 8px;
@@ -5881,6 +3480,7 @@ body,
 }
 
 /* Category filter chips */
+
 .mm-cl__chips {
   display: flex;
   flex-wrap: wrap;
@@ -5921,6 +3521,7 @@ body,
 }
 
 /* Empty state */
+
 .checklist-empty-modern {
   display: flex;
   flex-direction: column;
@@ -5998,48 +3599,3 @@ body,
 }
 
 /* Mobile improvements */
-@media (max-width: 760px) {
-  .mm-cl__toolbar {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .mm-cl__views {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .mm-cl__tools {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .mm-cl__add-label {
-    display: none;
-  }
-
-  .mm-cl__add {
-    padding: 8px;
-    border-radius: 50%;
-  }
-
-  .mm-cl__filter {
-    padding: 6px;
-    border-radius: 50%;
-  }
-
-  .mm-cl__menu summary {
-    width: 32px;
-    height: 32px;
-  }
-
-  .checklist-empty-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .checklist-empty-actions button {
-    width: 100%;
-    justify-content: center;
-  }
-}

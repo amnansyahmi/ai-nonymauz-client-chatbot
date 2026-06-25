@@ -6,6 +6,7 @@ import '../styles/marketing.css';
 import '../styles/majlismate-theme.css';
 import '../styles/ai-features.css';
 import '../styles/datepicker.css';
+import '../styles/mobile-app.css';
 
 // Mark the document as JS-capable before paint so scroll-reveal elements start
 // hidden only when we can actually reveal them (no flash / no stuck-hidden
