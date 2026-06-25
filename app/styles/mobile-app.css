@@ -477,8 +477,7 @@
   .planner-assistant-rail.assistant-drawer {
     inset: auto 0 0 0;
     width: 100vw;
-    height: min(78vh, 680px);
-    border-radius: 18px 18px 0 0;
+    border-radius: 0;
   }
 
   .assistant-drawer .menu-assistant-copy {
@@ -650,7 +649,7 @@
     grid-template-columns: minmax(0, 1fr) 44px !important;
   }
 
-  .assistant-drawer .menu-assistant-form button {
+  .assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
     min-width: 44px !important;
     max-width: 44px !important;
     padding: 0 !important;
@@ -659,7 +658,7 @@
     position: relative;
   }
 
-  .assistant-drawer .menu-assistant-form button::before {
+  .assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button)::before {
     content: "Ask";
     color: #ffffff;
     position: absolute;
@@ -669,7 +668,7 @@
     font-size: 0.72rem;
   }
 
-  .assistant-drawer .menu-assistant-form button:disabled::before {
+  .assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button):disabled::before {
     color: #9b9b9b;
   }
 }
@@ -1131,7 +1130,7 @@
   .vendor-discovery-panel {
     width: 100% !important;
     max-width: 100% !important;
-    padding: 16px 14px 96px !important;
+    padding: 16px 14px 72px !important;
     overflow-x: hidden;
   }
 
@@ -2431,7 +2430,7 @@
 
   .budget-command-center {
     min-height: calc(100dvh - 56px) !important;
-    padding: 18px 14px 96px !important;
+    padding: 18px 14px 72px !important;
   }
 
   .budget-hero-modern {
@@ -4532,8 +4531,8 @@
   .planner-content > .budget-command-center,
   .planner-content > .guest-command-center,
   .planner-content > .vendor-discovery-panel {
-    padding-left: 16px !important;
-    padding-right: 16px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
   }
 
   .workspace-title-center strong {
@@ -4805,8 +4804,8 @@
   .planner-content > .vendor-discovery-panel {
     width: 100% !important;
     max-width: none !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
   }
 
   .workspace-menu-button.is-checklist-mode {
@@ -5390,7 +5389,7 @@
     width: min(100vw, 430px) !important;
     max-width: 100vw !important;
     border-left: 0 !important;
-    border-radius: 22px 22px 0 0 !important;
+    border-radius: 0 !important;
     box-shadow: 0 -18px 70px rgba(0, 0, 0, 0.18) !important;
   }
 
@@ -5641,8 +5640,8 @@
   .planner-content {
     display: grid !important;
     grid-template-rows: auto minmax(0, 1fr) !important;
-    height: 101dvh !important;
-    max-height: 101dvh !important;
+    height: 103dvh !important;
+    max-height: 103dvh !important;
     min-height: 0 !important;
     overflow: hidden !important;
   }
@@ -5682,7 +5681,7 @@
 
 @media (max-width: 760px) {
   .planner-assistant-rail.assistant-drawer {
-    height: 100dvh !important;
+    height: auto !important;
     max-height: 100dvh !important;
   }
 
@@ -6298,8 +6297,6 @@
   .planner-assistant-rail.assistant-drawer {
     display: flex !important;
     flex-direction: column !important;
-    height: min(88dvh, 760px) !important;
-    max-height: calc(100dvh - 18px) !important;
     overflow: hidden !important;
   }
 
@@ -6332,37 +6329,42 @@
   .assistant-drawer .menu-assistant-form.chat-form {
     position: sticky !important;
     bottom: 0 !important;
-    flex: 0 0 auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 42px !important;
+    align-items: center !important;
+    gap: 8px !important;
     width: 100% !important;
     margin-top: auto !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     padding: 8px 8px 8px 16px !important;
-    border-radius: 24px !important;
+    border-radius: 999px !important;
   }
 
   .assistant-drawer .menu-assistant-form .composer-input {
-    flex: 1 1 auto !important;
     min-width: 0 !important;
     color: var(--mm-text) !important;
   }
 
   .assistant-drawer .menu-assistant-form .composer-send-button,
   .assistant-drawer .menu-assistant-form .composer-voice-button {
-    flex: 0 0 42px !important;
+    display: inline-grid !important;
+    place-items: center !important;
     width: 42px !important;
     height: 42px !important;
     min-width: 42px !important;
     min-height: 42px !important;
-    border-color: var(--mm-border-strong) !important;
-    background: var(--mm-brand-soft) !important;
-    color: var(--mm-text) !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: #0d0d0d !important;
+    color: #ffffff !important;
     opacity: 1 !important;
   }
 
   .assistant-drawer .menu-assistant-form .composer-send-button.has-input,
   .assistant-drawer .menu-assistant-form .composer-voice-button.has-input {
-    border-color: var(--mm-brand) !important;
-    background: var(--mm-brand) !important;
-    color: var(--mm-on-brand) !important;
+    background: #0d0d0d !important;
+    color: #ffffff !important;
   }
 
   .assistant-drawer .menu-assistant-form .composer-send-button svg,
@@ -6674,7 +6676,7 @@
   .wedding-countdown {
     display: grid !important;
     gap: 14px !important;
-    margin: 18px 0 96px !important;
+    margin: 18px 0 72px !important;
     padding: 16px !important;
     border: 1px solid var(--mm-border) !important;
     border-radius: 18px !important;

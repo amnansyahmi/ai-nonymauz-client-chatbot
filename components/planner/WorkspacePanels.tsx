@@ -370,7 +370,7 @@ export function BudgetPanel({
   language = 'ms'
 }: BudgetPanelProps) {
   const t = budgetCopy[language];
-  const [budgetView, setBudgetView] = useState<'all' | 'attention' | 'unpaid' | 'done'>('all');
+  const [budgetView, setBudgetView] = useState<'all' | 'unpaid' | 'done'>('all');
   const [expandedBudgetId, setExpandedBudgetId] = useState<string | null>(null);
   const [isBudgetAddOpen, setIsBudgetAddOpen] = useState(false);
   const remainingToPay = Math.max(totalActual - totalPaid, 0);
@@ -380,12 +380,10 @@ export function BudgetPanel({
   const completedBudgetItems = budgetItems.filter((item) => item.status === 'done');
   const budgetViewOptions = [
     { value: 'all' as const, label: t.views.all, count: budgetItems.length },
-    { value: 'attention' as const, label: t.views.attention, count: overBudgetItems.length },
     { value: 'unpaid' as const, label: t.views.unpaid, count: unpaidItems.length },
     { value: 'done' as const, label: t.views.done, count: completedBudgetItems.length }
   ];
   const filteredBudgetItems = budgetItems.filter((item) => {
-    if (budgetView === 'attention') return item.actual > item.planned && item.planned > 0;
     if (budgetView === 'unpaid') return Math.max(item.actual - item.paid, 0) > 0;
     if (budgetView === 'done') return item.status === 'done';
     return true;
@@ -469,39 +467,39 @@ export function BudgetPanel({
         </div>
       </header>
 
-      <div className="mm-bg__toolbar">
-        <div className="mm-bg__views" role="tablist" aria-label="Budget views">
+      <div className="mm-toolbar">
+        <div className="mm-views" role="tablist" aria-label="Budget views">
           {budgetViewOptions.map((option) => (
             <button
               key={option.value}
               type="button"
               role="tab"
               aria-selected={budgetView === option.value}
-              className={budgetView === option.value ? 'is-active' : ''}
+              className={`mm-views__btn${budgetView === option.value ? ' is-active' : ''}`}
               onClick={() => setBudgetView(option.value)}
             >
               {option.label}
-              <span className="mm-bg__view-count">{option.count}</span>
+              <span className="mm-views__count">{option.count}</span>
             </button>
           ))}
         </div>
-        <div className="mm-bg__tools">
+        <div className="mm-toolbar__tools">
           <button
             type="button"
-            className={`mm-bg__add${isBudgetAddOpen ? ' is-open' : ''}`}
+            className={`mm-add-btn${isBudgetAddOpen ? ' is-open' : ''}`}
             aria-expanded={isBudgetAddOpen}
             onClick={() => setIsBudgetAddOpen((v) => !v)}
           >
-            <span className="mm-bg__add-plus" aria-hidden="true">+</span>
-            <span className="mm-bg__add-label">{t.add}</span>
+            <span className="mm-add-btn__plus" aria-hidden="true">+</span>
+            <span className="mm-add-btn__label">{t.add}</span>
           </button>
-          <details className="mm-bg__menu">
+          <details className="mm-kebab">
             <summary aria-label={t.more}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
             </summary>
-            <div className="mm-bg__menu-pop">
-              <button type="button" onClick={applyBudgetAllocation}>{t.applySplit}</button>
-              <button type="button" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>{t.exportCsv}</button>
+            <div className="mm-dropdown">
+              <button type="button" className="mm-dropdown__btn" onClick={applyBudgetAllocation}>{t.applySplit}</button>
+              <button type="button" className="mm-dropdown__btn" onClick={exportBudgetCsv} disabled={budgetItems.length === 0}>{t.exportCsv}</button>
             </div>
           </details>
         </div>
@@ -907,44 +905,44 @@ export function RsvpPanel({
       ) : null}
 
       {/* ── Toolbar ── */}
-      <div className="mm-gs__toolbar">
-        <div className="mm-gs__views" role="tablist" aria-label="Guest views">
+      <div className="mm-toolbar">
+        <div className="mm-views" role="tablist" aria-label="Guest views">
           {guestViewOptions.map((option) => (
             <button
               key={option.value}
               type="button"
               role="tab"
               aria-selected={guestView === option.value}
-              className={guestView === option.value ? 'is-active' : ''}
+              className={`mm-views__btn${guestView === option.value ? ' is-active' : ''}`}
               onClick={() => setGuestView(option.value)}
             >
               {option.label}
-              <span className="mm-gs__view-count">{option.count}</span>
+              <span className="mm-views__count">{option.count}</span>
             </button>
           ))}
         </div>
-        <div className="mm-gs__tools">
+        <div className="mm-toolbar__tools">
           <button
             type="button"
-            className={`mm-gs__add${isGuestAddOpen ? ' is-open' : ''}`}
+            className={`mm-add-btn${isGuestAddOpen ? ' is-open' : ''}`}
             aria-expanded={isGuestAddOpen}
             onClick={() => setIsGuestAddOpen((v) => !v)}
           >
-            <span className="mm-gs__add-plus" aria-hidden="true">{isGuestAddOpen ? '×' : '+'}</span>
-            <span className="mm-gs__add-label">{isGuestAddOpen ? (language === 'ms' ? 'Batal' : 'Cancel') : (language === 'ms' ? 'Tambah' : 'Add')}</span>
+            <span className="mm-add-btn__plus" aria-hidden="true">{isGuestAddOpen ? '×' : '+'}</span>
+            <span className="mm-add-btn__label">{isGuestAddOpen ? (language === 'ms' ? 'Batal' : 'Cancel') : (language === 'ms' ? 'Tambah' : 'Add')}</span>
           </button>
-          <details className="mm-gs__menu">
+          <details className="mm-kebab">
             <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
             </summary>
-            <div className="mm-gs__menu-pop">
-              <button type="button" onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsRsvpShareOpen((open) => !open); }}>
+            <div className="mm-dropdown">
+              <button type="button" className="mm-dropdown__btn" onClick={() => { setRsvpUrlDraft(rsvpFormUrl); setIsRsvpShareOpen((open) => !open); }}>
                 {language === 'ms' ? 'Kongsi RSVP' : 'Share RSVP'}
               </button>
-              <button type="button" onClick={() => guestImportRef.current?.click()}>
+              <button type="button" className="mm-dropdown__btn" onClick={() => guestImportRef.current?.click()}>
                 {language === 'ms' ? 'Import CSV' : 'Import CSV'}
               </button>
-              <button type="button" onClick={exportGuestsCsv} disabled={guests.length === 0}>
+              <button type="button" className="mm-dropdown__btn" onClick={exportGuestsCsv} disabled={guests.length === 0}>
                 {language === 'ms' ? 'Eksport CSV' : 'Export CSV'}
               </button>
             </div>

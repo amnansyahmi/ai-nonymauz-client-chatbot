@@ -188,11 +188,6 @@
   margin-left: auto;
 }
 
-.mm-bg__add-plus {
-  font-size: 1rem;
-  line-height: 0;
-}
-
 .mm-bg__menu {
   position: relative;
 }
@@ -486,30 +481,17 @@
     grid-template-columns: repeat(2, 1fr);
   }
   .mm-bg__views {
-    flex: 0 0 auto;
-    flex-wrap: nowrap;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
   }
-  .mm-bg__add-label {
-    display: none !important;
+  .mm-budget .mm-bg__views button {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    gap: 5px;
   }
-  /* Perfect circle — grid/place-items beats flex centering quirks;
-     min-height:0 overrides the 42px global min-height on .planner-panel button */
-  .mm-budget .mm-bg__add,
-  .mm-budget .mm-bg__add.is-open {
-    display: grid !important;
-    place-items: center !important;
-    width: 38px !important;
-    min-width: 38px !important;
-    max-width: 38px !important;
-    height: 38px !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    border-radius: 50% !important;
-    flex-shrink: 0 !important;
-  }
-  .mm-bg__add-plus {
-    font-size: 1.25rem;
-    line-height: 1;
+  .mm-bg__view-count {
+    font-size: 0.68rem;
   }
   .mm-bg__addform-row {
     grid-template-columns: 1fr;
@@ -548,28 +530,6 @@
 
 .mm-budget .mm-bg__views button.is-active .mm-bg__view-count {
   color: var(--mm-accent-strong) !important;
-}
-
-.mm-budget .mm-bg__add {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 0 !important;
-  padding: 8px 15px !important;
-  border: 1px solid var(--mm-brand) !important;
-  border-radius: 999px !important;
-  background: var(--mm-brand) !important;
-  color: var(--mm-on-brand) !important;
-  box-shadow: none !important;
-  font-size: 0.84rem;
-  font-weight: 650 !important;
-  cursor: pointer;
-}
-
-.mm-budget .mm-bg__add.is-open {
-  background: var(--mm-surface) !important;
-  color: var(--mm-text) !important;
-  border-color: var(--mm-border-strong) !important;
 }
 
 .mm-budget .mm-bg__menu-pop button {

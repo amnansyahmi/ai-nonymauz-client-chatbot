@@ -493,19 +493,19 @@ body,
    Shared surface, weight, and transition for all planner buttons.
    Border-radius is intentionally split below so pill only applies to
    navigation/chrome — not to content rows inside budget, checklist, etc. */
-.planner-panel button,
+.planner-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.checklist-panel button,
+.checklist-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.calendar-panel button,
+.calendar-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.dashboard-panel button,
+.dashboard-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button,
+.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.vendor-detail-drawer button,
+.vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.assistant-drawer button,
+.assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
 .workspace-command-button,
 
@@ -527,20 +527,21 @@ body,
 }
 
 /* Panel content buttons — card radius keeps rows/items looking like cards,
-   not capsules. Budget line items, checklist rows, etc. all benefit. */
-.planner-panel button,
+   not capsules. Budget line items, checklist rows, etc. all benefit.
+   Exclude .mm-add-btn (pill/circle) and .mm-views__btn (pill). */
+.planner-panel button:not(.mm-add-btn):not(.mm-views__btn),
 
-.checklist-panel button,
+.checklist-panel button:not(.mm-add-btn):not(.mm-views__btn),
 
-.calendar-panel button,
+.calendar-panel button:not(.mm-add-btn):not(.mm-views__btn),
 
-.dashboard-panel button,
+.dashboard-panel button:not(.mm-add-btn):not(.mm-views__btn),
 
-.settings-drawer button,
+.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn),
 
-.vendor-detail-drawer button,
+.vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn),
 
-.assistant-drawer button {
+.assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn) {
   border-radius: var(--mm-radius-card) !important;
 }
 
@@ -608,7 +609,7 @@ body,
 .guest-command-center {
   width: min(1180px, calc(100vw - 48px)) !important;
   margin: 0 auto !important;
-  padding: clamp(22px, 3vw, 38px) 0 88px !important;
+  padding: clamp(16px, 2vw, 24px) 0 88px !important;
   background: var(--mm-surface) !important;
 }
 
@@ -1459,8 +1460,8 @@ body,
     max-height: 100% !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
-    padding-left: clamp(32px, 3vw, 58px) !important;
-    padding-right: clamp(32px, 3vw, 58px) !important;
+    padding-left: clamp(20px, 2vw, 36px) !important;
+    padding-right: clamp(20px, 2vw, 36px) !important;
     scrollbar-gutter: stable !important;
   }
 

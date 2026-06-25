@@ -31,6 +31,220 @@
   box-sizing: border-box;
 }
 
+/* ── Unified Add Button (.mm-add-btn) ───────────────────────────
+ *  One class for every + Add button across budget, checklist,
+ *  guest, and calendar. Desktop = pill with label, mobile = circle.
+ *  Change color/size here — all pages update automatically.
+ * ─────────────────────────────────────────────────────────────── */
+
+.mm-add-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 0 !important;
+  padding: 7px 14px !important;
+  border: 1px solid var(--mm-brand) !important;
+  border-radius: 999px !important;
+  background: var(--mm-brand) !important;
+  color: var(--mm-on-brand, #fff) !important;
+  box-shadow: none !important;
+  font-size: 0.84rem !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+}
+
+.mm-add-btn:hover {
+  background: var(--mm-brand-strong, var(--mm-brand)) !important;
+  border-color: var(--mm-brand-strong, var(--mm-brand)) !important;
+}
+
+.mm-add-btn.is-open {
+  background: var(--mm-surface, #fff) !important;
+  color: var(--mm-text, #171717) !important;
+  border-color: var(--mm-border-strong, #cfcfcf) !important;
+}
+
+.mm-add-btn__plus {
+  display: inline-grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  font-size: 1.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+  transform: translateY(-1px);
+}
+
+.mm-add-btn__label {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .mm-add-btn__label {
+    display: none !important;
+  }
+  .mm-add-btn,
+  .mm-add-btn.is-open {
+    display: grid !important;
+    place-items: center !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    max-width: 38px !important;
+    height: 38px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+  .mm-add-btn__plus {
+    font-size: 1.25rem;
+  }
+}
+
+/* ── Unified Toolbar (.mm-toolbar) ─────────────────────────────── */
+.mm-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.mm-toolbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ── Unified View Tabs (.mm-views) ─────────────────────────────── */
+.mm-views {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--mm-surface-muted);
+  flex-wrap: wrap;
+}
+
+.mm-views__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  padding: 7px 14px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  box-shadow: none !important;
+  font-size: 0.86rem !important;
+  font-weight: 650 !important;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.mm-views__btn:hover {
+  background: var(--mm-surface-subtle, #f5f5f5) !important;
+}
+
+.mm-views__btn.is-active {
+  background: var(--mm-surface, #fff) !important;
+  color: var(--mm-text, #171717) !important;
+  box-shadow: 0 1px 3px rgba(36, 28, 24, 0.12) !important;
+}
+
+.mm-views__count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--mm-text-soft);
+}
+
+.mm-views__btn.is-active .mm-views__count {
+  color: var(--mm-accent-strong, var(--mm-brand-strong));
+}
+
+@media (max-width: 760px) {
+  .mm-views {
+    flex: 1 1 auto !important;
+    flex-wrap: wrap !important;
+    min-width: 0 !important;
+  }
+  .mm-views__btn {
+    padding: 6px 10px !important;
+    font-size: 0.78rem !important;
+    gap: 5px !important;
+  }
+  .mm-views__count {
+    font-size: 0.68rem !important;
+  }
+}
+
+/* ── Unified Kebab Menu (.mm-kebab) ────────────────────────────── */
+.mm-kebab {
+  position: relative;
+}
+
+.mm-kebab summary {
+  list-style: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  border: 1px solid var(--mm-border) !important;
+  border-radius: 50% !important;
+  background: var(--mm-surface) !important;
+  color: var(--mm-text-muted) !important;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mm-kebab summary::-webkit-details-marker { display: none !important; }
+
+.mm-kebab summary:hover,
+.mm-kebab[open] summary {
+  background: var(--mm-surface-muted) !important;
+  border-color: var(--mm-border-strong) !important;
+  color: var(--mm-text) !important;
+}
+
+/* ── Unified Dropdown (.mm-dropdown) ───────────────────────────── */
+.mm-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 6px;
+  border: 1px solid var(--mm-border);
+  border-radius: 12px;
+  background: var(--mm-surface);
+  box-shadow: 0 16px 40px rgba(36, 28, 24, 0.18);
+}
+
+.mm-dropdown__btn {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+  padding: 9px 11px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  font-size: 0.86rem !important;
+  font-weight: 550 !important;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.mm-dropdown__btn:hover {
+  background: var(--mm-surface-subtle, #f5f5f5) !important;
+}
+
 *,
 
 *::before,
@@ -2887,7 +3101,7 @@ select {
 }
 
 .main-chat-panel .messages {
-  padding: 0 min(13vw, 220px) 12px;
+  padding: 0 min(8vw, 120px) 12px;
   background: transparent;
 }
 
@@ -4321,7 +4535,7 @@ select {
   height: 100% !important;
   overflow-y: auto !important;
   overscroll-behavior: contain;
-  padding: 24px min(13vw, 220px) 20px !important;
+  padding: 24px min(8vw, 120px) 20px !important;
 }
 
 .main-chat-panel.active-chat .chat-form {
@@ -4762,7 +4976,7 @@ body {
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid var(--mm-border) !important;
-  border-radius: 18px;
+  border-radius: 0;
   background: #ffffff !important;
   padding: 0 !important;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
@@ -4957,7 +5171,7 @@ body {
   outline: none;
 }
 
-.assistant-drawer .menu-assistant-form button {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
   min-width: 58px;
   min-height: 38px;
   border: 0;
@@ -4970,7 +5184,7 @@ body {
   cursor: pointer;
 }
 
-.assistant-drawer .menu-assistant-form button:disabled {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button):disabled {
   background: #f1f1f1;
   color: #a3a3a3;
   cursor: not-allowed;
@@ -5253,7 +5467,7 @@ body {
 
 .action-empty button,
 
-.assistant-drawer .menu-assistant-form button {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
   border-color: #171717 !important;
   background: #171717 !important;
   color: #ffffff !important;
@@ -6062,7 +6276,7 @@ body {
   box-shadow: none !important;
 }
 
-.assistant-drawer .menu-assistant-form button {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
   width: auto !important;
   min-width: 54px !important;
   max-width: 92px !important;
@@ -6072,7 +6286,7 @@ body {
   white-space: nowrap;
 }
 
-.assistant-drawer .menu-assistant-form button:disabled {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button):disabled {
   background: #eeeeee !important;
   color: #9b9b9b !important;
 }
@@ -6348,7 +6562,7 @@ button,
 .checklist-command-center {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 96px !important;
+  padding: 20px 0 72px !important;
   background: transparent !important;
 }
 
@@ -6996,7 +7210,7 @@ button,
   margin: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  padding: clamp(20px, 2.2vw, 32px) clamp(18px, 2.4vw, 40px) 96px !important;
+  padding: clamp(14px, 1.5vw, 20px) clamp(14px, 1.5vw, 24px) 72px !important;
   scrollbar-gutter: stable;
 }
 
@@ -7277,7 +7491,7 @@ button,
   min-height: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  padding: clamp(20px, 2.2vw, 32px) clamp(18px, 2.4vw, 40px) 96px !important;
+  padding: clamp(14px, 1.5vw, 20px) clamp(14px, 1.5vw, 24px) 72px !important;
   background: #ffffff !important;
 }
 
@@ -7727,7 +7941,7 @@ button,
   min-height: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  padding: clamp(20px, 2.2vw, 32px) clamp(18px, 2.4vw, 40px) 96px !important;
+  padding: clamp(14px, 1.5vw, 20px) clamp(14px, 1.5vw, 24px) 72px !important;
   background: #ffffff !important;
 }
 
@@ -8608,19 +8822,19 @@ button,
   line-height: 1.55 !important;
 }
 
-.planner-panel button,
+.planner-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.checklist-panel button,
+.checklist-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.calendar-panel button,
+.calendar-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.dashboard-panel button,
+.dashboard-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button,
+.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.vendor-detail-drawer button,
+.vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.assistant-drawer button,
+.assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
 .workspace-command-button,
 
@@ -8647,19 +8861,19 @@ button,
     box-shadow 140ms ease !important;
 }
 
-.planner-panel button:hover,
+.planner-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.checklist-panel button:hover,
+.checklist-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.calendar-panel button:hover,
+.calendar-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.dashboard-panel button:hover,
+.dashboard-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button:hover,
+.settings-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.vendor-detail-drawer button:hover,
+.vendor-detail-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.assistant-drawer button:hover,
+.assistant-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
 .workspace-command-button:hover,
 
@@ -8757,7 +8971,7 @@ select:focus-visible {
 
 .settings-primary-actions button:first-child,
 
-.assistant-drawer .menu-assistant-form button {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
   border-color: var(--mm-text) !important;
   background: var(--mm-text) !important;
   color: #ffffff !important;
@@ -9530,7 +9744,7 @@ textarea:focus {
   justify-items: center !important;
   gap: 18px !important;
   min-height: calc(100dvh - 64px) !important;
-  padding: 0 20px clamp(24px, 6vh, 64px) !important;
+  padding: 0 20px clamp(16px, 4vh, 40px) !important;
   background: #ffffff !important;
 }
 
@@ -10149,7 +10363,7 @@ textarea:focus {
   padding-inline: 16px !important;
 }
 
-.assistant-drawer .menu-assistant-form button {
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button) {
   position: relative;
   width: 42px !important;
   min-width: 42px !important;
@@ -10159,6 +10373,12 @@ textarea:focus {
   overflow: hidden;
   color: transparent !important;
   font-size: 0 !important;
+}
+
+.assistant-drawer .menu-assistant-form button:not(.composer-voice-button):not(.composer-send-button):not(.composer-icon-button):not(.composer-dictate-button)::before {
+  color: #ffffff;
+  font-size: 1rem;
+  content: ">";
 }
 
 .assistant-drawer .menu-assistant-form button::before {
@@ -11395,15 +11615,15 @@ textarea:focus {
   bottom: 0 !important;
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) 42px !important;
-  align-items: end !important;
+  align-items: center !important;
   gap: 8px !important;
   width: calc(100% - 48px) !important;
   margin: 0 24px 20px !important;
   min-height: 0 !important;
   border: 1px solid #dedede !important;
-  border-radius: 28px !important;
+  border-radius: 999px !important;
   background: #ffffff !important;
-  padding: 7px 8px 7px 14px !important;
+  padding: 7px 8px 7px 22px !important;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08) !important;
 }
 
@@ -11443,39 +11663,7 @@ textarea:focus {
   color: #9ca3af !important;
 }
 
-/* Send button — same dark pill as chat menu */
-
-.assistant-drawer .menu-assistant-form .composer-voice-button {
-  display: inline-grid !important;
-  place-items: center !important;
-  width: 42px !important;
-  min-width: 42px !important;
-  height: 42px !important;
-  min-height: 42px !important;
-  border: 0 !important;
-  border-radius: 999px !important;
-  background: #0d0d0d !important;
-  color: #ffffff !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-  cursor: pointer !important;
-  transition: background 140ms ease !important;
-}
-
-.assistant-drawer .menu-assistant-form .composer-voice-button:hover {
-  background: #2b2b2b !important;
-}
-
-.assistant-drawer .menu-assistant-form .composer-voice-button:disabled {
-  background: #e8e8e8 !important;
-  color: #b0b0b0 !important;
-  cursor: default !important;
-}
-
-.assistant-drawer .menu-assistant-form .composer-voice-button svg {
-  width: 18px !important;
-  height: 18px !important;
-}
+/* Send button inherits base .composer-voice-button styles — same as chat menu. */
 
 /* Planner AI sizing correction: keep the side-panel width, use the full vertical space. */
 

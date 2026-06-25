@@ -3282,33 +3282,33 @@ export default function PlannerWorkspace() {
           </header>
 
           {checklistItems.length > 0 ? (
-            <div className="mm-cl__toolbar">
+            <div className="mm-toolbar">
               {/* View tabs use div[role=tab] to avoid global .checklist-panel button overrides */}
-              <div className="mm-cl__views" role="tablist" aria-label="Checklist views">
+              <div className="mm-views" role="tablist" aria-label="Checklist views">
                 {checklistViewOptions.map((option) => (
                   <div
                     key={option.value}
                     role="tab"
                     tabIndex={0}
                     aria-selected={checklistView === option.value}
-                    className={`mm-cl__tab${checklistView === option.value ? ' is-active' : ''}`}
+                    className={`mm-views__btn${checklistView === option.value ? ' is-active' : ''}`}
                     onClick={() => setChecklistView(option.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setChecklistView(option.value); } }}
                   >
-                    <span className="mm-cl__tab-label">{option.label}</span>
-                    <span className="mm-cl__view-count">{option.count}</span>
+                    <span>{option.label}</span>
+                    <span className="mm-views__count">{option.count}</span>
                   </div>
                 ))}
               </div>
-              <div className="mm-cl__tools">
+              <div className="mm-toolbar__tools">
                 <button
                   type="button"
-                  className={`mm-cl__add${quickAddOpen ? ' is-open' : ''}`}
+                  className={`mm-add-btn${quickAddOpen ? ' is-open' : ''}`}
                   aria-expanded={quickAddOpen}
                   onClick={() => setQuickAddOpen((v) => !v)}
                 >
-                  <span className="mm-cl__add-plus" aria-hidden="true">+</span>
-                  <span className="mm-cl__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
+                  <span className="mm-add-btn__plus" aria-hidden="true">+</span>
+                  <span className="mm-add-btn__label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
                 </button>
                 {checklistCategoryChips.length > 1 ? (
                   <button
@@ -3321,23 +3321,23 @@ export default function PlannerWorkspace() {
                     {checklistCategoryFilter ? <span className="mm-cl__filter-dot" aria-hidden="true" /> : null}
                   </button>
                 ) : null}
-                <details className="mm-cl__menu">
+                <details className="mm-kebab">
                   <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                   </summary>
-                  <div className="mm-cl__menu-pop">
-                    <button type="button" onClick={() => setSetupOpen(true)}>
+                  <div className="mm-dropdown">
+                    <button type="button" className="mm-dropdown__btn" onClick={() => setSetupOpen(true)}>
                       <span aria-hidden="true">✨</span>
                       {checklistItems.length > 0 ? (language === 'ms' ? 'Jana semula ikut majlis' : 'Regenerate from setup') : (language === 'ms' ? 'Jana ikut majlis' : 'Generate from wedding')}
                     </button>
-                    <button type="button" onClick={() => { setChecklistSelectMode((v) => !v); setSelectedChecklistIds(new Set()); }}>
+                    <button type="button" className="mm-dropdown__btn" onClick={() => { setChecklistSelectMode((v) => !v); setSelectedChecklistIds(new Set()); }}>
                       {checklistSelectMode ? (language === 'ms' ? 'Selesai pilih' : 'Done selecting') : (language === 'ms' ? 'Pilih item' : 'Select items')}
                     </button>
                     <hr />
-                    <button type="button" onClick={copyChecklist}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
-                    <button type="button" onClick={() => exportChecklist('txt')}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
-                    <button type="button" onClick={() => exportChecklist('json')}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
-                    <button type="button" onClick={printChecklist}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
+                    <button type="button" className="mm-dropdown__btn" onClick={copyChecklist}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
+                    <button type="button" className="mm-dropdown__btn" onClick={() => exportChecklist('txt')}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
+                    <button type="button" className="mm-dropdown__btn" onClick={() => exportChecklist('json')}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
+                    <button type="button" className="mm-dropdown__btn" onClick={printChecklist}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
                   </div>
                 </details>
               </div>
@@ -3644,31 +3644,31 @@ export default function PlannerWorkspace() {
             </div>
           </header>
 
-          <div className="mm-cal__toolbar">
-            <div className="mm-cal__views" role="tablist" aria-label="Calendar views">
-              <button type="button" role="tab" aria-selected={calendarView === 'month'} className={calendarView === 'month' ? 'is-active' : ''} onClick={() => setCalendarView('month')}>{language === 'ms' ? 'Bulan' : 'Month'}</button>
-              <button type="button" role="tab" aria-selected={calendarView === 'agenda'} className={calendarView === 'agenda' ? 'is-active' : ''} onClick={() => setCalendarView('agenda')}>{language === 'ms' ? 'Agenda' : 'Agenda'}</button>
-              <button type="button" role="tab" aria-selected={calendarView === 'proposed'} className={calendarView === 'proposed' ? 'is-active' : ''} onClick={() => setCalendarView('proposed')}>{language === 'ms' ? 'Cadangan' : 'Proposed'}</button>
+          <div className="mm-toolbar">
+            <div className="mm-views" role="tablist" aria-label="Calendar views">
+              <button type="button" role="tab" className={`mm-views__btn${calendarView === 'month' ? ' is-active' : ''}`} aria-selected={calendarView === 'month'} onClick={() => setCalendarView('month')}>{language === 'ms' ? 'Bulan' : 'Month'}</button>
+              <button type="button" role="tab" className={`mm-views__btn${calendarView === 'agenda' ? ' is-active' : ''}`} aria-selected={calendarView === 'agenda'} onClick={() => setCalendarView('agenda')}>{language === 'ms' ? 'Agenda' : 'Agenda'}</button>
+              <button type="button" role="tab" className={`mm-views__btn${calendarView === 'proposed' ? ' is-active' : ''}`} aria-selected={calendarView === 'proposed'} onClick={() => setCalendarView('proposed')}>{language === 'ms' ? 'Cadangan' : 'Proposed'}</button>
             </div>
-            <div className="mm-cal__tools">
-              <button type="button" className="mm-cal__add" onClick={startAppointmentAssistant}>
-                <span className="mm-cal__add-plus" aria-hidden="true">+</span>
-                <span className="mm-cal__add-label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
+            <div className="mm-toolbar__tools">
+              <button type="button" className="mm-add-btn" onClick={startAppointmentAssistant}>
+                <span className="mm-add-btn__plus" aria-hidden="true">+</span>
+                <span className="mm-add-btn__label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
               </button>
-              <details className="mm-cal__menu">
+              <details className="mm-kebab">
                 <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                 </summary>
-                <div className="mm-cal__menu-pop">
+                <div className="mm-dropdown">
                   {plannerProfile.majlisDate ? (
-                    <button type="button" onClick={() => {
+                    <button type="button" className="mm-dropdown__btn" onClick={() => {
                       const weddingDate = new Date(`${plannerProfile.majlisDate}T00:00:00`);
                       setCalendarMonth(new Date(weddingDate.getFullYear(), weddingDate.getMonth(), 1));
                       setSelectedDate(plannerProfile.majlisDate);
                       setAppointmentDraft((current) => ({ ...current, date: plannerProfile.majlisDate }));
                     }}>{language === 'ms' ? 'Pergi ke hari majlis' : 'Go to wedding day'}</button>
                   ) : null}
-                  <button type="button" onClick={addAllAppointmentsToPhoneCalendar}>{language === 'ms' ? 'Muat turun kalendar' : 'Download calendar'}</button>
+                  <button type="button" className="mm-dropdown__btn" onClick={addAllAppointmentsToPhoneCalendar}>{language === 'ms' ? 'Muat turun kalendar' : 'Download calendar'}</button>
                 </div>
               </details>
             </div>

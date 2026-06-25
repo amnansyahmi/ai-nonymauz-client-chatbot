@@ -1071,7 +1071,7 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 14px 13px calc(16px + env(safe-area-inset-bottom, 0px));
+    padding: 14px 10px calc(16px + env(safe-area-inset-bottom, 0px)) 12px;
     background: var(--mm-bg);
   }
 
@@ -1140,6 +1140,8 @@
   /* The list flows inside the scrollable main column */
   .mm-cl__list {
     overflow: visible;
+    padding-left: 0px;
+    padding-right: 0px;
   }
 
   /* The rail replaces the desktop Tapis toggle + chips */
