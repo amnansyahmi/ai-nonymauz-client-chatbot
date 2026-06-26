@@ -47,7 +47,7 @@ function FailedInner() {
           </Link>
         </div>
         <p className="checkout-status__hint">
-          {/* ms */}Bayaran melalui ToyyibPay kadangkala mengambil masa
+          {/* ms */}Bayaran melalui Billplz kadangkala mengambil masa
           beberapa minit untuk dikemas kini. Jika wang sudah dipotong,
           hubungi kami di support@majlismate.ai.
         </p>

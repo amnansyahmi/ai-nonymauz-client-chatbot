@@ -22,8 +22,8 @@ type StatusResponse = {
 function SuccessInner() {
   const router = useRouter();
   const params = useSearchParams();
-  // ToyyibPay appends ?billcode= to the return URL; our callback route uses ?bill=
-  const billCode = params.get('billcode') ?? params.get('BillCode') ?? params.get('bill') ?? '';
+  // Billplz appends ?billplz[id]= & billplz[paid]= to the redirect URL.
+  const billCode = params.get('billplz[id]') ?? params.get('billcode') ?? params.get('bill') ?? '';
   const reference = params.get('ref') ?? '';
   const planId = params.get('plan') ?? '';
   const intervalParam = params.get('interval') ?? 'bulanan';
@@ -88,7 +88,7 @@ function SuccessInner() {
           <>
             <span className="checkout-status__emoji" aria-hidden="true">⏳</span>
             <h1>Menyemak pembayaran…</h1>
-            <p>Sila tunggu sebentar. Kami sedang sahkan bayaran anda dengan ToyyibPay.</p>
+            <p>Sila tunggu sebentar. Kami sedang sahkan bayaran anda dengan Billplz.</p>
           </>
         ) : state === 'paid' ? (
           <>
