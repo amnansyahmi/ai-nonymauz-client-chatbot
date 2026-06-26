@@ -27,7 +27,7 @@ export default function PricingPage() {
       <section className="pricing-page__hero">
         <span className="eyebrow">{/* ms */}Harga</span>
         <h1>Pakej lengkap, satu harga</h1>
-        <p>Semua ciri dalam satu pakej. Tiada caj tersembunyi. Bayaran melalui ToyyibPay.</p>
+        <p>Semua ciri dalam satu pakej. Tiada caj tersembunyi. Bayaran melalui Billplz.</p>
       </section>
 
       <section className="pricing-page__grid" aria-label="Plans">
@@ -68,8 +68,8 @@ export default function PricingPage() {
         <details>
           <summary>Bagaimana pembayaran berfungsi?</summary>
           <p>
-            {/* ms */}Kami gunakan ToyyibPay. Selepas pilih pakej dan isi butiran,
-            anda akan diarahkan ke ToyyibPay untuk bayar melalui FPX (bank
+            {/* ms */}Kami gunakan Billplz. Selepas pilih pakej dan isi butiran,
+            anda akan diarahkan ke Billplz untuk bayar melalui FPX (bank
             online) atau Boost e-wallet. Selepas berjaya, anda akan diarahkan
             balik ke MajlisMate.
           </p>

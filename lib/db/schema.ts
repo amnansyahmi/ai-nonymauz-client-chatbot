@@ -107,6 +107,18 @@ export const referrals = pgTable('referral', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
 });
 
+// Admin accounts — separate from affiliate/customer auth. Roles: superuser | admin.
+// passwordHash is nullable for now (login accepts any password until hashing is
+// enabled); a non-null hash will be enforced later.
+export const adminUsers = pgTable('admin_user', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull().unique(),
+  name: text('name'),
+  role: text('role').notNull().default('admin'),
+  passwordHash: text('password_hash'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+});
+
 // Singleton commission/payout configuration, edited from the admin page.
 // Always one row, id = 'default'.
 export const affiliateSettings = pgTable('affiliate_setting', {

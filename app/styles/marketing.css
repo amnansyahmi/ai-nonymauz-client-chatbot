@@ -2428,3 +2428,232 @@
 .aff-dash__approval.is-approved { background: color-mix(in srgb, #10b981 18%, transparent); color: #047857; }
 .aff-dash__approval.is-suspended,
 .aff-dash__approval.is-rejected { background: color-mix(in srgb, #ef4444 16%, transparent); color: #b91c1c; }
+
+/* =============================================
+   ADMIN PANEL
+   Mirrors the affiliate dashboard (aff-dash) look:
+   warm tokens, single accent, calm states. No bespoke
+   gradients/colour-coding beyond the shared system.
+   ============================================= */
+.admin {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---- Sidebar ---- */
+.admin__sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  padding: 18px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin__brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 8px 16px;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.admin__brand-tag {
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+.admin__nav { display: flex; flex-direction: column; flex: 1; }
+.admin__nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.admin__nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.admin__nav a span { width: 20px; text-align: center; }
+.admin__nav a:hover { background: var(--bg); color: var(--ink); }
+.admin__nav a.is-active {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.admin__nav-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.admin__nav-email { font-size: 0.78rem; color: var(--muted); padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin__nav-foot form { display: block; }
+.admin__nav-foot button {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+.admin__nav-foot button:hover { border-color: var(--accent); }
+
+/* ---- Main ---- */
+.admin__main { flex: 1; min-width: 0; padding: 28px 32px 56px; max-width: 1120px; }
+.admin-page { display: flex; flex-direction: column; gap: 22px; }
+.admin-page__head h1 { margin: 0 0 4px; font-size: 1.5rem; display: flex; align-items: center; gap: 10px; }
+.admin-page__head p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.admin-back { display: inline-block; margin-bottom: 8px; color: var(--muted); font-size: 0.85rem; }
+.admin-back:hover { color: var(--accent); }
+
+/* Greeting banner — same accent-wash as the affiliate referral card */
+.admin-hello {
+  border-radius: 16px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--card)), var(--card));
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+.admin-hello h1 { margin: 0 0 4px; font-size: 1.5rem; }
+.admin-hello p { margin: 0; color: var(--muted); }
+
+/* ---- KPI cards (mirror aff-dash__metric) ---- */
+.admin-kpi-group { display: flex; flex-direction: column; gap: 10px; }
+.admin-kpi-group h2 { margin: 0; font-size: 1rem; color: var(--muted); font-weight: 600; }
+.admin-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.admin-kpi {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-kpi__icon { font-size: 1.2rem; }
+.admin-kpi__value { font-size: 1.5rem; font-weight: 800; }
+.admin-kpi__label { font-size: 0.85rem; color: var(--muted); }
+.admin-kpi--warn .admin-kpi__value { color: #b45309; }
+.admin-kpi--ok .admin-kpi__value { color: #047857; }
+
+/* ---- Cards (mirror aff-dash__panel) ---- */
+.admin-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.admin-card h2 { margin: 0 0 14px; font-size: 1.05rem; }
+.admin-card--narrow { max-width: 520px; }
+.admin-detail-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; align-items: start; }
+
+.admin-dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; margin: 0 0 16px; }
+.admin-dl div { display: flex; flex-direction: column; gap: 2px; }
+.admin-dl dt { font-size: 0.76rem; color: var(--muted); }
+.admin-dl dd { margin: 0; font-size: 0.92rem; }
+
+/* ---- Tables (mirror aff-dash__table) ---- */
+.admin-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.admin-card .admin-table-wrap { border: none; border-radius: 0; background: transparent; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th, .admin-table td {
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.admin-table th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.admin-table__empty { text-align: center; color: var(--muted); padding: 22px; }
+.admin-link { color: var(--accent); font-weight: 600; }
+.admin-link:hover { text-decoration: underline; }
+.admin-sub { display: block; font-size: 0.76rem; color: var(--muted); }
+code { font-family: 'Consolas', 'Menlo', monospace; }
+
+/* ---- Badges (same palette as aff-dash status pills) ---- */
+.admin-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; }
+.admin-badge.is-pending { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; }
+.admin-badge.is-approved { background: color-mix(in srgb, #10b981 20%, transparent); color: #047857; }
+.admin-badge.is-paid { background: color-mix(in srgb, #3b82f6 20%, transparent); color: #1d4ed8; }
+.admin-badge.is-rejected { background: color-mix(in srgb, #ef4444 16%, transparent); color: #b91c1c; }
+.admin-badge.is-neutral { background: color-mix(in srgb, #6b7280 18%, transparent); color: #4b5563; }
+
+/* ---- Actions ---- (buttons now use the shared .ui-btn primitives) */
+.admin-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.admin-actions form { display: inline; }
+
+/* ---- Forms ---- */
+.admin-form { display: flex; flex-direction: column; gap: 16px; }
+.admin-field { display: flex; flex-direction: column; gap: 6px; }
+.admin-field span { font-size: 0.85rem; font-weight: 600; }
+.admin-field input, .admin-field select {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--ink);
+}
+.admin-field input:focus, .admin-field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.admin-note {
+  font-size: 0.84rem;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+@media (max-width: 860px) {
+  .admin { flex-direction: column; }
+  .admin__sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 11px 14px;
+  }
+  .admin__brand { padding: 0 10px 0 0; border-right: 1px solid var(--border); white-space: nowrap; }
+  .admin__nav { flex-direction: row; flex: 1; }
+  .admin__nav ul { flex-direction: row; gap: 4px; }
+  .admin__nav a span { font-size: 1.05rem; }
+  .admin__nav-foot { margin: 0; padding: 0 0 0 10px; border-top: none; border-left: 1px solid var(--border); flex-direction: row; align-items: center; }
+  .admin__nav-email { display: none; }
+  .admin__nav-foot button { width: auto; padding: 8px 12px; }
+  .admin__main { padding: 22px 16px 44px; }
+  .admin-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-detail-grid { grid-template-columns: 1fr; }
+}

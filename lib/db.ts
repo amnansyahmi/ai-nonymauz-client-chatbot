@@ -9,13 +9,13 @@ import * as schema from './db/schema';
  *              await sql`SELECT * FROM affiliate WHERE code = ${code}`
  * - `db`   — Drizzle ORM instance (type-safe queries + the Auth.js adapter).
  *
- * Works in both Node and Edge runtimes; no pooling setup needed. The connection
- * string lives in DATABASE_URL (.env.local — never committed).
+ * Requires DATABASE_URL — set it in .env.local locally and in your host's
+ * project environment variables (e.g. Vercel) for both build and runtime.
  */
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error('DATABASE_URL is not set. Add it to .env.local.');
+  throw new Error('DATABASE_URL is not set. Add it to .env.local (and your host env vars).');
 }
 
 export const sql = neon(connectionString);

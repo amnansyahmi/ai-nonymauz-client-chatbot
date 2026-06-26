@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { findPlan, priceForInterval, type PlanInterval } from '../../../../lib/payments/plans';
-import { createBill, isToyyibPayConfigured } from '../../../../lib/payments/toyyibpay';
+import { createBill, isBillplzConfigured } from '../../../../lib/payments/billplz';
 import { readAttributionCookie } from '../../../../lib/affiliate/tracking';
 import { createReferralAtCheckout } from '../../../../lib/affiliate/queries';
 
@@ -34,11 +34,11 @@ function isValidPhone(phone: string): boolean {
 }
 
 export async function POST(request: Request) {
-  if (!isToyyibPayConfigured()) {
+  if (!isBillplzConfigured()) {
     return NextResponse.json(
       {
         ok: false,
-        error: 'ToyyibPay is not configured on this server. Sila hubungi pentadbir.'
+        error: 'Billplz is not configured on this server. Sila hubungi pentadbir.'
       },
       { status: 503 }
     );
@@ -85,17 +85,13 @@ export async function POST(request: Request) {
   const reference = `mm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
   const result = await createBill({
-    billName: `MajlisMate ${plan.nameMs} (${interval})`,
-    billDescription: `Langganan MajlisMate ${plan.nameMs} untuk 1 bulan.`,
-    billAmountInCents,
-    billReturnUrl: `${origin}/checkout/success?ref=${reference}&plan=${plan.id}&interval=${interval}`,
-    billCallbackUrl: `${origin}/api/payments/callback`,
-    billExternalReferenceNo: reference,
-    billTo: name,
-    billEmail: email,
-    billPhone: phone,
-    billPaymentChannel: '0',
-    billChargeToCustomer: '1'
+    name,
+    email,
+    amountInCents: billAmountInCents,
+    description: `Langganan MajlisMate ${plan.nameMs} (${interval}).`,
+    redirectUrl: `${origin}/checkout/success?ref=${reference}&plan=${plan.id}&interval=${interval}`,
+    callbackUrl: `${origin}/api/payments/callback`,
+    reference
   });
 
   if (!result.ok) {
@@ -126,7 +122,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     paymentUrl: result.paymentUrl,
-    billCode: result.billCode,
+    billCode: result.billId,
     reference,
     planId: plan.id,
     interval,

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: 'MajlisMate.ai — Pembantu AI untuk rancang majlis kahwin',
   description:
     'MajlisMate.ai ialah pembantu peribadi AI untuk merancang majlis kahwin. Senarai semak pintar, bajet, vendor dan voice mode dalam satu aplikasi.',
-  keywords: ['wedding planner', 'majlis kahwin', 'AI assistant', 'ToyyibPay', 'Malaysia'],
+  keywords: ['wedding planner', 'majlis kahwin', 'AI assistant', 'Billplz', 'Malaysia'],
   openGraph: {
     title: 'MajlisMate.ai — Pembantu AI untuk rancang majlis kahwin',
     description:
@@ -71,7 +71,7 @@ const FEATURES = [
 ];
 
 const TRUST_SIGNALS = [
-  { label: 'Pembayaran selamat ToyyibPay', icon: '🔒' },
+  { label: 'Pembayaran selamat Billplz', icon: '🔒' },
   { label: 'Data disimpan di Malaysia', icon: '🇲🇾' },
   { label: 'Batal bila-bila', icon: '↩️' },
   { label: 'Sokongan Bahasa Melayu', icon: '💬' }
@@ -91,6 +91,7 @@ export default function LandingPage() {
           <Link href="#pricing">{/* ms */}Harga</Link>
           <Link href="#faq">{/* ms */}Soalan</Link>
           <Link href="/affiliate">{/* ms */}Affiliate</Link>
+          <Link href="/admin-login">{/* ms */}Admin</Link>
           <Link href="/preview" className="landing__nav-cta">
             {PLANS[0].ctaMs}
           </Link>
@@ -298,14 +299,14 @@ export default function LandingPage() {
             <p>
               {/* ms */}Ya. Data anda disimpan di peranti anda secara lalai. Untuk
               pelan berbayar, kami hanya simpan maklumat asas akaun dan sejarah
-              pembayaran di ToyyibPay — tiada vendor atau tetamu dihantar ke
+              pembayaran di Billplz — tiada vendor atau tetamu dihantar ke
               pihak ketiga.
             </p>
           </details>
           <details className="landing__faq-item">
             <summary>Bagaimana cara pembayaran?</summary>
             <p>
-              {/* ms */}Kami gunakan ToyyibPay — gateway pembayaran tempatan
+              {/* ms */}Kami gunakan Billplz — gateway pembayaran tempatan
               Malaysia. Anda boleh bayar melalui FPX (online banking), kad
               debit, atau Boost e-wallet.
             </p>

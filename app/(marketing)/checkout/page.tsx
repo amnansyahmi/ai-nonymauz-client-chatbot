@@ -138,7 +138,7 @@ function CheckoutInner() {
         <form className="checkout-page__form" onSubmit={handleSubmit} noValidate>
           <h1>Bayaran untuk {plan.nameMs}</h1>
           <p className="checkout-page__lede">
-            {/* ms */}Isi butiran anda. Anda akan diarahkan ke ToyyibPay untuk
+            {/* ms */}Isi butiran anda. Anda akan diarahkan ke Billplz untuk
             bayar dengan selamat.
           </p>
 
@@ -213,12 +213,12 @@ function CheckoutInner() {
           <button type="submit" className="primary-action checkout-page__submit" disabled={submitting}>
             {submitting
               ? 'Sila tunggu…'
-              : `Bayar ${formatRinggit(amount)} melalui ToyyibPay`}
+              : `Bayar ${formatRinggit(amount)} melalui Billplz`}
           </button>
 
           <p className="checkout-page__small">
             {/* ms */}Dengan meneruskan, anda bersetuju dengan terma MajlisMate.
-            Pembayaran diproses oleh ToyyibPay — kami tidak menyimpan
+            Pembayaran diproses oleh Billplz — kami tidak menyimpan
             maklumat kad bank anda.
           </p>
         </form>
@@ -243,7 +243,7 @@ function CheckoutInner() {
           </ul>
           <div className="checkout-page__summary-trust">
             <span aria-hidden="true">🔒</span>
-            <span>Pembayaran selamat ToyyibPay</span>
+            <span>Pembayaran selamat Billplz</span>
           </div>
         </aside>
       </section>

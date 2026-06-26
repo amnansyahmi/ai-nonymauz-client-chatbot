@@ -1,70 +1,49 @@
 import { NextResponse } from 'next/server';
-import { getBillTransactions, isSuccessfulStatus } from '../../../../lib/payments/toyyibpay';
+import { getBill } from '../../../../lib/payments/billplz';
 import { finalizeReferralCommission } from '../../../../lib/affiliate/queries';
 
 export const runtime = 'nodejs';
 
-async function handle(request: Request) {
+/**
+ * Billplz server-to-server callback. Billplz POSTs form-encoded fields (incl.
+ * the bill `id`). We re-read the bill from Billplz (authoritative) to confirm
+ * payment, then finalize affiliate attribution. Returns 200 — the browser
+ * return is handled separately by the redirect_url (the success page).
+ */
+async function readBillId(request: Request): Promise<string | null> {
   const url = new URL(request.url);
-  const billCode = url.searchParams.get('billcode') ?? url.searchParams.get('BillCode');
-  const reference = url.searchParams.get('ref') ?? url.searchParams.get('order_id');
-
-  const baseUrl = new URL(request.url).origin;
-  const safeRef = encodeURIComponent(reference ?? '');
-  const safeBill = encodeURIComponent(billCode ?? '');
-
-  if (!billCode) {
-    return NextResponse.redirect(`${baseUrl}/checkout/failed?reason=missing-bill&ref=${safeRef}`);
+  const fromQuery = url.searchParams.get('billplz[id]') || url.searchParams.get('id');
+  if (fromQuery) return fromQuery;
+  try {
+    const form = await request.formData();
+    const id = form.get('id');
+    return typeof id === 'string' ? id : null;
+  } catch {
+    return null;
   }
-
-  const result = await getBillTransactions(billCode);
-  if (!result.ok) {
-    return NextResponse.redirect(
-      `${baseUrl}/checkout/failed?reason=lookup&ref=${safeRef}&bill=${safeBill}`
-    );
-  }
-
-  const tx = result.transactions[0];
-  const status = tx?.status;
-  if (isSuccessfulStatus(status)) {
-    // Confirmed payment: promote the referral and create the commission. Keyed
-    // by reference (order_id), idempotent, and never blocks the redirect.
-    if (reference) {
-      try {
-        await finalizeReferralCommission(reference);
-      } catch (error) {
-        console.error('[callback] commission finalize failed', error);
-      }
-    }
-    return NextResponse.redirect(
-      `${baseUrl}/checkout/success?ref=${safeRef}&bill=${safeBill}`
-    );
-  }
-
-  return NextResponse.redirect(
-    `${baseUrl}/checkout/failed?reason=not-paid&ref=${safeRef}&bill=${safeBill}`
-  );
 }
 
-export async function GET(request: Request) {
-  return handle(request);
+async function handle(request: Request) {
+  const billId = await readBillId(request);
+  if (!billId) return NextResponse.json({ ok: false, reason: 'missing-bill' }, { status: 400 });
+
+  const bill = await getBill(billId);
+  if (bill.ok && bill.paid && bill.reference) {
+    try {
+      await finalizeReferralCommission(bill.reference);
+    } catch (error) {
+      console.error('[callback] commission finalize failed', error);
+    }
+  }
+
+  // Billplz only needs a 200 acknowledgement.
+  return NextResponse.json({ ok: true });
 }
 
 export async function POST(request: Request) {
-  // ToyyibPay sends form-encoded data; consume it so the body stream
-  // is fully read before we look at the URL parameters above.
-  try {
-    const cloned = request.clone();
-    const contentType = cloned.headers.get('content-type') ?? '';
-    if (contentType.includes('application/x-www-form-urlencoded')) {
-      await cloned.formData();
-    } else if (contentType.includes('multipart/form-data')) {
-      await cloned.formData();
-    } else {
-      await cloned.text();
-    }
-  } catch {
-    // Ignore — the URL params are enough to verify.
-  }
+  return handle(request);
+}
+
+export async function GET(request: Request) {
   return handle(request);
 }

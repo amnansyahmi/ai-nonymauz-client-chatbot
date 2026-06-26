@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     'MajlisMate.ai ialah pembantu AI untuk merancang majlis kahwin. Senarai semak pintar, bajet, vendor dan voice mode dalam satu aplikasi.',
   applicationName: 'MajlisMate.ai',
-  keywords: ['wedding planner', 'majlis kahwin', 'AI assistant', 'ToyyibPay', 'Malaysia']
+  keywords: ['wedding planner', 'majlis kahwin', 'AI assistant', 'Billplz', 'Malaysia']
 };
 
 export const viewport: Viewport = {
