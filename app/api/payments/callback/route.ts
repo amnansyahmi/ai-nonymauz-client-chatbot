@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getBillTransactions, isSuccessfulStatus } from '../../../../lib/payments/toyyibpay';
+import { finalizeReferralCommission } from '../../../../lib/affiliate/queries';
 
 export const runtime = 'nodejs';
 
@@ -26,6 +27,15 @@ async function handle(request: Request) {
   const tx = result.transactions[0];
   const status = tx?.status;
   if (isSuccessfulStatus(status)) {
+    // Confirmed payment: promote the referral and create the commission. Keyed
+    // by reference (order_id), idempotent, and never blocks the redirect.
+    if (reference) {
+      try {
+        await finalizeReferralCommission(reference);
+      } catch (error) {
+        console.error('[callback] commission finalize failed', error);
+      }
+    }
     return NextResponse.redirect(
       `${baseUrl}/checkout/success?ref=${safeRef}&bill=${safeBill}`
     );

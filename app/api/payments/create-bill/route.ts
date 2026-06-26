@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { findPlan, priceForInterval, type PlanInterval } from '../../../../lib/payments/plans';
 import { createBill, isToyyibPayConfigured } from '../../../../lib/payments/toyyibpay';
+import { readAttributionCookie } from '../../../../lib/affiliate/tracking';
+import { createReferralAtCheckout } from '../../../../lib/affiliate/queries';
 
 export const runtime = 'nodejs';
 
@@ -101,6 +103,24 @@ export async function POST(request: Request) {
       { ok: false, error: result.reason },
       { status: 502 }
     );
+  }
+
+  // Affiliate attribution: if this visitor arrived via a referral link, record
+  // a referred lead keyed by the payment reference. Never block checkout on it.
+  const refCode = readAttributionCookie(request.headers.get('cookie'));
+  if (refCode) {
+    try {
+      await createReferralAtCheckout({
+        code: refCode,
+        reference,
+        amount,
+        customerName: name,
+        customerEmail: email,
+        packageName: plan.nameMs
+      });
+    } catch (error) {
+      console.error('[create-bill] referral attribution failed', error);
+    }
   }
 
   return NextResponse.json({

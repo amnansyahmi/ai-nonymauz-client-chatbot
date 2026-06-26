@@ -90,6 +90,7 @@ export default function LandingPage() {
           <Link href="#features">{/* ms */}Ciri-ciri</Link>
           <Link href="#pricing">{/* ms */}Harga</Link>
           <Link href="#faq">{/* ms */}Soalan</Link>
+          <Link href="/affiliate">{/* ms */}Affiliate</Link>
           <Link href="/preview" className="landing__nav-cta">
             {PLANS[0].ctaMs}
           </Link>
@@ -352,6 +353,7 @@ export default function LandingPage() {
         <div>
           <Link href="/chat">Buka app</Link>
           <Link href="#pricing">Harga</Link>
+          <Link href="/affiliate">Program Affiliate</Link>
           <Link href="#faq">Soalan lazim</Link>
         </div>
       </footer>
