@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import type { AttachedImage } from '../../lib/ai/imageUpload';
-import { formatBytes, readImage } from '../../lib/ai/imageUpload';
-import { trackEvent } from '../../lib/analytics';
+import type { AttachedImage } from '@/lib/ai/imageUpload';
+import { formatBytes, readImage } from '@/lib/ai/imageUpload';
+import { trackEvent } from '@/lib/analytics';
 
 type ImageUploadButtonProps = {
   onAttach: (image: AttachedImage) => void;

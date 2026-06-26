@@ -9,7 +9,7 @@ import {
   generateDefaultChecklist,
   localizedValue
 } from '../utils';
-import { useLocalStorage } from '../../../lib/hooks/useLocalStorage';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 
 export type ChecklistView = 'next' | 'timeline' | 'category' | 'completed';
 

@@ -4,8 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState, type FormEvent } from 'react';
-import { findPlan, formatRinggit, priceForInterval, type PlanInterval } from '../../../lib/payments/plans';
-import { trackEvent } from '../../../lib/analytics';
+import { findPlan, formatRinggit, priceForInterval, type PlanInterval } from '@/lib/payments/plans';
+import { trackEvent } from '@/lib/analytics';
 
 type CheckoutForm = {
   name: string;

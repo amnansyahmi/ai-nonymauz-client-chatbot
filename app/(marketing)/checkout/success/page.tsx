@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
-import { findPlan, formatRinggit } from '../../../../lib/payments/plans';
-import { trackEvent } from '../../../../lib/analytics';
+import { findPlan, formatRinggit } from '@/lib/payments/plans';
+import { trackEvent } from '@/lib/analytics';
 import {
   clearSubscription,
   writeSubscription,
   type Subscription
-} from '../../../../lib/payments/subscription';
+} from '@/lib/payments/subscription';
 
 type StatusResponse = {
   ok: boolean;

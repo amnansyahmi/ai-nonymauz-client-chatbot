@@ -1,8 +1,8 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { getAdminUserByEmail } from '../../../lib/admin/users';
-import { setAdminSession, clearAdminSession, type AdminRole } from '../../../lib/admin/session';
+import { getAdminUserByEmail } from '@/lib/admin/users';
+import { setAdminSession, clearAdminSession, type AdminRole } from '@/lib/admin/session';
 
 /**
  * Admin login. For now the password is collected but NOT verified — any password

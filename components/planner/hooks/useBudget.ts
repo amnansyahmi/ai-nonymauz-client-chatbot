@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { defaultBudgetItems, storageKeys } from '../data';
 import type { BudgetItem, PlannerProfile } from '../types';
 import { downloadTextFile, money, statusLabel } from '../utils';
-import { useLocalStorage } from '../../../lib/hooks/useLocalStorage';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 
 export type UseBudgetOptions = {
   profile: PlannerProfile;

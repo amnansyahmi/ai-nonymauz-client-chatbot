@@ -1,7 +1,7 @@
 'use client';
 
 import type { AppLanguage, ChecklistItem } from '../planner/types';
-import { getCategoryLabel } from '../../lib/planner/checklistCategories';
+import { getCategoryLabel } from '@/lib/planner/checklistCategories';
 
 export const MAX_VISIBLE_ITEMS = 25;
 

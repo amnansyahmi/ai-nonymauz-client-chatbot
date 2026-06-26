@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { decodeRsvpToken, buildGuestSubmitWhatsApp } from '../../../lib/planner/rsvpLink';
+import { decodeRsvpToken, buildGuestSubmitWhatsApp } from '@/lib/planner/rsvpLink';
 import styles from './rsvp.module.css';
 
 export default function RsvpClient({ token }: { token: string }) {

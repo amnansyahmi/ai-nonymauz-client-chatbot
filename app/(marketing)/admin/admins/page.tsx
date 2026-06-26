@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { requireSuperuser } from '../../../../lib/admin/session';
-import { listAdminUsers } from '../../../../lib/admin/users';
-import { fmtDate } from '../../../../lib/affiliate/format';
+import { requireSuperuser } from '@/lib/admin/session';
+import { listAdminUsers } from '@/lib/admin/users';
+import { fmtDate } from '@/lib/affiliate/format';
+import { Button, Badge, Card, Field, Input, Select } from '@/components/ui';
 import { addAdminUserAction, removeAdminUserAction } from '../actions';
 
 export const metadata: Metadata = { title: 'Pentadbir — Admin' };
@@ -18,29 +19,26 @@ export default async function AdminUsersPage() {
         <p>Urus akaun admin dan peranan. Hanya superuser boleh akses halaman ini.</p>
       </header>
 
-      <section className="admin-card admin-card--narrow">
+      <Card className="admin-card--narrow">
         <h2>Tambah admin</h2>
         <form action={addAdminUserAction} className="admin-form">
-          <label className="admin-field">
-            <span>E-mel</span>
-            <input type="email" name="email" placeholder="admin@majlismate.ai" required />
-          </label>
-          <label className="admin-field">
-            <span>Nama</span>
-            <input type="text" name="name" placeholder="Nama admin" />
-          </label>
-          <label className="admin-field">
-            <span>Peranan</span>
-            <select name="role" defaultValue="admin">
+          <Field label="E-mel">
+            <Input type="email" name="email" placeholder="admin@majlismate.ai" required />
+          </Field>
+          <Field label="Nama">
+            <Input type="text" name="name" placeholder="Nama admin" />
+          </Field>
+          <Field label="Peranan">
+            <Select name="role" defaultValue="admin">
               <option value="admin">Admin</option>
               <option value="superuser">Superuser</option>
-            </select>
-          </label>
-          <button type="submit" className="ui-btn ui-btn--primary ui-btn--lg">Tambah admin</button>
+            </Select>
+          </Field>
+          <Button type="submit" variant="primary" size="lg">Tambah admin</Button>
         </form>
-      </section>
+      </Card>
 
-      <section className="admin-card">
+      <Card>
         <h2>Senarai admin ({admins.length})</h2>
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -53,9 +51,9 @@ export default async function AdminUsersPage() {
                   <td>{a.email}</td>
                   <td>{a.name || '—'}</td>
                   <td>
-                    <span className={`admin-badge ${a.role === 'superuser' ? 'is-approved' : 'is-neutral'}`}>
+                    <Badge variant={a.role === 'superuser' ? 'success' : 'neutral'}>
                       {a.role === 'superuser' ? 'Superuser' : 'Admin'}
-                    </span>
+                    </Badge>
                   </td>
                   <td>{fmtDate(a.createdAt)}</td>
                   <td>
@@ -64,7 +62,7 @@ export default async function AdminUsersPage() {
                     ) : (
                       <form action={removeAdminUserAction}>
                         <input type="hidden" name="id" value={a.id} />
-                        <button className="ui-btn ui-btn--sm ui-btn--danger">Buang</button>
+                        <Button type="submit" variant="danger" size="sm">Buang</Button>
                       </form>
                     )}
                   </td>
@@ -73,7 +71,7 @@ export default async function AdminUsersPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

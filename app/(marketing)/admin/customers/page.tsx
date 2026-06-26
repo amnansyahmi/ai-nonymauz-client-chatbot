@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { listCustomers } from '../../../../lib/affiliate/admin';
-import { rm, fmtDate, statusMeta } from '../../../../lib/affiliate/format';
+import { listCustomers } from '@/lib/affiliate/admin';
+import { rm, fmtDate, statusMeta } from '@/lib/affiliate/format';
+import { Badge } from '@/components/ui';
 
 export const metadata: Metadata = { title: 'Pelanggan — Admin' };
 export const dynamic = 'force-dynamic';
@@ -41,7 +42,7 @@ export default async function AdminCustomersPage() {
                   </td>
                   <td>{String(r.package_name ?? '—')}</td>
                   <td>{rm(r.amount as number)}</td>
-                  <td><span className={`admin-badge ${s.cls}`}>{s.label}</span></td>
+                  <td><Badge variant={s.variant}>{s.label}</Badge></td>
                   <td><code>{String(r.affiliate_code)}</code></td>
                   <td>{fmtDate(r.created_at as string)}</td>
                 </tr>

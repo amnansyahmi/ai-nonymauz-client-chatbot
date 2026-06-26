@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { AppLanguage } from '../planner/types';
-import { getPreviewStrings } from '../../lib/preview/i18n';
+import { getPreviewStrings } from '@/lib/preview/i18n';
 
 type Props = {
   language: AppLanguage;

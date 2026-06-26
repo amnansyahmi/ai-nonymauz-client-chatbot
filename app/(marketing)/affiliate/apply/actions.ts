@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { createOrGetAffiliate } from '../../../../lib/affiliate/queries';
+import { createOrGetAffiliate } from '@/lib/affiliate/queries';
 
 const applicationSchema = z.object({
   name: z.string().trim().min(2, 'Sila masukkan nama penuh.'),

@@ -1,0 +1,13 @@
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+/* Default heading spacing for cards that contain a section title. */
+.card h2 { margin: 0 0 14px; font-size: 1.05rem; }
+
+/* A table-wrap placed inside a card shouldn't double its border (the card
+   already provides one). :global keeps the consumer class name un-scoped. */
+.card :global(.admin-table-wrap) { border: none; border-radius: 0; background: transparent; }

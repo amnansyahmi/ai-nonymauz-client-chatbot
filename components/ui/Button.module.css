@@ -1,0 +1,45 @@
+/* Scoped styles for <Button> / buttonClasses(). Class names are local to this
+   module — they cannot leak or collide. Tokens (var(--*)) are global. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+.btn:hover { border-color: var(--accent); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+.ghost { background: transparent; }
+
+.ok {
+  background: color-mix(in srgb, #10b981 14%, transparent);
+  border-color: color-mix(in srgb, #10b981 40%, transparent);
+  color: #047857;
+}
+.ok:hover { border-color: #10b981; }
+
+.danger {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  border-color: color-mix(in srgb, #ef4444 35%, transparent);
+  color: #b91c1c;
+}
+.danger:hover { border-color: #ef4444; }
+
+.sm { padding: 6px 11px; font-size: 0.82rem; border-radius: 8px; }
+.lg { padding: 12px 22px; font-size: 0.98rem; }
+.block { width: 100%; }

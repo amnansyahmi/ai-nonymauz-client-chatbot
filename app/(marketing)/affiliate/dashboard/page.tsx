@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth } from '../../../../auth';
-import { createOrGetAffiliate, getDashboardData } from '../../../../lib/affiliate/queries';
-import AffiliateDashboard from '../../../../components/affiliate/AffiliateDashboard';
+import { auth } from '@/auth';
+import { createOrGetAffiliate, getDashboardData } from '@/lib/affiliate/queries';
+import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
 
 export const metadata: Metadata = {
   title: 'Dashboard Affiliate — MajlisMate.ai',

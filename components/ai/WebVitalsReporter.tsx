@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { initWebVitals } from '../../lib/ai/webVitals';
+import { initWebVitals } from '@/lib/ai/webVitals';
 
 /**
  * Side-effect component that wires up Web Vitals reporting on mount.

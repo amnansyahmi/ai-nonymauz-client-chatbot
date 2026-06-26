@@ -1,4 +1,4 @@
-﻿import SetupWizard from '../../../components/ai/SetupWizard';
+﻿import SetupWizard from '@/components/ai/SetupWizard';
 
 export const metadata = {
   title: 'Setup Majlis - MajlisMate.ai'

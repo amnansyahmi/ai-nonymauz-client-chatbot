@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getReports } from '../../../../lib/affiliate/admin';
-import { rm } from '../../../../lib/affiliate/format';
+import { getReports } from '@/lib/affiliate/admin';
+import { rm } from '@/lib/affiliate/format';
+import { Card } from '@/components/ui';
 
 export const metadata: Metadata = { title: 'Laporan — Admin' };
 export const dynamic = 'force-dynamic';
@@ -33,7 +34,7 @@ export default async function AdminReportsPage() {
         </div>
       </section>
 
-      <section className="admin-card">
+      <Card>
         <h2>Affiliate teratas</h2>
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -56,7 +57,7 @@ export default async function AdminReportsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { PLANS, formatRinggit } from '../../../lib/payments/plans';
+import { PLANS, formatRinggit } from '@/lib/payments/plans';
 
 export const metadata: Metadata = {
   title: 'Harga — MajlisMate.ai',

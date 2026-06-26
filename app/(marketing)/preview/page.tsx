@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import PreviewFunnel from '../../../components/preview/PreviewFunnel';
+import PreviewFunnel from '@/components/preview/PreviewFunnel';
 
 export const metadata: Metadata = {
   title: 'Cuba MajlisMate.ai — Preview Checklist Percuma',

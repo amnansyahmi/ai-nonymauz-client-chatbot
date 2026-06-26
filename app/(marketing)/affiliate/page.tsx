@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import ScrollReveal from '../../../components/marketing/ScrollReveal';
+import ScrollReveal from '@/components/marketing/ScrollReveal';
 
 export const metadata: Metadata = {
   title: 'Program Affiliate — MajlisMate.ai',

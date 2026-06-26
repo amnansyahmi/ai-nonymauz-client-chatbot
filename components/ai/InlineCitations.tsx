@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { SOURCE_CONFIDENCE_LABEL, getSourceConfidence, type SourceItem } from '../../lib/ai/sourceConfidence';
+import { SOURCE_CONFIDENCE_LABEL, getSourceConfidence, type SourceItem } from '@/lib/ai/sourceConfidence';
 
 type InlineCitationsProps = {
   sources: SourceItem[];

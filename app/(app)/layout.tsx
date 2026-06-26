@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import PwaRegister from '../../components/PwaRegister';
-import PwaInstallPrompt from '../../components/mobile/PwaInstallPrompt';
-import WebVitalsReporter from '../../components/ai/WebVitalsReporter';
-import ShortcutsDialog from '../../components/ai/ShortcutsDialog';
-import OnboardingTour from '../../components/ai/OnboardingTour';
+import PwaRegister from '@/components/PwaRegister';
+import PwaInstallPrompt from '@/components/mobile/PwaInstallPrompt';
+import WebVitalsReporter from '@/components/ai/WebVitalsReporter';
+import ShortcutsDialog from '@/components/ai/ShortcutsDialog';
+import OnboardingTour from '@/components/ai/OnboardingTour';
 import '../globals.css';
 import '../styles/planner-overrides.css';
 import '../styles/live-voice.css';

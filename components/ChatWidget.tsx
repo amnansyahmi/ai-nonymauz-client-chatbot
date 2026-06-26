@@ -2,13 +2,13 @@
 
 import { FormEvent, RefObject, useEffect, useRef, useState } from 'react';
 import type { Message } from './planner/types';
-import { summarizeAction, type PlannerAction } from '../lib/planner/chatActions';
+import { summarizeAction, type PlannerAction } from '@/lib/planner/chatActions';
 import Composer from './ui/Composer';
 import Markdown from './ui/Markdown';
 import StopGeneratingButton from './ai/StopGeneratingButton';
 import HighlightToAsk from './ai/HighlightToAsk';
 import InlineCitations from './ai/InlineCitations';
-import type { AttachedImage } from '../lib/ai/imageUpload';
+import type { AttachedImage } from '@/lib/ai/imageUpload';
 
 type ChatWidgetProps = {
   messages: Message[];

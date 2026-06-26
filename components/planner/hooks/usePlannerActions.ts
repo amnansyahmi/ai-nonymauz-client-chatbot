@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type Dispatch, type SetStateAction } from 'react';
-import type { PlannerAction } from '../../../lib/planner/chatActions';
+import type { PlannerAction } from '@/lib/planner/chatActions';
 import type { AppLanguage, Message } from '../types';
 
 export type DisambiguationCandidate = { id: string; label: string; sublabel?: string };

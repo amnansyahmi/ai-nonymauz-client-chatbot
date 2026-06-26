@@ -6,9 +6,9 @@ import {
   buildWhatsAppShareUrl,
   isValidFormUrl,
   normalizeFormUrl
-} from '../../lib/planner/rsvpShare';
-import { buildRsvpPageUrl } from '../../lib/planner/rsvpLink';
-import type { WeeklyBriefing as Briefing, BriefingTone } from '../../lib/planner/weeklyBriefing';
+} from '@/lib/planner/rsvpShare';
+import { buildRsvpPageUrl } from '@/lib/planner/rsvpLink';
+import type { WeeklyBriefing as Briefing, BriefingTone } from '@/lib/planner/weeklyBriefing';
 
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;

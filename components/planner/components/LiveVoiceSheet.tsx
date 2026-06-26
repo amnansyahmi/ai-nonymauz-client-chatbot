@@ -7,11 +7,11 @@ import LiveOrb from './LiveOrb';
 import Waveform from './Waveform';
 import VoiceLeds from './VoiceLeds';
 import VoiceSettings from './VoiceSettings';
-import type { VoiceMode } from '../../../lib/voice/storage';
-import { summarizeAction, type PlannerAction } from '../../../lib/planner/chatActions';
-import { splitIntoSentences } from '../../../lib/voice/tts';
-import { usePushToTalkHotkey } from '../../../lib/hooks/usePushToTalkHotkey';
-import { useVisibilityRecovery } from '../../../lib/hooks/useVisibilityRecovery';
+import type { VoiceMode } from '@/lib/voice/storage';
+import { summarizeAction, type PlannerAction } from '@/lib/planner/chatActions';
+import { splitIntoSentences } from '@/lib/voice/tts';
+import { usePushToTalkHotkey } from '@/lib/hooks/usePushToTalkHotkey';
+import { useVisibilityRecovery } from '@/lib/hooks/useVisibilityRecovery';
 
 export type LiveVoiceSheetProps = {
   language: AppLanguage;

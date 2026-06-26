@@ -3,14 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
-import { AFFILIATE_ASSETS, AFFILIATE_BADGES } from '../../lib/affiliate/constants';
-import type { AffiliateDashboardData } from '../../lib/affiliate/queries';
-
-const STATUS_CLASS: Record<string, string> = {
-  registered: 'is-registered',
-  trial: 'is-trial',
-  active: 'is-active'
-};
+import { AFFILIATE_ASSETS, AFFILIATE_BADGES } from '@/lib/affiliate/constants';
+import { statusMeta } from '@/lib/affiliate/format';
+import type { AffiliateDashboardData } from '@/lib/affiliate/queries';
+import { Button, Badge, buttonClasses } from '@/components/ui';
 
 const STATUS_LABEL: Record<string, string> = {
   registered: 'Berdaftar',
@@ -68,13 +64,9 @@ export default function AffiliateDashboard({ user, data }: Props) {
             <span className="aff-dash__user-name">{user.name}</span>
             <span className="aff-dash__user-email">{user.email}</span>
           </div>
-          <button
-            type="button"
-            className="aff-dash__signout"
-            onClick={() => signOut({ callbackUrl: '/affiliate' })}
-          >
+          <Button variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: '/affiliate' })}>
             Log keluar
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -82,10 +74,10 @@ export default function AffiliateDashboard({ user, data }: Props) {
         <div className="aff-dash__greeting">
           <h1>Hai, {user.name.split(' ')[0]} 👋</h1>
           <p>
-            Ini ringkasan prestasi affiliate anda.
-            <span className={`aff-dash__approval is-${profile.status}`}>
+            Ini ringkasan prestasi affiliate anda.{' '}
+            <Badge variant={statusMeta(profile.status).variant}>
               {APPROVAL_LABEL[profile.status] ?? profile.status}
-            </span>
+            </Badge>
           </p>
         </div>
 
@@ -97,10 +89,10 @@ export default function AffiliateDashboard({ user, data }: Props) {
             <code className="aff-dash__refcard-link">{profile.link}</code>
           </div>
           <div className="aff-dash__refcard-actions">
-            <button type="button" className="primary-action" onClick={copyLink}>
+            <Button variant="primary" onClick={copyLink}>
               {copied ? 'Disalin ✓' : 'Salin link'}
-            </button>
-            <a className="utility-action" href={whatsappShare} target="_blank" rel="noopener noreferrer">
+            </Button>
+            <a className={buttonClasses({ variant: 'ghost' })} href={whatsappShare} target="_blank" rel="noopener noreferrer">
               Kongsi WhatsApp
             </a>
           </div>
@@ -141,9 +133,9 @@ export default function AffiliateDashboard({ user, data }: Props) {
                       <tr key={`${ref.name}-${i}`}>
                         <td>{ref.name}</td>
                         <td>
-                          <span className={`aff-dash__status ${STATUS_CLASS[ref.status] ?? ''}`}>
+                          <Badge variant={statusMeta(ref.status).variant}>
                             {STATUS_LABEL[ref.status] ?? ref.status}
-                          </span>
+                          </Badge>
                         </td>
                         <td>{ref.packageName}</td>
                         <td>{ref.date}</td>
@@ -231,7 +223,7 @@ export default function AffiliateDashboard({ user, data }: Props) {
                   <strong>{asset.title}</strong>
                   <span>{asset.type}</span>
                 </div>
-                <button type="button" className="aff-dash__asset-btn">Muat turun</button>
+                <Button size="sm">Muat turun</Button>
               </article>
             ))}
           </div>

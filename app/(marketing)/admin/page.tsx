@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { getAdminSession } from '../../../lib/admin/session';
-import { getAdminDashboard } from '../../../lib/affiliate/admin';
-import { rm } from '../../../lib/affiliate/format';
+import { getAdminSession } from '@/lib/admin/session';
+import { getAdminDashboard } from '@/lib/affiliate/admin';
+import { rm } from '@/lib/affiliate/format';
 
 export const metadata: Metadata = { title: 'Admin Dashboard — MajlisMate.ai' };
 export const dynamic = 'force-dynamic';

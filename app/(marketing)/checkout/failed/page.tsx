@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { trackEvent } from '../../../../lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 const REASON_LABEL: Record<string, { ms: string; en: string }> = {
   'missing-bill': { ms: 'Maklumat bil tidak dijumpai.', en: 'Bill information is missing.' },

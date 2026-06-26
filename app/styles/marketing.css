@@ -2194,18 +2194,6 @@
 .aff-dash__user-name { font-weight: 600; font-size: 0.92rem; }
 .aff-dash__user-email { color: var(--muted); font-size: 0.8rem; }
 
-.aff-dash__signout {
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--ink);
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-.aff-dash__signout:hover { border-color: var(--accent); }
 
 .aff-dash__body {
   max-width: 1140px;
@@ -2297,17 +2285,6 @@
 .aff-dash__table th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
 .aff-dash__table tbody tr:last-child td { border-bottom: none; }
 
-.aff-dash__status {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-.aff-dash__status.is-registered { background: color-mix(in srgb, #6b7280 18%, transparent); color: #4b5563; }
-.aff-dash__status.is-trial { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; }
-.aff-dash__status.is-active { background: color-mix(in srgb, #10b981 20%, transparent); color: #047857; }
-
 .aff-dash__today, .aff-dash__payouts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .aff-dash__today li { display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; }
 .aff-dash__today li span { color: var(--muted); }
@@ -2357,17 +2334,6 @@
 .aff-dash__asset > div strong { font-size: 0.9rem; }
 .aff-dash__asset > div span { font-size: 0.78rem; color: var(--muted); }
 .aff-dash__asset-icon { font-size: 1.4rem; }
-.aff-dash__asset-btn {
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--ink);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.82rem;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.aff-dash__asset-btn:hover { border-color: var(--accent); }
 
 .aff-dash__demo-banner {
   text-align: center;
@@ -2414,20 +2380,6 @@
   text-align: center;
 }
 
-.aff-dash__approval {
-  display: inline-block;
-  margin-left: 8px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 999px;
-  vertical-align: middle;
-  background: color-mix(in srgb, #f59e0b 18%, transparent);
-  color: #b45309;
-}
-.aff-dash__approval.is-approved { background: color-mix(in srgb, #10b981 18%, transparent); color: #047857; }
-.aff-dash__approval.is-suspended,
-.aff-dash__approval.is-rejected { background: color-mix(in srgb, #ef4444 16%, transparent); color: #b91c1c; }
 
 /* =============================================
    ADMIN PANEL
@@ -2556,14 +2508,7 @@
 .admin-kpi--warn .admin-kpi__value { color: #b45309; }
 .admin-kpi--ok .admin-kpi__value { color: #047857; }
 
-/* ---- Cards (mirror aff-dash__panel) ---- */
-.admin-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 20px;
-}
-.admin-card h2 { margin: 0 0 14px; font-size: 1.05rem; }
+/* ---- Cards (the <Card> primitive owns its styling; admin-only tweaks here) ---- */
 .admin-card--narrow { max-width: 520px; }
 .admin-detail-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; align-items: start; }
 
@@ -2574,7 +2519,6 @@
 
 /* ---- Tables (mirror aff-dash__table) ---- */
 .admin-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
-.admin-card .admin-table-wrap { border: none; border-radius: 0; background: transparent; }
 .admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .admin-table th, .admin-table td {
   text-align: left;
@@ -2592,35 +2536,14 @@
 .admin-sub { display: block; font-size: 0.76rem; color: var(--muted); }
 code { font-family: 'Consolas', 'Menlo', monospace; }
 
-/* ---- Badges (same palette as aff-dash status pills) ---- */
-.admin-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; }
-.admin-badge.is-pending { background: color-mix(in srgb, #f59e0b 20%, transparent); color: #b45309; }
-.admin-badge.is-approved { background: color-mix(in srgb, #10b981 20%, transparent); color: #047857; }
-.admin-badge.is-paid { background: color-mix(in srgb, #3b82f6 20%, transparent); color: #1d4ed8; }
-.admin-badge.is-rejected { background: color-mix(in srgb, #ef4444 16%, transparent); color: #b91c1c; }
-.admin-badge.is-neutral { background: color-mix(in srgb, #6b7280 18%, transparent); color: #4b5563; }
+/* Badges, buttons and form fields now use the shared .ui-* primitives. */
 
-/* ---- Actions ---- (buttons now use the shared .ui-btn primitives) */
+/* ---- Actions ---- */
 .admin-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .admin-actions form { display: inline; }
 
-/* ---- Forms ---- */
+/* ---- Forms ---- (fields use the <Field>/<Input> primitives; this is just form layout) */
 .admin-form { display: flex; flex-direction: column; gap: 16px; }
-.admin-field { display: flex; flex-direction: column; gap: 6px; }
-.admin-field span { font-size: 0.85rem; font-weight: 600; }
-.admin-field input, .admin-field select {
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  background: var(--bg);
-  color: var(--ink);
-}
-.admin-field input:focus, .admin-field select:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
-}
 
 .admin-note {
   font-size: 0.84rem;

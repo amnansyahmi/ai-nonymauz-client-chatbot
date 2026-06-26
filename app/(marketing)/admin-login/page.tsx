@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { getAdminSession } from '../../../lib/admin/session';
+import { getAdminSession } from '@/lib/admin/session';
+import { Button } from '@/components/ui';
 import { adminLogin } from './actions';
 
 export const metadata: Metadata = { title: 'Log masuk Admin — MajlisMate.ai' };
@@ -48,7 +49,7 @@ export default async function AdminLoginPage({
               <span>Kata laluan</span>
               <input type="password" name="password" placeholder="••••••••" autoComplete="current-password" />
             </label>
-            <button type="submit" className="ui-btn ui-btn--primary ui-btn--lg ui-btn--block">Log masuk</button>
+            <Button type="submit" variant="primary" size="lg" block>Log masuk</Button>
           </form>
 
           <p className="affiliate-login__demo-note">

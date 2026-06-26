@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { buildHighlightPrompt, clearSelection, getSelectionInfo, type HighlightInfo } from '../../lib/ai/highlightToAsk';
-import { trackEvent } from '../../lib/analytics';
+import { buildHighlightPrompt, clearSelection, getSelectionInfo, type HighlightInfo } from '@/lib/ai/highlightToAsk';
+import { trackEvent } from '@/lib/analytics';
 
 type HighlightToAskProps = {
   containerRef: React.RefObject<HTMLElement | null>;

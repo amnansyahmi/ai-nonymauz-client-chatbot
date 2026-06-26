@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { ScoredVoice } from '../../../lib/voice/voices';
-import type { VoicePreferences } from '../../../lib/voice/storage';
+import type { ScoredVoice } from '@/lib/voice/voices';
+import type { VoicePreferences } from '@/lib/voice/storage';
 import type { AppLanguage } from '../types';
-import type { VoiceMode } from '../../../lib/voice/storage';
+import type { VoiceMode } from '@/lib/voice/storage';
 
 export type VoiceSettingsProps = {
   language: AppLanguage;

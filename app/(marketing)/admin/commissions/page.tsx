@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { listCommissions } from '../../../../lib/affiliate/admin';
-import { rm, fmtDate, statusMeta } from '../../../../lib/affiliate/format';
+import { listCommissions } from '@/lib/affiliate/admin';
+import { rm, fmtDate, statusMeta } from '@/lib/affiliate/format';
+import { Button, Badge } from '@/components/ui';
 import { setCommissionStatusAction } from '../actions';
 
 export const metadata: Metadata = { title: 'Komisen — Admin' };
@@ -43,7 +44,7 @@ export default async function AdminCommissionsPage() {
                   <td><code>{String(c.affiliate_code)}</code><span className="admin-sub">{String(c.affiliate_name)}</span></td>
                   <td>{rm(c.amount as number)}</td>
                   <td>{String(c.type)}</td>
-                  <td><span className={`admin-badge ${s.cls}`}>{s.label}</span></td>
+                  <td><Badge variant={s.variant}>{s.label}</Badge></td>
                   <td>{fmtDate(c.created_at as string)}</td>
                   <td>
                     <div className="admin-actions">
@@ -52,12 +53,12 @@ export default async function AdminCommissionsPage() {
                           <form action={setCommissionStatusAction}>
                             <input type="hidden" name="id" value={id} />
                             <input type="hidden" name="status" value="approved" />
-                            <button className="ui-btn ui-btn--sm ui-btn--ok">Lulus</button>
+                            <Button type="submit" variant="ok" size="sm">Lulus</Button>
                           </form>
                           <form action={setCommissionStatusAction}>
                             <input type="hidden" name="id" value={id} />
                             <input type="hidden" name="status" value="rejected" />
-                            <button className="ui-btn ui-btn--sm ui-btn--danger">Tolak</button>
+                            <Button type="submit" variant="danger" size="sm">Tolak</Button>
                           </form>
                         </>
                       )}
@@ -65,7 +66,7 @@ export default async function AdminCommissionsPage() {
                         <form action={setCommissionStatusAction}>
                           <input type="hidden" name="id" value={id} />
                           <input type="hidden" name="status" value="paid" />
-                          <button className="ui-btn ui-btn--sm ui-btn--ok">Tanda dibayar</button>
+                          <Button type="submit" variant="ok" size="sm">Tanda dibayar</Button>
                         </form>
                       )}
                       {(status === 'paid' || status === 'rejected') && <span className="admin-sub">—</span>}

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { clearMemory, extractFacts, loadMemory, memoryToContext, mergeFacts, saveMemory, type MemoryFact } from '../../lib/ai/conversationMemory';
-import { trackEvent } from '../../lib/analytics';
+import { clearMemory, extractFacts, loadMemory, memoryToContext, mergeFacts, saveMemory, type MemoryFact } from '@/lib/ai/conversationMemory';
+import { trackEvent } from '@/lib/analytics';
 import type { Message } from '../planner/types';
 
 type MemoryIndicatorProps = {

@@ -4,8 +4,8 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { BudgetItem, ChecklistItem, PlannerProfile } from '../planner/types';
-import { generatePersonalizedChecklist, type SurveyAnswers } from '../../lib/planner/checklistGenerator';
-import { generateBudgetBreakdown } from '../../lib/planner/budgetGenerator';
+import { generatePersonalizedChecklist, type SurveyAnswers } from '@/lib/planner/checklistGenerator';
+import { generateBudgetBreakdown } from '@/lib/planner/budgetGenerator';
 import DatePicker from '../ui/DatePicker';
 
 export type SetupCompletePayload = {
