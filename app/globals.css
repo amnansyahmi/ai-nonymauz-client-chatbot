@@ -11835,6 +11835,55 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.18);
 }
 
+/* Comparison tables (e.g. venue package / vendor comparisons) */
+.bubble .md-table-wrap {
+  margin: 8px 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 4px;
+}
+
+.bubble .md-table-wrap:last-child {
+  margin-bottom: 0;
+}
+
+.bubble .md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.bubble .md-table th,
+.bubble .md-table td {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 6px 10px;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.bubble .md-table th {
+  background: rgba(0, 0, 0, 0.05);
+  font-weight: 700;
+}
+
+.bubble .md-table tbody tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+.message.user .bubble .md-table th,
+.message.user .bubble .md-table td {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.message.user .bubble .md-table th {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.message.user .bubble .md-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.07);
+}
+
 /* Blinking streaming cursor */
 
 @keyframes md-cursor-blink {
