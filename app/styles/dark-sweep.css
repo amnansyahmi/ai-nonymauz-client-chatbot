@@ -297,6 +297,35 @@
   color: #15110d !important;
 }
 
+/* Comparison tables — assistant bubbles sit on a dark card, so the default
+   black-tinted borders/fills would vanish. Re-derive them from theme tokens. */
+:root[data-theme='dark'] .bubble .md-table th,
+:root[data-theme='dark'] .bubble .md-table td {
+  border-color: var(--border) !important;
+}
+
+:root[data-theme='dark'] .bubble .md-table th {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+:root[data-theme='dark'] .bubble .md-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* User bubbles use the gold accent with dark ink — keep contrast on that fill. */
+:root[data-theme='dark'] .message.user .bubble .md-table th,
+:root[data-theme='dark'] .message.user .bubble .md-table td {
+  border-color: rgba(0, 0, 0, 0.28) !important;
+}
+
+:root[data-theme='dark'] .message.user .bubble .md-table th {
+  background: rgba(0, 0, 0, 0.18) !important;
+}
+
+:root[data-theme='dark'] .message.user .bubble .md-table tbody tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.1) !important;
+}
+
 /* 10 — Empty states */
 :root[data-theme='dark'] .empty-state,
 :root[data-theme='dark'] .action-empty,

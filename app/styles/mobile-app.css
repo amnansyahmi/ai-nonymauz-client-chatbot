@@ -407,6 +407,18 @@
   .main-chat-panel .chat-form {
     width: min(calc(100vw - 24px), 760px) !important;
   }
+
+  /* Comparison tables: tighter on phones; allow wrapping so they fit the
+     narrow bubble instead of forcing horizontal scroll on every column. */
+  .bubble .md-table {
+    font-size: 0.8em;
+  }
+
+  .bubble .md-table th,
+  .bubble .md-table td {
+    padding: 5px 8px;
+    white-space: normal;
+  }
 }
 
 @media (max-width: 560px) {
