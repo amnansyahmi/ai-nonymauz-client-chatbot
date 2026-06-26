@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { decodeRsvpToken } from '../../../lib/planner/rsvpLink';
+import { decodeRsvpToken } from '@/lib/planner/rsvpLink';
 import RsvpClient from './RsvpClient';
 
 type Props = { params: Promise<{ token: string }> };

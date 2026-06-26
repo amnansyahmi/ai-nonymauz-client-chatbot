@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { requireAdmin } from '../../../lib/admin/session';
+import { requireAdmin } from '@/lib/admin/session';
 import { adminLogout } from '../admin-login/actions';
-import AdminNav from '../../../components/admin/AdminNav';
+import AdminNav from '@/components/admin/AdminNav';
 
 export const dynamic = 'force-dynamic';
 

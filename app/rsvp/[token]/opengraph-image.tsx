@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { decodeRsvpToken } from '../../../lib/planner/rsvpLink';
+import { decodeRsvpToken } from '@/lib/planner/rsvpLink';
 
 export const alt = 'RSVP Invitation';
 export const size = { width: 1200, height: 630 };

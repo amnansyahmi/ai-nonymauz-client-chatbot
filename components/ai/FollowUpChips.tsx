@@ -1,6 +1,6 @@
 'use client';
 
-import { suggestFollowUps, type FollowUp } from '../../lib/ai/followUps';
+import { suggestFollowUps, type FollowUp } from '@/lib/ai/followUps';
 
 type FollowUpChipsProps = {
   answer: string;

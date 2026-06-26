@@ -1,8 +1,8 @@
 'use client';
 
-import { PLANS } from '../../lib/payments/plans';
+import { PLANS } from '@/lib/payments/plans';
 import type { AppLanguage } from '../planner/types';
-import { getPreviewStrings } from '../../lib/preview/i18n';
+import { getPreviewStrings } from '@/lib/preview/i18n';
 
 type Props = {
   taskCount: number;

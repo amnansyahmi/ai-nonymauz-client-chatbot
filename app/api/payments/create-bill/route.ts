@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { findPlan, priceForInterval, type PlanInterval } from '../../../../lib/payments/plans';
-import { createBill, isBillplzConfigured } from '../../../../lib/payments/billplz';
-import { readAttributionCookie } from '../../../../lib/affiliate/tracking';
-import { createReferralAtCheckout } from '../../../../lib/affiliate/queries';
+import { findPlan, priceForInterval, type PlanInterval } from '@/lib/payments/plans';
+import { createBill, isBillplzConfigured } from '@/lib/payments/billplz';
+import { readAttributionCookie } from '@/lib/affiliate/tracking';
+import { createReferralAtCheckout } from '@/lib/affiliate/queries';
 
 export const runtime = 'nodejs';
 

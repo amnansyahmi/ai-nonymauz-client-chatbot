@@ -1,6 +1,6 @@
 'use client';
 
-import type { ProactiveSuggestion as Suggestion } from '../../lib/ai/proactiveSuggestions';
+import type { ProactiveSuggestion as Suggestion } from '@/lib/ai/proactiveSuggestions';
 
 type ProactiveSuggestionProps = {
   suggestions: Suggestion[];

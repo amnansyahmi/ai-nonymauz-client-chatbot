@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { storageKeys } from '../data';
 import type { Guest } from '../types';
 import { downloadTextFile, rsvpLabel } from '../utils';
-import { useLocalStorage } from '../../../lib/hooks/useLocalStorage';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 
 export type GuestDraft = {
   id: string;

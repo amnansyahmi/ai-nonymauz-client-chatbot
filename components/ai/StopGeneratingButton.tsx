@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { trackEvent } from '../../lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 type StopGeneratingButtonProps = {
   visible: boolean;

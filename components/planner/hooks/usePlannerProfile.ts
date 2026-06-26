@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { defaultPlannerProfile, storageKeys } from '../data';
 import type { AppLanguage, PlannerProfile } from '../types';
-import { useLocalStorage } from '../../../lib/hooks/useLocalStorage';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import { parsePlannerSetup } from '../utils';
 
 const PROFILE_STATES = [

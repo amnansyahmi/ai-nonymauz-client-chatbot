@@ -9,18 +9,20 @@ export function fmtDate(value: string | Date | null | undefined): string {
   return new Intl.DateTimeFormat('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' }).format(d);
 }
 
-// Malay labels + CSS modifier for a status value (affiliate / commission / referral).
-export const STATUS_META: Record<string, { label: string; cls: string }> = {
-  pending: { label: 'Menunggu', cls: 'is-pending' },
-  approved: { label: 'Diluluskan', cls: 'is-approved' },
-  rejected: { label: 'Ditolak', cls: 'is-rejected' },
-  suspended: { label: 'Digantung', cls: 'is-rejected' },
-  paid: { label: 'Dibayar', cls: 'is-paid' },
-  active: { label: 'Aktif', cls: 'is-approved' },
-  trial: { label: 'Percubaan', cls: 'is-pending' },
-  registered: { label: 'Berdaftar', cls: 'is-neutral' }
+// Malay labels + <Badge> variant for a status value (affiliate / commission / referral).
+import type { BadgeVariant } from '../../components/ui/Badge';
+
+export const STATUS_META: Record<string, { label: string; variant: BadgeVariant }> = {
+  pending: { label: 'Menunggu', variant: 'pending' },
+  approved: { label: 'Diluluskan', variant: 'success' },
+  rejected: { label: 'Ditolak', variant: 'danger' },
+  suspended: { label: 'Digantung', variant: 'danger' },
+  paid: { label: 'Dibayar', variant: 'info' },
+  active: { label: 'Aktif', variant: 'success' },
+  trial: { label: 'Percubaan', variant: 'pending' },
+  registered: { label: 'Berdaftar', variant: 'neutral' }
 };
 
-export function statusMeta(status: string): { label: string; cls: string } {
-  return STATUS_META[status] ?? { label: status, cls: 'is-neutral' };
+export function statusMeta(status: string): { label: string; variant: BadgeVariant } {
+  return STATUS_META[status] ?? { label: status, variant: 'neutral' };
 }

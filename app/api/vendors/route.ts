@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import type { Vendor } from '../../../components/planner/types';
+import type { Vendor } from '@/components/planner/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

@@ -4,7 +4,7 @@ export type Message = {
   role: 'user' | 'assistant';
   content: string;
   sources?: Source[];
-  actions?: import('../../lib/planner/chatActions').PlannerAction[];
+  actions?: import('@/lib/planner/chatActions').PlannerAction[];
   actionsState?: 'pending' | 'applied' | 'dismissed';
   /** Suggested quick-reply options when the AI asks a clarifying question. */
   clarify?: string[];

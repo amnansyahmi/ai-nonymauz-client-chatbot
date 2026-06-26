@@ -2,8 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { auth, isGoogleConfigured } from '../../../../auth';
-import AffiliateLoginForm from '../../../../components/affiliate/AffiliateLoginForm';
+import { auth, isGoogleConfigured } from '@/auth';
+import AffiliateLoginForm from '@/components/affiliate/AffiliateLoginForm';
 
 export const metadata: Metadata = {
   title: 'Log masuk affiliate — MajlisMate.ai',

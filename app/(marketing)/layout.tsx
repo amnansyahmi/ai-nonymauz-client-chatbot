@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import '../globals.css';
-import '../styles/ui.css';
 import '../styles/app-states.css';
 import '../styles/dark.css';
 import '../styles/marketing.css';

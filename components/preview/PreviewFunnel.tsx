@@ -9,9 +9,9 @@ import PaywallOverlay from './PaywallOverlay';
 import DraftingAnimation from './DraftingAnimation';
 import { seedPlannerFromPreview } from './seedPlanner';
 import type { AppLanguage, ChecklistItem } from '../planner/types';
-import { getPreviewStrings } from '../../lib/preview/i18n';
+import { getPreviewStrings } from '@/lib/preview/i18n';
 import { daysUntil } from '../planner/utils';
-import { trackEvent } from '../../lib/analytics';
+import { trackEvent } from '@/lib/analytics';
 
 type FunnelState = 'wizard' | 'drafting' | 'preview' | 'paywall';
 

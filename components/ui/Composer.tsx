@@ -2,7 +2,7 @@
 
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from 'react';
 import ImageUploadButton from '../ai/ImageUploadButton';
-import type { AttachedImage } from '../../lib/ai/imageUpload';
+import type { AttachedImage } from '@/lib/ai/imageUpload';
 
 type SpeechRecognitionConstructor = new () => {
   continuous: boolean;

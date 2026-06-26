@@ -15,7 +15,7 @@ import ChatWidget from './ChatWidget';
 import { useLiveVoice, type VoiceExchange } from './planner/hooks/useLiveVoice';
 import { usePlannerActions, type AmbiguousAction } from './planner/hooks/usePlannerActions';
 import LiveVoiceSheet from './planner/components/LiveVoiceSheet';
-import { askStream } from '../lib/chatStream';
+import { askStream } from '@/lib/chatStream';
 import MenuAssistant, {
   createMenuAssistantMessages,
   createMenuInputs,
@@ -32,11 +32,11 @@ import VendorMessageSheet from './planner/components/VendorMessageSheet';
 import NotificationToggle from './planner/components/NotificationToggle';
 import ThemeToggle from './planner/ThemeToggle';
 import ViewportLock from './ViewportLock';
-import { buildWeeklyBriefing } from '../lib/planner/weeklyBriefing';
-import { parseChatActions, stripActionBlock, type PlannerAction } from '../lib/planner/chatActions';
-import { parseClarify, stripClarifyBlock } from '../lib/planner/chatClarify';
-import { budgetBlueprint, contingencyPercent } from '../lib/planner/budgetGenerator';
-import { collectDueReminders, fireReminders } from '../lib/notifications';
+import { buildWeeklyBriefing } from '@/lib/planner/weeklyBriefing';
+import { parseChatActions, stripActionBlock, type PlannerAction } from '@/lib/planner/chatActions';
+import { parseClarify, stripClarifyBlock } from '@/lib/planner/chatClarify';
+import { budgetBlueprint, contingencyPercent } from '@/lib/planner/budgetGenerator';
+import { collectDueReminders, fireReminders } from '@/lib/notifications';
 import type {
   ActiveTab,
   ActivityItem,
@@ -60,7 +60,7 @@ import {
   generateSuggestions as generateProactiveSuggestions,
   dismissSuggestion,
   type ProactiveSuggestion
-} from '../lib/ai/proactiveSuggestions';
+} from '@/lib/ai/proactiveSuggestions';
 import Link from 'next/link';
 import SetupWizardModal from './ai/SetupWizardModal';
 import type { SetupCompletePayload } from './ai/SetupWizard';
@@ -68,15 +68,15 @@ import {
   generatePersonalizedChecklist,
   profileReadyForChecklist,
   type SurveyAnswers
-} from '../lib/planner/checklistGenerator';
+} from '@/lib/planner/checklistGenerator';
 import {
   CHECKLIST_CATEGORIES,
   categorizeTask,
   tryDetectCategory,
   getCategoryLabel,
   type ChecklistCategoryId
-} from '../lib/planner/checklistCategories';
-import { featureFlags } from '../lib/featureFlags';
+} from '@/lib/planner/checklistCategories';
+import { featureFlags } from '@/lib/featureFlags';
 import {
   checklistFromAnswer,
   dateKey,
@@ -110,7 +110,7 @@ import {
   parseGuestsCsv
 } from './planner/exporters';
 import { derivePlannerContext } from './planner/plannerContext';
-import { extractFacts, loadMemory, saveMemory, mergeFacts, memoryToContext, type MemoryFact } from '../lib/ai/conversationMemory';
+import { extractFacts, loadMemory, saveMemory, mergeFacts, memoryToContext, type MemoryFact } from '@/lib/ai/conversationMemory';
 
 function toSurveyAnswers(profile: PlannerProfile): SurveyAnswers {
   return {

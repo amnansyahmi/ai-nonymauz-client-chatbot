@@ -1,0 +1,16 @@
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.iconBtn:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.sm { width: 32px; height: 32px; }

@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { chatRequestSchema, type ChatRequest } from '../../../lib/chatSchema';
-import { formatContext, getClientName, retrieveContext, type KnowledgeDoc } from '../../../lib/retrieval';
-import { clientKeyFromRequest, SimpleRateLimiter } from '../../../lib/rateLimit';
-import { encodeSseError, encodeSseEvent, parseSseEvents, type StreamEvent } from '../../../lib/stream/sse';
-import { MM_CLARIFY_OPEN, MM_CLARIFY_CLOSE } from '../../../lib/planner/chatClarify';
-import { MM_ACTIONS_OPEN, MM_ACTIONS_CLOSE } from '../../../lib/planner/chatActions';
+import { chatRequestSchema, type ChatRequest } from '@/lib/chatSchema';
+import { formatContext, getClientName, retrieveContext, type KnowledgeDoc } from '@/lib/retrieval';
+import { clientKeyFromRequest, SimpleRateLimiter } from '@/lib/rateLimit';
+import { encodeSseError, encodeSseEvent, parseSseEvents, type StreamEvent } from '@/lib/stream/sse';
+import { MM_CLARIFY_OPEN, MM_CLARIFY_CLOSE } from '@/lib/planner/chatClarify';
+import { MM_ACTIONS_OPEN, MM_ACTIONS_CLOSE } from '@/lib/planner/chatActions';
 import {
   detectPlannerDuplicate,
   findChecklistDuplicate,
@@ -15,8 +15,8 @@ import {
   buildDuplicateClarifyMessage,
   buildMarkDoneMessage,
   buildStillOpenMessage
-} from '../../../lib/planner/duplicateGuard';
-import { getSourceConfidence } from '../../../lib/ai/sourceConfidence';
+} from '@/lib/planner/duplicateGuard';
+import { getSourceConfidence } from '@/lib/ai/sourceConfidence';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordClick } from '../../../lib/affiliate/queries';
+import { recordClick } from '@/lib/affiliate/queries';
 import {
   ATTRIBUTION_COOKIE,
   cookieMaxAgeSeconds,
   parseUserAgent,
   clientIpFromHeaders
-} from '../../../lib/affiliate/tracking';
+} from '@/lib/affiliate/tracking';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

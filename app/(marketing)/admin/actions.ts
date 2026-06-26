@@ -2,10 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
-import { db } from '../../../lib/db';
-import { affiliates, commissions, payouts, affiliateSettings } from '../../../lib/db/schema';
-import { requireAdmin, requireSuperuser } from '../../../lib/admin/session';
-import { createAdminUser, deleteAdminUser } from '../../../lib/admin/users';
+import { db } from '@/lib/db';
+import { affiliates, commissions, payouts, affiliateSettings } from '@/lib/db/schema';
+import { requireAdmin, requireSuperuser } from '@/lib/admin/session';
+import { createAdminUser, deleteAdminUser } from '@/lib/admin/users';
 
 const AFFILIATE_STATUSES = ['pending', 'approved', 'suspended', 'rejected'];
 const COMMISSION_STATUSES = ['pending', 'approved', 'rejected', 'paid'];

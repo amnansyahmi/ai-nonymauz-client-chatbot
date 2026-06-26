@@ -1,6 +1,6 @@
 'use client';
 
-import type { ConversationNode } from '../../lib/ai/branches';
+import type { ConversationNode } from '@/lib/ai/branches';
 
 type BranchNavigatorProps = {
   siblings: ConversationNode[];

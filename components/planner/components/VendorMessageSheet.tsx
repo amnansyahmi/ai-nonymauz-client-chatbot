@@ -8,7 +8,7 @@ import {
   VENDOR_MESSAGE_INTENTS,
   whatsappLink,
   type VendorMessageIntent
-} from '../../../lib/planner/vendorMessages';
+} from '@/lib/planner/vendorMessages';
 
 type Props = {
   vendor: Vendor;

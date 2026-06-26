@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { listAffiliates } from '../../../../lib/affiliate/admin';
-import { rm, fmtDate, statusMeta } from '../../../../lib/affiliate/format';
+import { listAffiliates } from '@/lib/affiliate/admin';
+import { rm, fmtDate, statusMeta } from '@/lib/affiliate/format';
+import { Button, Badge } from '@/components/ui';
 import { setAffiliateStatusAction } from '../actions';
 
 export const metadata: Metadata = { title: 'Affiliates — Admin' };
@@ -46,21 +47,21 @@ export default async function AdminAffiliatesPage() {
                   <td>{a.users}</td>
                   <td>{rm(a.revenue)}</td>
                   <td>{rm(a.commission)}</td>
-                  <td><span className={`admin-badge ${s.cls}`}>{s.label}</span></td>
+                  <td><Badge variant={s.variant}>{s.label}</Badge></td>
                   <td>
                     <div className="admin-actions">
                       {a.status !== 'approved' && (
                         <form action={setAffiliateStatusAction}>
                           <input type="hidden" name="id" value={a.id} />
                           <input type="hidden" name="status" value="approved" />
-                          <button className="ui-btn ui-btn--sm ui-btn--ok">Lulus</button>
+                          <Button type="submit" variant="ok" size="sm">Lulus</Button>
                         </form>
                       )}
                       {a.status !== 'suspended' && (
                         <form action={setAffiliateStatusAction}>
                           <input type="hidden" name="id" value={a.id} />
                           <input type="hidden" name="status" value="suspended" />
-                          <button className="ui-btn ui-btn--sm ui-btn--danger">Gantung</button>
+                          <Button type="submit" variant="danger" size="sm">Gantung</Button>
                         </form>
                       )}
                     </div>

@@ -1,15 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { PLANS } from '../../lib/payments/plans';
-import ScrollReveal from '../../components/marketing/ScrollReveal';
-import ScrollProgress from '../../components/marketing/ScrollProgress';
-import InteractiveHero from '../../components/marketing/InteractiveHero';
-import FloatingShapes from '../../components/marketing/FloatingShapes';
-import AnimatedCounter from '../../components/marketing/AnimatedCounter';
-import TestimonialCarousel from '../../components/marketing/TestimonialCarousel';
-import FeatureShowcase from '../../components/marketing/FeatureShowcase';
-import ConfettiLink from '../../components/marketing/ConfettiLink';
+import { PLANS } from '@/lib/payments/plans';
+import ScrollReveal from '@/components/marketing/ScrollReveal';
+import ScrollProgress from '@/components/marketing/ScrollProgress';
+import InteractiveHero from '@/components/marketing/InteractiveHero';
+import FloatingShapes from '@/components/marketing/FloatingShapes';
+import AnimatedCounter from '@/components/marketing/AnimatedCounter';
+import TestimonialCarousel from '@/components/marketing/TestimonialCarousel';
+import FeatureShowcase from '@/components/marketing/FeatureShowcase';
+import ConfettiLink from '@/components/marketing/ConfettiLink';
 
 export const metadata: Metadata = {
   title: 'MajlisMate.ai — Pembantu AI untuk rancang majlis kahwin',

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { SOURCE_CONFIDENCE_LABEL, getSourceConfidence } from '../../lib/ai/sourceConfidence';
-import type { SourceItem } from '../../lib/ai/sourceConfidence';
+import { SOURCE_CONFIDENCE_LABEL, getSourceConfidence } from '@/lib/ai/sourceConfidence';
+import type { SourceItem } from '@/lib/ai/sourceConfidence';
 
 type SourceChipsProps = {
   sources: SourceItem[];

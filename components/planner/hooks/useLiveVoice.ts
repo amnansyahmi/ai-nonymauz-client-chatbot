@@ -2,26 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppLanguage } from '../types';
-import { classifySupport, detectCapabilities, type VoiceCapabilities, type VoiceSupportLevel } from '../../../lib/voice/capabilities';
-import { createSttController, type SttController } from '../../../lib/voice/stt';
+import { classifySupport, detectCapabilities, type VoiceCapabilities, type VoiceSupportLevel } from '@/lib/voice/capabilities';
+import { createSttController, type SttController } from '@/lib/voice/stt';
 import {
   createStreamingTts,
   createTtsController,
   splitIntoSentences,
   type StreamingTtsHandle,
   type TtsController
-} from '../../../lib/voice/tts';
-import { createVad, type VadController } from '../../../lib/voice/vad';
-import { detectLanguage, isConfident, type LanguageDetection } from '../../../lib/voice/languages';
+} from '@/lib/voice/tts';
+import { createVad, type VadController } from '@/lib/voice/vad';
+import { detectLanguage, isConfident, type LanguageDetection } from '@/lib/voice/languages';
 import {
   findSavedVoice,
   loadVoicePreferences,
   saveVoicePreferences,
   type VoicePreferences
-} from '../../../lib/voice/storage';
-import { listVoicesForLanguage, pickBestVoice, type ScoredVoice } from '../../../lib/voice/voices';
-import { humanize, isQuestionSentence, sentenceProsody } from '../../../lib/voice/prosody';
-import { parseChatActions, MM_ACTIONS_OPEN, type PlannerAction } from '../../../lib/planner/chatActions';
+} from '@/lib/voice/storage';
+import { listVoicesForLanguage, pickBestVoice, type ScoredVoice } from '@/lib/voice/voices';
+import { humanize, isQuestionSentence, sentenceProsody } from '@/lib/voice/prosody';
+import { parseChatActions, MM_ACTIONS_OPEN, type PlannerAction } from '@/lib/planner/chatActions';
 
 const THINKING_ACKS: Record<AppLanguage, readonly string[]> = {
   en: [

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getBill } from '../../../../lib/payments/billplz';
-import { finalizeReferralCommission } from '../../../../lib/affiliate/queries';
+import { getBill } from '@/lib/payments/billplz';
+import { finalizeReferralCommission } from '@/lib/affiliate/queries';
 
 export const runtime = 'nodejs';
 

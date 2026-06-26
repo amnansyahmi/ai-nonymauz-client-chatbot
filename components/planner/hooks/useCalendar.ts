@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { storageKeys } from '../data';
 import type { Appointment, AppLanguage, PlannerProfile } from '../types';
 import { dateKey, downloadTextFile, getCalendarDays, monthLabel, sortAppointments } from '../utils';
-import { useLocalStorage } from '../../../lib/hooks/useLocalStorage';
+import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 
 export type CalendarView = 'month' | 'agenda';
 export type AgendaFilter = 'upcoming' | 'all';

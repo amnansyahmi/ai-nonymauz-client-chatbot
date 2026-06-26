@@ -6,7 +6,7 @@ import {
   notificationPermission,
   notificationsSupported,
   requestNotificationPermission
-} from '../../../lib/notifications';
+} from '@/lib/notifications';
 
 type Props = {
   language: AppLanguage;

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
-import { getPayableAffiliates, listPayouts } from '../../../../lib/affiliate/admin';
-import { rm, fmtDate, statusMeta } from '../../../../lib/affiliate/format';
+import { getPayableAffiliates, listPayouts } from '@/lib/affiliate/admin';
+import { rm, fmtDate, statusMeta } from '@/lib/affiliate/format';
+import { Button, Badge, Card } from '@/components/ui';
 import { payAffiliateAction } from '../actions';
 
 export const metadata: Metadata = { title: 'Bayaran — Admin' };
@@ -16,7 +17,7 @@ export default async function AdminPayoutsPage() {
         <p>Bayar komisen affiliate yang telah diluluskan.</p>
       </header>
 
-      <section className="admin-card">
+      <Card>
         <h2>Sedia untuk dibayar</h2>
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -40,12 +41,12 @@ export default async function AdminPayoutsPage() {
                         <form action={payAffiliateAction}>
                           <input type="hidden" name="affiliateId" value={id} />
                           <input type="hidden" name="method" value="duitnow" />
-                          <button className="ui-btn ui-btn--sm ui-btn--ok">DuitNow</button>
+                          <Button type="submit" variant="ok" size="sm">DuitNow</Button>
                         </form>
                         <form action={payAffiliateAction}>
                           <input type="hidden" name="affiliateId" value={id} />
                           <input type="hidden" name="method" value="bank" />
-                          <button className="ui-btn ui-btn--sm">Bank</button>
+                          <Button type="submit" size="sm">Bank</Button>
                         </form>
                       </div>
                     </td>
@@ -55,9 +56,9 @@ export default async function AdminPayoutsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
 
-      <section className="admin-card">
+      <Card>
         <h2>Sejarah bayaran</h2>
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -75,7 +76,7 @@ export default async function AdminPayoutsPage() {
                     <td><code>{String(p.affiliate_code)}</code></td>
                     <td>{rm(p.amount as number)}</td>
                     <td>{String(p.method) === 'bank' ? 'Bank' : 'DuitNow'}</td>
-                    <td><span className={`admin-badge ${s.cls}`}>{s.label}</span></td>
+                    <td><Badge variant={s.variant}>{s.label}</Badge></td>
                     <td>{fmtDate((p.paid_at ?? p.created_at) as string)}</td>
                   </tr>
                 );
@@ -83,7 +84,7 @@ export default async function AdminPayoutsPage() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }
