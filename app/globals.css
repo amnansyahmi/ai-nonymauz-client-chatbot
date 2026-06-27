@@ -2925,17 +2925,19 @@ select {
 
 .workspace-titlebar {
   position: relative;
-  display: grid;
-  grid-template-columns: 80px 1fr 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   min-height: 60px;
   border-bottom: 1px solid #eee6e1;
   background: #fffaf7;
   color: var(--chatgpt-text);
   padding: 0 18px;
+  gap: 0;
 }
 
 .workspace-menu-button {
-  justify-self: start;
+  flex-shrink: 0;
   width: 36px;
   height: 36px;
   border: 0;
@@ -2961,9 +2963,10 @@ select {
 }
 
 .workspace-title-center {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  flex: 1 1 auto;
   gap: 9px;
 }
 
@@ -3181,11 +3184,19 @@ select {
 }
 
 .planner-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
   width: min(320px, calc(100vw - 28px));
   background: var(--mm-panel);
   border-color: var(--mm-border);
   box-shadow: 18px 0 48px rgba(23, 23, 23, 0.14);
   padding: 14px 12px;
+}
+
+.planner-menu {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
 }
 
 .sidebar-backdrop {
@@ -3217,8 +3228,12 @@ select {
 .workspace-menu-button::after {
   content: "";
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: 18px;
   height: 2px;
+  margin-left: -9px;
+  margin-top: -1px;
   border: 0;
   border-radius: 999px;
   background: var(--mm-text);
@@ -4545,10 +4560,14 @@ select {
 
 .workspace-titlebar {
   position: relative;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   z-index: 20;
   grid-row: 1;
   min-height: 60px;
   background: var(--mm-bg);
+  gap: 0 !important;
 }
 
 .main-chat-panel {
@@ -4952,7 +4971,7 @@ body {
 /* On-demand context assistant drawer */
 
 .workspace-title-actions {
-  justify-self: end;
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -7136,10 +7155,6 @@ button,
 
 /* Final containment fixes: keep Ask AI inside its box and make chat scrolling use the full panel height. */
 
-.workspace-titlebar {
-  grid-template-columns: auto minmax(0, 1fr) auto !important;
-}
-
 .workspace-title-actions {
   min-width: 0;
   max-width: 100%;
@@ -8866,8 +8881,6 @@ button,
 
 .dashboard-panel button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
-.settings-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn):not(.settings-close-button),
-
 .vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
 .assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn) {
@@ -8919,8 +8932,6 @@ button,
 .calendar-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
 .dashboard-panel button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
-
-.settings-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn):not(.settings-close-button),
 
 .vendor-detail-drawer button:hover:not(.mm-add-btn):not(.mm-views__btn):not(.mm-dropdown__btn),
 
@@ -9987,230 +9998,6 @@ textarea:focus {
 .planner-content:has(.main-chat-panel) .workspace-history-button svg {
   width: 19px;
   height: 19px;
-}
-
-/* Modern couple profile drawer */
-
-.settings-drawer-backdrop {
-  background: rgba(0, 0, 0, 0.18) !important;
-  backdrop-filter: blur(2px);
-}
-
-.settings-drawer {
-  width: min(520px, 100vw) !important;
-  border-left: 1px solid var(--mm-border) !important;
-  background: #ffffff !important;
-  color: var(--mm-text) !important;
-  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.1) !important;
-  scrollbar-gutter: stable;
-}
-
-.settings-drawer-header {
-  align-items: center !important;
-  min-height: 72px !important;
-  border-bottom: 1px solid var(--mm-border) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  padding: 16px 22px !important;
-}
-
-.settings-drawer-header .eyebrow {
-  min-height: auto !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  color: var(--mm-text-muted) !important;
-  padding: 0 !important;
-  font-size: 0.78rem !important;
-  font-weight: 650 !important;
-  letter-spacing: 0 !important;
-  text-transform: none !important;
-}
-
-.settings-drawer-header h3 {
-  margin: 3px 0 0 !important;
-  color: var(--mm-text) !important;
-  font-size: 1.16rem !important;
-  font-weight: 720 !important;
-  line-height: 1.2 !important;
-}
-
-.settings-drawer .settings-close-button {
-  display: inline-grid !important;
-  place-items: center;
-  width: 38px !important;
-  min-width: 38px !important;
-  height: 38px !important;
-  min-height: 38px !important;
-  border: 1px solid var(--mm-border) !important;
-  border-radius: var(--mm-radius-pill) !important;
-  background: var(--mm-surface) !important;
-  color: var(--mm-text) !important;
-  padding: 0 !important;
-}
-
-.settings-drawer .settings-close-button:hover,
-
-.settings-drawer .settings-close-button:focus-visible {
-  background: var(--mm-surface-subtle) !important;
-  border-color: var(--mm-border-strong) !important;
-}
-
-.settings-close-button svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-width: 2;
-}
-
-.settings-form {
-  display: grid !important;
-  gap: 22px !important;
-  padding: 18px 22px 0 !important;
-}
-
-.settings-section {
-  display: grid !important;
-  gap: 14px !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-}
-
-.settings-section > span,
-
-.settings-language-row > span {
-  color: var(--mm-text-muted) !important;
-  font-size: 0.78rem !important;
-  font-weight: 720 !important;
-  letter-spacing: 0 !important;
-  text-transform: none !important;
-}
-
-.settings-section label {
-  gap: 7px !important;
-  color: var(--mm-text-muted) !important;
-  font-size: 0.83rem !important;
-  font-weight: 650 !important;
-}
-
-.settings-section input,
-
-.settings-section select {
-  min-height: 46px !important;
-  border: 1px solid var(--mm-border) !important;
-  border-radius: 12px !important;
-  background: var(--mm-surface) !important;
-  color: var(--mm-text) !important;
-  padding: 0 14px !important;
-  font-size: 0.96rem !important;
-  font-weight: 520 !important;
-}
-
-.settings-section input::placeholder {
-  color: var(--mm-text-soft) !important;
-}
-
-.settings-section input:focus,
-
-.settings-section select:focus {
-  border-color: var(--mm-text) !important;
-  outline: 3px solid rgba(23, 23, 23, 0.08) !important;
-}
-
-.settings-two-column {
-  gap: 12px !important;
-}
-
-.settings-language-row {
-  min-height: 46px;
-  align-items: center !important;
-  border-top: 1px solid var(--mm-border) !important;
-  padding-top: 14px;
-}
-
-.settings-language-row .language-toggle {
-  min-height: 36px !important;
-  border-radius: var(--mm-radius-pill) !important;
-  padding: 3px !important;
-}
-
-.settings-language-row .language-toggle button {
-  min-height: 30px !important;
-  border-radius: var(--mm-radius-pill) !important;
-  padding: 0 12px !important;
-}
-
-.settings-primary-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  grid-template-columns: minmax(0, 1fr) auto !important;
-  margin: 8px -22px 0 !important;
-  border-top: 1px solid var(--mm-border) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  padding: 14px 22px max(14px, env(safe-area-inset-bottom, 0px)) !important;
-  backdrop-filter: blur(14px);
-}
-
-.settings-primary-actions button,
-
-.settings-action-grid button,
-
-.settings-danger-button {
-  min-height: 44px !important;
-  border-radius: var(--mm-radius-pill) !important;
-  font-size: 0.9rem !important;
-}
-
-.settings-primary-actions button:first-child {
-  border-color: #171717 !important;
-  background: #171717 !important;
-  color: #ffffff !important;
-}
-
-.settings-primary-actions button:last-child {
-  padding-inline: 16px !important;
-}
-
-.settings-utility-section {
-  margin: 18px 22px 24px !important;
-  border-top: 1px solid var(--mm-border) !important;
-  padding-top: 18px !important;
-}
-
-.settings-action-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 10px !important;
-}
-
-.settings-action-grid button {
-  min-height: 58px !important;
-  border-radius: 14px !important;
-  background: var(--mm-surface) !important;
-  padding: 10px 12px !important;
-}
-
-.settings-action-grid button:hover,
-
-.settings-action-grid button:focus-visible {
-  background: var(--mm-surface-subtle) !important;
-}
-
-.settings-action-grid small {
-  color: var(--mm-text-muted) !important;
-}
-
-.settings-danger-button {
-  width: 100%;
-  margin-top: 4px;
-  border-color: #f1d4d4 !important;
-  background: #fffafa !important;
-  color: #9f1d1d !important;
 }
 
 /* Final legacy UI cleanup */
@@ -12764,6 +12551,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding-left: 8px;
   max-width: 100%;
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
-import type { ActivityItem, AppLanguage, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
+import type { ActiveTab, ActivityItem, AppLanguage, BudgetItem, Guest, PlannerProfile, Vendor } from './types';
 import { money, rsvpLabel, statusLabel } from './utils';
 import {
   buildRsvpInviteMessage,
@@ -9,6 +9,8 @@ import {
 } from '@/lib/planner/rsvpShare';
 import { buildRsvpPageUrl } from '@/lib/planner/rsvpLink';
 import type { WeeklyBriefing as Briefing, BriefingTone } from '@/lib/planner/weeklyBriefing';
+import RiskAlerts from './components/RiskAlerts';
+import type { RiskAlert } from './riskDetector';
 
 type DashboardPanelProps = {
   plannerProfile: PlannerProfile;
@@ -28,6 +30,8 @@ type DashboardPanelProps = {
   activity: ActivityItem[];
   language?: AppLanguage;
   briefing: Briefing;
+  riskAlerts?: RiskAlert[];
+  onNavigate?: (tab: ActiveTab) => void;
 };
 
 const dashboardCopy = {
@@ -129,6 +133,8 @@ export function DashboardPanel({
   activity,
   language = 'ms',
   briefing,
+  riskAlerts = [],
+  onNavigate,
 }: DashboardPanelProps) {
   const t = dashboardCopy[language];
   const isMs = language === 'ms';
@@ -181,6 +187,14 @@ export function DashboardPanel({
           <span className="mm-stat__meta">{t.rsvpMeta(pendingGuests, declinedGuests)}</span>
         </article>
       </div>
+
+      {riskAlerts.length > 0 ? (
+        <RiskAlerts
+          alerts={riskAlerts}
+          language={language}
+          onNavigate={onNavigate ?? (() => {})}
+        />
+      ) : null}
 
       <div className="mm-dash__cols">
         <section className="mm-dash__card mm-dash__focus">
@@ -486,7 +500,7 @@ export function BudgetPanel({
         <div className="mm-toolbar__tools">
           <button
             type="button"
-            className={`mm-add-btn${isBudgetAddOpen ? ' is-open' : ''}`}
+            className={`mm-add-btn mm-circle-button${isBudgetAddOpen ? ' is-open' : ''}`}
             aria-expanded={isBudgetAddOpen}
             onClick={() => setIsBudgetAddOpen((v) => !v)}
           >
@@ -494,7 +508,7 @@ export function BudgetPanel({
             <span className="mm-add-btn__label">{t.add}</span>
           </button>
           <details className="mm-kebab">
-            <summary aria-label={t.more}>
+            <summary className="mm-circle-button" aria-label={t.more}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
             </summary>
             <div className="mm-dropdown">
@@ -923,7 +937,7 @@ export function RsvpPanel({
         <div className="mm-toolbar__tools">
           <button
             type="button"
-            className={`mm-add-btn${isGuestAddOpen ? ' is-open' : ''}`}
+            className={`mm-add-btn mm-circle-button${isGuestAddOpen ? ' is-open' : ''}`}
             aria-expanded={isGuestAddOpen}
             onClick={() => setIsGuestAddOpen((v) => !v)}
           >
@@ -931,7 +945,7 @@ export function RsvpPanel({
             <span className="mm-add-btn__label">{isGuestAddOpen ? (language === 'ms' ? 'Batal' : 'Cancel') : (language === 'ms' ? 'Tambah' : 'Add')}</span>
           </button>
           <details className="mm-kebab">
-            <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+            <summary className="mm-circle-button" aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
             </summary>
             <div className="mm-dropdown">
@@ -1118,8 +1132,6 @@ type VendorsPanelProps = {
   addVendorToBudget: (vendor: Vendor) => void;
   language?: AppLanguage;
   defaultNegeri?: string;
-  onSearchNearby?: () => void;
-  searchLoading?: boolean;
   searchInfo?: string;
 };
 
@@ -1137,8 +1149,6 @@ export function VendorsPanel({
   addVendorToBudget,
   language = 'ms',
   defaultNegeri = '',
-  onSearchNearby,
-  searchLoading = false,
   searchInfo = ''
 }: VendorsPanelProps) {
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -1187,19 +1197,6 @@ export function VendorsPanel({
         <a className="mm-vd__maps" href={browseMapsUrl} target="_blank" rel="noreferrer">
           {language === 'ms' ? '🗺️ Cari di Google Maps' : '🗺️ Find on Google Maps'}
         </a>
-        {onSearchNearby ? (
-          <button
-            type="button"
-            className="mm-vd__import"
-            onClick={onSearchNearby}
-            disabled={searchLoading}
-            title={language === 'ms' ? 'Import hasil ke dalam app (perlu API key)' : 'Import results into the app (needs API key)'}
-          >
-            {searchLoading
-              ? (language === 'ms' ? 'Mengimport…' : 'Importing…')
-              : (language === 'ms' ? 'Import ke app' : 'Import to app')}
-          </button>
-        ) : null}
       </div>
       {searchInfo ? <p className="vendor-search-info">{searchInfo}</p> : null}
 

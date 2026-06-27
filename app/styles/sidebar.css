@@ -1,0 +1,847 @@
+/* =============================================================
+ * Planner Sidebar — 100% ChatGPT-style
+ * Loaded after globals.css + planner-overrides.css for precedence.
+ * ============================================================= */
+
+/* ── Hamburger / sidebar toggle (titlebar) ────────────────── */
+.workspace-menu-button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  flex-shrink: 0 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text, #1a1a1a) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+  transition: background 140ms ease !important;
+}
+
+.workspace-menu-button:hover,
+.workspace-menu-button:focus-visible {
+  background: var(--mm-surface-subtle, rgba(0,0,0,0.06)) !important;
+  color: var(--mm-text, #1a1a1a) !important;
+  outline: none !important;
+}
+
+.workspace-menu-button:active {
+  transform: scale(0.96) !important;
+}
+
+.workspace-menu-button svg {
+  width: 22px !important;
+  height: 22px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+/* Remove old pseudo-element hamburger */
+.workspace-menu-button::before,
+.workspace-menu-button::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+  transform: none !important;
+}
+
+/* ── Sidebar shell ─────────────────────────────────────────── */
+.planner-sidebar {
+  position: fixed !important;
+  z-index: 90 !important;
+  inset: 0 !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 280px !important;
+  max-width: calc(100vw - 28px) !important;
+  height: 100dvh !important;
+  border: 0 !important;
+  border-right: 1px solid #deded8 !important;
+  border-radius: 0 !important;
+  background: #f7f7f5 !important;
+  color: #171717 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  transform: translateX(-100%) !important;
+  transition: transform 240ms cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  padding: 0 !important;
+}
+
+.planner-body.sidebar-open .planner-sidebar {
+  transform: translateX(0) !important;
+}
+
+/* Kill old ::before backdrop */
+.planner-body.sidebar-open::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* ── Backdrop ──────────────────────────────────────────────── */
+.sidebar-backdrop {
+  position: fixed !important;
+  z-index: 80 !important;
+  inset: 0 !important;
+  border: 0 !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  cursor: pointer !important;
+  animation: sidebarFadeIn 200ms ease !important;
+}
+
+@keyframes sidebarFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Top (close button only — like ChatGPT) ────────────────── */
+.sidebar-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 12px 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.sidebar-close-button {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background 140ms ease !important;
+}
+
+.sidebar-close-button:hover,
+.sidebar-close-button:focus-visible {
+  background: var(--mm-surface-subtle, rgba(0,0,0,0.05)) !important;
+  color: var(--mm-text) !important;
+  outline: none !important;
+}
+
+.sidebar-close-button svg {
+  width: 22px !important;
+  height: 22px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+/* ── Nav menu (scrollable middle) ──────────────────────────── */
+.planner-menu {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 4px 8px !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--mm-border-strong, #d4d4d4) transparent !important;
+}
+
+.planner-menu::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.planner-menu::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.planner-menu::-webkit-scrollbar-thumb {
+  background: var(--mm-border-strong, #d4d4d4) !important;
+  border-radius: 999px !important;
+}
+
+/* ── Nav items — ChatGPT style ─────────────────────────────── */
+.planner-menu button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text-muted, #5d5d5d) !important;
+  padding: 0 10px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  text-align: left !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background 100ms ease !important;
+}
+
+.planner-menu button:hover {
+  background: var(--mm-surface-subtle, rgba(0,0,0,0.04)) !important;
+}
+
+.planner-menu button.active {
+  background: var(--mm-surface-muted, #ececec) !important;
+  color: var(--mm-text) !important;
+}
+
+.planner-menu button:active {
+  transform: scale(0.99) !important;
+}
+
+/* ── Menu icon — ChatGPT style ─────────────────────────────── */
+.menu-icon {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+.menu-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8 !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* ── Menu text ─────────────────────────────────────────────── */
+.menu-text {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ── Footer (profile pinned to bottom) ─────────────────────── */
+.sidebar-footer {
+  flex-shrink: 0 !important;
+  border-top: 1px solid var(--mm-border) !important;
+  padding: 8px !important;
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.sidebar-profile-button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  min-height: 44px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  padding: 6px 8px !important;
+  text-align: left !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background 100ms ease !important;
+}
+
+.sidebar-profile-button:hover {
+  background: var(--mm-surface-subtle, rgba(0,0,0,0.04)) !important;
+}
+
+/* ── Avatar ────────────────────────────────────────────────── */
+.sidebar-avatar {
+  display: grid !important;
+  place-items: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 50% !important;
+  background: var(--mm-text, #171717) !important;
+  color: var(--mm-on-brand, #fff) !important;
+  font-size: 0.7rem !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+}
+
+/* ── Profile info ──────────────────────────────────────────── */
+.sidebar-profile-info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.sidebar-profile-info strong {
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  color: var(--mm-text) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+
+.sidebar-profile-info span {
+  font-size: 0.72rem !important;
+  font-weight: 400 !important;
+  color: var(--mm-text-muted, #8e8e8e) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  line-height: 1.3 !important;
+}
+
+.sidebar-profile-chevron {
+  flex-shrink: 0 !important;
+  color: var(--mm-text-muted, #8e8e8e) !important;
+}
+
+/* ═══ Mobile responsive ═══════════════════════════════════════ */
+@media (max-width: 760px) {
+  .planner-sidebar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-right: 0 !important;
+  }
+
+  .planner-menu button {
+    min-height: 44px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .menu-icon {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .menu-icon svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  .sidebar-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.76rem !important;
+  }
+}
+
+/* ── Hide old classes ──────────────────────────────────────── */
+.sidebar-header,
+.sidebar-mark,
+.sidebar-brand,
+.sidebar-brand-mark,
+.sidebar-date,
+.couple-profile-card,
+.couple-profile-main,
+.couple-avatar,
+.couple-profile-copy,
+.menu-label,
+.menu-chevron,
+.menu-badge,
+.sidebar-live-button,
+.sidebar-live-dot {
+  display: none !important;
+}
+
+/* Kill old planner-menu span backgrounds */
+.planner-menu span {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* sidebar uses a ChatGPT-like light rail regardless of color-scheme */
+
+/* ==========================================================================
+ * Final ChatGPT-like sidebar pass
+ * This file is loaded late, so keep the drawer source of truth here.
+ * ========================================================================== */
+
+.planner-body {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.planner-body.has-assistant {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.36fr) !important;
+}
+
+.planner-content {
+  grid-column: 1 !important;
+}
+
+.planner-assistant-rail {
+  grid-column: 2 !important;
+}
+
+.planner-sidebar {
+  --gpt-sidebar-bg: #f7f7f5;
+  --gpt-sidebar-hover: #ececea;
+  --gpt-sidebar-active: #e7e7e4;
+  --gpt-sidebar-text: #171717;
+  --gpt-sidebar-muted: #5f5f5a;
+  --gpt-sidebar-faint: #8a8a84;
+  --gpt-sidebar-border: #deded8;
+  position: fixed !important;
+  inset: 0 auto 0 0 !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 260px !important;
+  max-width: calc(100vw - 24px) !important;
+  height: 100dvh !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-right: 1px solid var(--gpt-sidebar-border) !important;
+  border-radius: 0 !important;
+  background: var(--gpt-sidebar-bg) !important;
+  color: var(--gpt-sidebar-text) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+  transform: translateX(-100%) !important;
+  opacity: 0.98 !important;
+  pointer-events: none !important;
+  will-change: transform !important;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0, 0, 1),
+    opacity 160ms ease !important;
+}
+
+.planner-body.sidebar-open .planner-sidebar {
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.planner-body.sidebar-open::before {
+  display: none !important;
+  content: none !important;
+}
+
+.sidebar-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 990 !important;
+  display: block !important;
+  border: 0 !important;
+  padding: 0 !important;
+  background: rgba(0, 0, 0, 0.4) !important;
+  opacity: 1 !important;
+  cursor: default !important;
+  animation: gpt-sidebar-backdrop-in 160ms ease both !important;
+}
+
+@keyframes gpt-sidebar-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gpt-sidebar-top {
+  display: grid !important;
+  grid-template-columns: 40px minmax(0, 1fr) 40px !important;
+  align-items: center !important;
+  gap: 2px !important;
+  min-height: 60px !important;
+  padding: 10px 12px !important;
+}
+
+.gpt-sidebar-brand {
+  min-width: 0 !important;
+  padding: 0 8px !important;
+  color: var(--gpt-sidebar-text) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 0.93rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.gpt-sidebar-toggle,
+.gpt-sidebar-compose,
+.workspace-menu-button {
+  display: grid !important;
+  place-items: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.gpt-sidebar-toggle,
+.gpt-sidebar-compose {
+  background: transparent !important;
+  color: var(--gpt-sidebar-muted) !important;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease !important;
+}
+
+.gpt-sidebar-toggle:hover,
+.gpt-sidebar-compose:hover {
+  background: var(--gpt-sidebar-hover) !important;
+  color: var(--gpt-sidebar-text) !important;
+}
+
+.gpt-sidebar-toggle:active,
+.gpt-sidebar-compose:active,
+.workspace-menu-button:active {
+  transform: scale(0.96) !important;
+}
+
+.gpt-sidebar-toggle svg,
+.gpt-sidebar-compose svg,
+.workspace-menu-button svg {
+  width: 20px !important;
+  height: 20px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.gpt-sidebar-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  padding: 0 8px 10px !important;
+  flex: 0 0 auto !important;
+}
+
+.gpt-sidebar-nav button,
+.gpt-history-title,
+.gpt-recents-toggle,
+.gpt-chat-menu-item,
+.gpt-sidebar-profile {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.gpt-sidebar-nav button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 40px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: var(--gpt-sidebar-muted) !important;
+  padding: 0 10px !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: background 100ms ease, color 100ms ease !important;
+}
+
+.gpt-sidebar-nav button:hover {
+  background: var(--gpt-sidebar-hover) !important;
+  color: var(--gpt-sidebar-text) !important;
+}
+
+.gpt-sidebar-nav button.active {
+  background: var(--gpt-sidebar-active) !important;
+  color: var(--gpt-sidebar-text) !important;
+  font-weight: 500 !important;
+}
+
+.gpt-sidebar-nav .menu-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: currentColor !important;
+  opacity: 0.86 !important;
+  flex: 0 0 20px !important;
+}
+
+.gpt-sidebar-nav .menu-icon svg {
+  width: 19px !important;
+  height: 19px !important;
+  fill: none !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8px !important;
+}
+
+.gpt-sidebar-history {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 8px !important;
+  border-top: 1px solid var(--gpt-sidebar-border) !important;
+  scrollbar-color: rgba(23, 23, 23, 0.18) transparent !important;
+  scrollbar-width: thin !important;
+}
+
+.gpt-sidebar-history::-webkit-scrollbar {
+  width: 4px !important;
+}
+
+.gpt-sidebar-history::-webkit-scrollbar-thumb {
+  border-radius: 999px !important;
+  background: rgba(23, 23, 23, 0.18) !important;
+}
+
+.gpt-section-label,
+.gpt-history-group-label {
+  display: block !important;
+  padding: 10px 10px 5px !important;
+  color: var(--gpt-sidebar-faint) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  user-select: none !important;
+}
+
+.gpt-recents-toggle {
+  min-height: 34px !important;
+  padding: 0 10px !important;
+  color: var(--gpt-sidebar-faint) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+.gpt-history-item {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 36px !important;
+  border-radius: 8px !important;
+  position: relative !important;
+  color: var(--gpt-sidebar-muted) !important;
+  transition: background 100ms ease !important;
+}
+
+.gpt-history-item:hover {
+  background: var(--gpt-sidebar-hover) !important;
+}
+
+.gpt-history-item.active {
+  background: var(--gpt-sidebar-active) !important;
+}
+
+.gpt-history-title {
+  min-height: 36px !important;
+  padding: 0 6px 0 10px !important;
+  color: inherit !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  line-height: 36px !important;
+}
+
+.gpt-history-item:hover .gpt-history-title,
+.gpt-history-item.active .gpt-history-title {
+  color: var(--gpt-sidebar-text) !important;
+}
+
+.gpt-history-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0 !important;
+  padding-right: 4px !important;
+  opacity: 0 !important;
+  transition: opacity 100ms ease !important;
+}
+
+.gpt-history-item:hover .gpt-history-actions,
+.gpt-history-item.active .gpt-history-actions,
+.gpt-pin-btn.active {
+  opacity: 1 !important;
+}
+
+.gpt-pin-btn,
+.gpt-menu-btn {
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 8px !important;
+  color: var(--gpt-sidebar-faint) !important;
+}
+
+.gpt-pin-btn:hover,
+.gpt-menu-btn:hover {
+  background: rgba(23, 23, 23, 0.08) !important;
+  color: var(--gpt-sidebar-text) !important;
+}
+
+.gpt-pin-btn.active {
+  color: var(--gpt-sidebar-text) !important;
+}
+
+.gpt-pin-btn svg,
+.gpt-menu-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+
+.gpt-rename-input {
+  min-height: 30px !important;
+  margin: 3px 6px 3px 10px !important;
+  border: 1px solid var(--gpt-sidebar-border) !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: var(--gpt-sidebar-text) !important;
+  font-size: 0.875rem !important;
+}
+
+.gpt-sidebar-footer {
+  flex: 0 0 auto !important;
+  padding: 8px !important;
+  border-top: 1px solid var(--gpt-sidebar-border) !important;
+}
+
+.gpt-sidebar-profile {
+  min-height: 52px !important;
+  padding: 8px !important;
+  border-radius: 8px !important;
+}
+
+.gpt-sidebar-profile:hover {
+  background: var(--gpt-sidebar-hover) !important;
+}
+
+.gpt-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  background: #7b3f5f !important;
+  color: #ffffff !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0 !important;
+}
+
+.gpt-profile-info strong {
+  color: var(--gpt-sidebar-text) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.gpt-profile-info span {
+  color: var(--gpt-sidebar-faint) !important;
+  font-size: 0.78rem !important;
+  line-height: 1.25 !important;
+}
+
+.workspace-menu-button {
+  background: transparent !important;
+  color: var(--mm-text, #171717) !important;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease !important;
+}
+
+.workspace-menu-button:hover,
+.workspace-menu-button:focus-visible,
+.workspace-menu-button.active {
+  background: #f1f1f1 !important;
+  color: #171717 !important;
+  outline: none !important;
+}
+
+.workspace-menu-button::before,
+.workspace-menu-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+.planner-workspace .workspace-titlebar > .workspace-menu-button,
+.planner-workspace .gpt-sidebar-toggle,
+.planner-workspace .gpt-sidebar-compose {
+  display: grid !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  color: inherit !important;
+}
+
+.planner-workspace .workspace-titlebar > .workspace-menu-button > *,
+.planner-workspace .gpt-sidebar-toggle > *,
+.planner-workspace .gpt-sidebar-compose > * {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.planner-workspace .workspace-titlebar > .workspace-menu-button svg {
+  display: block !important;
+  color: #171717 !important;
+  stroke: currentColor !important;
+}
+
+.planner-workspace .gpt-sidebar-toggle svg,
+.planner-workspace .gpt-sidebar-compose svg {
+  display: block !important;
+  color: var(--gpt-sidebar-muted) !important;
+  stroke: currentColor !important;
+}
+
+.gpt-chat-menu {
+  background: #ffffff !important;
+  border: 1px solid var(--gpt-sidebar-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 14px 36px rgba(23, 23, 23, 0.14) !important;
+}
+
+.gpt-chat-menu-item {
+  color: #171717 !important;
+}
+
+.gpt-chat-menu-item:hover {
+  background: #f1f1ef !important;
+}
+
+.gpt-chat-menu-divider {
+  background: var(--gpt-sidebar-border) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .planner-sidebar,
+  .sidebar-backdrop,
+  .gpt-chat-menu {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .planner-body,
+  .planner-body.has-assistant {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .planner-sidebar {
+    width: min(86vw, 320px) !important;
+    max-width: calc(100vw - 18px) !important;
+  }
+
+  .planner-assistant-rail {
+    grid-column: 1 !important;
+  }
+}

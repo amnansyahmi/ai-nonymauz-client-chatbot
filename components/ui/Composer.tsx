@@ -70,14 +70,6 @@ function DictateIcon() {
   );
 }
 
-function VoiceIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="M6 10v4M10 6v12M14 8v8M18 11v2" />
-    </svg>
-  );
-}
-
 export default function Composer({
   className = 'chat-form',
   input,

@@ -23,7 +23,6 @@ import MenuAssistant, {
   type MenuAssistantTab
 } from './planner/MenuAssistant';
 import { BudgetPanel, DashboardPanel, RsvpPanel, VendorsPanel } from './planner/WorkspacePanels';
-import RiskAlerts from './planner/components/RiskAlerts';
 import { detectRisks } from './planner/riskDetector';
 import ChecklistTaskRow from './planner/components/ChecklistTaskRow';
 import ChecklistTaskSheet from './planner/components/ChecklistTaskSheet';
@@ -55,7 +54,6 @@ import type {
 
 import ProactiveSuggestionCard from './ai/ProactiveSuggestionCard';
 import DatePicker from './ui/DatePicker';
-import MobileBottomNav, { type MobileTab } from './mobile/MobileBottomNav';
 import {
   generateSuggestions as generateProactiveSuggestions,
   dismissSuggestion,
@@ -186,19 +184,19 @@ function RobotIcon() {
   );
 }
 
-function HistoryIcon() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="M4 12a8 8 0 1 0 2.34-5.66L4 8.68" />
-      <path d="M4 4v4.68h4.68M12 7v5l3 2" />
-    </svg>
-  );
-}
-
 function CloseIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
       <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <circle cx="10.75" cy="10.75" r="6.25" />
+      <path d="m15.4 15.4 4.1 4.1" />
     </svg>
   );
 }
@@ -210,6 +208,62 @@ function TrashIcon() {
       <path d="M10 11v6M14 11v6" />
       <path d="M6 7l1 14h10l1-14" />
       <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+function SidebarPanelIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18" />
+    </svg>
+  );
+}
+
+function ComposeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
+function PinIcon({ active }: { active?: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? '2' : '1.75'} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 17v5" />
+      <path d="M5 17h14" />
+      <path d="M17 17v-5l-2-2V5l1-1H8l1 1v5l-2 2v5" />
+    </svg>
+  );
+}
+
+function DotsIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="5" cy="12" r="1.5" />
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="19" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
+function ChevronSmallIcon({ down }: { down: boolean }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transition: 'transform 0.2s', transform: down ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+      <path d="M6 9l6 6 6-6" />
     </svg>
   );
 }
@@ -238,6 +292,7 @@ type ChatSession = {
   title: string;
   updatedAt: string;
   messages: Message[];
+  pinned?: boolean;
 };
 
 const CATEGORY_ICON: Record<string, string> = {
@@ -259,10 +314,12 @@ export default function PlannerWorkspace() {
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState<AppLanguage>('ms');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [catRailOpen, setCatRailOpen] = useState(false);
   const [isContextAssistantOpen, setIsContextAssistantOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isChatHistoryOpen, setIsChatHistoryOpen] = useState(false);
+  const [recentsExpanded, setRecentsExpanded] = useState(true);
+  const [chatMenu, setChatMenu] = useState<{ id: string; pinned: boolean; top: number; left: number } | null>(null);
+  const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState('');
   const [menuMessages, setMenuMessages] = useState<Record<MenuAssistantTab, Message[]>>(() => createMenuAssistantMessages());
@@ -589,6 +646,8 @@ export default function PlannerWorkspace() {
       }
       if (event.key === 'Escape') {
         setIsCommandOpen(false);
+        setIsSidebarOpen(false);
+        setChatMenu(null);
       }
     }
 
@@ -818,7 +877,6 @@ export default function PlannerWorkspace() {
     setInput('');
     setCurrentChatId(`chat-${Date.now()}`);
     setActiveTab('chat');
-    setIsChatHistoryOpen(false);
     if (!options?.silent) {
       setStatusMessage(language === 'ms' ? 'Chat baru dibuka.' : 'New chat started.');
     }
@@ -829,7 +887,18 @@ export default function PlannerWorkspace() {
     setCurrentChatId(session.id);
     setInput('');
     setActiveTab('chat');
-    setIsChatHistoryOpen(false);
+  }
+
+  function pinChat(id: string, pin: boolean) {
+    setChatSessions((prev) => prev.map((s) => s.id === id ? { ...s, pinned: pin } : s));
+  }
+
+  function renameChat(id: string, newTitle: string) {
+    const trimmed = newTitle.trim();
+    if (trimmed) {
+      setChatSessions((prev) => prev.map((s) => s.id === id ? { ...s, title: trimmed } : s));
+    }
+    setRenamingChatId(null);
   }
 
   function deleteChatSession(sessionId: string) {
@@ -2070,6 +2139,32 @@ export default function PlannerWorkspace() {
   const pendingGuests = guests.filter((guest) => guest.status === 'pending').reduce((sum, guest) => sum + guest.pax, 0);
   const riskAlerts = detectRisks({ plannerProfile, checklistItems, budgetItems, appointments, guests, pendingGuests, totalPlanned, totalPaid });
 
+  const pinnedSessions = useMemo(() => chatSessions.filter((s) => s.pinned), [chatSessions]);
+
+  const groupedChatSessions = useMemo(() => {
+    const unpinned = chatSessions.filter((s) => !s.pinned);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayMs = todayStart.getTime();
+    const yesterdayMs = todayMs - 86400000;
+    const weekMs = todayMs - 6 * 86400000;
+    const monthMs = todayMs - 29 * 86400000;
+    const isMs = language === 'ms';
+    const buckets = [
+      { label: isMs ? 'Hari ini' : 'Today', test: (t: number) => t >= todayMs },
+      { label: isMs ? 'Semalam' : 'Yesterday', test: (t: number) => t >= yesterdayMs && t < todayMs },
+      { label: isMs ? '7 hari lepas' : 'Previous 7 days', test: (t: number) => t >= weekMs && t < yesterdayMs },
+      { label: isMs ? '30 hari lepas' : 'Previous 30 days', test: (t: number) => t >= monthMs && t < weekMs },
+      { label: isMs ? 'Lama' : 'Older', test: (t: number) => t < monthMs },
+    ];
+    const result: Array<{ label: string; sessions: ChatSession[] }> = [];
+    for (const bucket of buckets) {
+      const sessions = unpinned.filter((s) => bucket.test(new Date(s.updatedAt).getTime()));
+      if (sessions.length) result.push({ label: bucket.label, sessions });
+    }
+    return result;
+  }, [chatSessions, language]);
+
   const proactiveSuggestions = generateProactiveSuggestions({
     daysToWedding: daysLeft,
     weddingDateSet: Boolean(plannerProfile.majlisDate),
@@ -2569,6 +2664,20 @@ export default function PlannerWorkspace() {
   const coupleMeta =
     plannerProfile.majlisDate ||
     (plannerProfile.negeri ? `${plannerProfile.negeri} - ${plannerProfile.guestTarget} pax` : `${plannerProfile.guestTarget} pax`);
+  const settingsProfileStats = [
+    {
+      label: language === 'ms' ? 'Tarikh' : 'Date',
+      value: plannerProfile.majlisDate || (language === 'ms' ? 'Belum set' : 'Not set')
+    },
+    {
+      label: language === 'ms' ? 'Tetamu' : 'Guests',
+      value: plannerProfile.guestTarget ? `${plannerProfile.guestTarget} pax` : (language === 'ms' ? 'Belum set' : 'Not set')
+    },
+    {
+      label: language === 'ms' ? 'Bajet' : 'Budget',
+      value: plannerProfile.totalBudget ? money(plannerProfile.totalBudget) : (language === 'ms' ? 'Belum set' : 'Not set')
+    }
+  ];
   const selectTab = (tab: ActiveTab) => {
     if (tab === 'chat') {
       startFreshChat({ silent: true });
@@ -2842,141 +2951,191 @@ export default function PlannerWorkspace() {
         />
       ) : null}
 
+      {/* Context menu for chat history items */}
+      {chatMenu ? (
+        <>
+          <div className="gpt-chat-menu-backdrop" onClick={() => setChatMenu(null)} />
+          <div className="gpt-chat-menu" style={{ top: chatMenu.top, left: chatMenu.left }}>
+            <button
+              type="button"
+              className="gpt-chat-menu-item"
+              onClick={() => { setRenamingChatId(chatMenu.id); setRenameValue(chatSessions.find((s) => s.id === chatMenu.id)?.title ?? ''); setChatMenu(null); }}
+            >
+              <EditIcon />
+              <span>{language === 'ms' ? 'Namakan semula' : 'Rename'}</span>
+            </button>
+            <button
+              type="button"
+              className="gpt-chat-menu-item"
+              onClick={() => { pinChat(chatMenu.id, !chatMenu.pinned); setChatMenu(null); }}
+            >
+              <PinIcon active={chatMenu.pinned} />
+              <span>{chatMenu.pinned ? (language === 'ms' ? 'Nyahsemat' : 'Unpin') : (language === 'ms' ? 'Semat chat' : 'Pin chat')}</span>
+            </button>
+            <div className="gpt-chat-menu-divider" />
+            <button
+              type="button"
+              className="gpt-chat-menu-item danger"
+              onClick={() => { deleteChatSession(chatMenu.id); setChatMenu(null); }}
+            >
+              <TrashIcon />
+              <span>{language === 'ms' ? 'Padam' : 'Delete'}</span>
+            </button>
+          </div>
+        </>
+      ) : null}
+
       <div className={`planner-body ${activeMenuTab ? 'has-assistant' : ''} ${isSidebarOpen ? 'sidebar-open' : ''}`}>
         <aside className="planner-sidebar" aria-label="Planner menu">
-          <div className="sidebar-header">
-            <span className="sidebar-mark" aria-hidden="true">i</span>
-            <div>
-              <strong>{copy.weddingPlanner}</strong>
-            </div>
-            <button type="button" className="sidebar-close-button" aria-label="Close menu" onClick={() => setIsSidebarOpen(false)}>
-              ×
+          {/* Header: panel-toggle + brand + compose */}
+          <div className="gpt-sidebar-top">
+            <button
+              type="button"
+              className="gpt-sidebar-toggle"
+              aria-label="Close sidebar"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              <SidebarPanelIcon />
+            </button>
+            <span className="gpt-sidebar-brand">MajlisMate</span>
+            <button
+              type="button"
+              className="gpt-sidebar-compose"
+              aria-label={language === 'ms' ? 'Chat baru' : 'New chat'}
+              onClick={() => { startFreshChat(); setIsSidebarOpen(false); }}
+            >
+              <ComposeIcon />
             </button>
           </div>
-          <div className="sidebar-date">
-            <span>{copy.weddingDate}</span>
-            <DatePicker
-              value={plannerProfile.majlisDate}
-              onChange={(v) => setPlannerProfile((current) => ({ ...current, majlisDate: v }))}
-              language={language}
-              ariaLabel={copy.weddingDate}
-              placeholder={language === 'ms' ? 'Pilih tarikh majlis' : 'Pick your wedding date'}
-            />
-          </div>
-          <nav className="planner-menu" role="tablist" aria-label="Planner menu">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'dashboard'}
-              className={activeTab === 'dashboard' ? 'active' : ''}
-              onClick={() => selectTab('dashboard')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="dashboard" /></span>{copy.dashboard}</span>
-              <span className="menu-chevron" aria-hidden="true" />
+
+          {/* Navigation */}
+          <nav className="gpt-sidebar-nav" role="tablist" aria-label="Planner menu">
+            <button type="button" role="tab" aria-selected={activeTab === 'dashboard'} className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => selectTab('dashboard')}>
+              <span className="menu-icon"><MenuIcon name="dashboard" /></span>
+              <span className="menu-text">{copy.dashboard}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'chat'}
-              className={activeTab === 'chat' ? 'active' : ''}
-              onClick={() => selectTab('chat')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="chat" /></span>{copy.chat}</span>
-              <span className="menu-chevron" aria-hidden="true" />
+            <button type="button" role="tab" aria-selected={activeTab === 'chat'} className={activeTab === 'chat' ? 'active' : ''} onClick={() => selectTab('chat')}>
+              <span className="menu-icon"><MenuIcon name="chat" /></span>
+              <span className="menu-text">{copy.chat}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'checklist'}
-              className={activeTab === 'checklist' ? 'active' : ''}
-              onClick={() => selectTab('checklist')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="checklist" /></span>{copy.checklist}</span>
-              {checklistItems.length > 0 ? <span>{completedCount}/{checklistItems.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
+            <button type="button" role="tab" aria-selected={activeTab === 'checklist'} className={activeTab === 'checklist' ? 'active' : ''} onClick={() => selectTab('checklist')}>
+              <span className="menu-icon"><MenuIcon name="checklist" /></span>
+              <span className="menu-text">{copy.checklist}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'calendar'}
-              className={activeTab === 'calendar' ? 'active' : ''}
-              onClick={() => selectTab('calendar')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="calendar" /></span>{copy.calendar}</span>
-              {appointments.length > 0 ? <span>{appointments.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
+            <button type="button" role="tab" aria-selected={activeTab === 'calendar'} className={activeTab === 'calendar' ? 'active' : ''} onClick={() => selectTab('calendar')}>
+              <span className="menu-icon"><MenuIcon name="calendar" /></span>
+              <span className="menu-text">{copy.calendar}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'budget'}
-              className={activeTab === 'budget' ? 'active' : ''}
-              onClick={() => selectTab('budget')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="budget" /></span>{sidebarMenuLabels.budget}</span>
-              {budgetItems.length > 0 ? <span>{money(totalPaid)}</span> : <span className="menu-chevron" aria-hidden="true" />}
+            <button type="button" role="tab" aria-selected={activeTab === 'budget'} className={activeTab === 'budget' ? 'active' : ''} onClick={() => selectTab('budget')}>
+              <span className="menu-icon"><MenuIcon name="budget" /></span>
+              <span className="menu-text">{sidebarMenuLabels.budget}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'rsvp'}
-              className={activeTab === 'rsvp' ? 'active' : ''}
-              onClick={() => selectTab('rsvp')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="guests" /></span>{sidebarMenuLabels.rsvp}</span>
-              {guests.length > 0 ? <span>{confirmedGuests}</span> : <span className="menu-chevron" aria-hidden="true" />}
+            <button type="button" role="tab" aria-selected={activeTab === 'rsvp'} className={activeTab === 'rsvp' ? 'active' : ''} onClick={() => selectTab('rsvp')}>
+              <span className="menu-icon"><MenuIcon name="guests" /></span>
+              <span className="menu-text">{sidebarMenuLabels.rsvp}</span>
             </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'vendors'}
-              className={activeTab === 'vendors' ? 'active' : ''}
-              onClick={() => selectTab('vendors')}
-            >
-              <span className="menu-label"><span className="menu-icon"><MenuIcon name="vendors" /></span>{copy.vendors}</span>
-              {savedVendors.length > 0 ? <span>{savedVendors.length}</span> : <span className="menu-chevron" aria-hidden="true" />}
+            <button type="button" role="tab" aria-selected={activeTab === 'vendors'} className={activeTab === 'vendors' ? 'active' : ''} onClick={() => selectTab('vendors')}>
+              <span className="menu-icon"><MenuIcon name="vendors" /></span>
+              <span className="menu-text">{copy.vendors}</span>
             </button>
           </nav>
-          {featureFlags.liveVoice ? (
+
+          {/* Pinned + Recents history */}
+          {chatSessions.length > 0 ? (
+            <div className="gpt-sidebar-history">
+              {/* Pinned section */}
+              {pinnedSessions.length > 0 ? (
+                <div className="gpt-history-section">
+                  <span className="gpt-section-label">{language === 'ms' ? 'Disematkan' : 'Pinned'}</span>
+                  {pinnedSessions.map((session) => (
+                    <div key={session.id} className={`gpt-history-item${session.id === currentChatId ? ' active' : ''}`}>
+                      {renamingChatId === session.id ? (
+                        <input
+                          type="text"
+                          className="gpt-rename-input"
+                          value={renameValue}
+                          autoFocus
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={() => renameChat(session.id, renameValue)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') renameChat(session.id, renameValue); if (e.key === 'Escape') setRenamingChatId(null); }}
+                        />
+                      ) : (
+                        <>
+                          <button type="button" className="gpt-history-title" onClick={() => { openChatSession(session); setIsSidebarOpen(false); }}>{session.title}</button>
+                          <div className="gpt-history-actions">
+                            <button type="button" className="gpt-pin-btn active" title="Unpin" onClick={(e) => { e.stopPropagation(); pinChat(session.id, false); }}>
+                              <PinIcon active />
+                            </button>
+                            <button type="button" className="gpt-menu-btn" title="Options" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setChatMenu({ id: session.id, pinned: true, top: r.bottom + 4, left: Math.min(r.left - 170, window.innerWidth - 210) }); }}>
+                              <DotsIcon />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Recents section */}
+              {groupedChatSessions.length > 0 ? (
+                <div className="gpt-history-section">
+                  <button type="button" className="gpt-recents-toggle" onClick={() => setRecentsExpanded((v) => !v)}>
+                    <span>{language === 'ms' ? 'Terkini' : 'Recents'}</span>
+                    <ChevronSmallIcon down={recentsExpanded} />
+                  </button>
+                  {recentsExpanded ? groupedChatSessions.map((group) => (
+                    <div key={group.label} className="gpt-history-group">
+                      <span className="gpt-history-group-label">{group.label}</span>
+                      {group.sessions.map((session) => (
+                        <div key={session.id} className={`gpt-history-item${session.id === currentChatId ? ' active' : ''}`}>
+                          {renamingChatId === session.id ? (
+                            <input
+                              type="text"
+                              className="gpt-rename-input"
+                              value={renameValue}
+                              autoFocus
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onBlur={() => renameChat(session.id, renameValue)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') renameChat(session.id, renameValue); if (e.key === 'Escape') setRenamingChatId(null); }}
+                            />
+                          ) : (
+                            <>
+                              <button type="button" className="gpt-history-title" onClick={() => { openChatSession(session); setIsSidebarOpen(false); }}>{session.title}</button>
+                              <div className="gpt-history-actions">
+                                <button type="button" className="gpt-pin-btn" title="Pin" onClick={(e) => { e.stopPropagation(); pinChat(session.id, true); }}>
+                                  <PinIcon />
+                                </button>
+                                <button type="button" className="gpt-menu-btn" title="Options" onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setChatMenu({ id: session.id, pinned: false, top: r.bottom + 4, left: Math.min(r.left - 170, window.innerWidth - 210) }); }}>
+                                  <DotsIcon />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="gpt-sidebar-spacer" />
+          )}
+
+          {/* Profile footer */}
+          <div className="gpt-sidebar-footer">
             <button
               type="button"
-              className={`sidebar-live-button${liveVoice.phase !== 'idle' ? ' is-active' : ''}`}
-              onClick={() => setIsLiveVoiceOpen(true)}
+              className="gpt-sidebar-profile"
+              onClick={() => { setIsSidebarOpen(false); setIsSettingsOpen(true); }}
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" />
-                <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-              </svg>
-              {copy.live}
-              {liveVoice.phase !== 'idle' ? (
-                <span className="sidebar-live-dot" aria-hidden="true" />
-              ) : null}
-            </button>
-          ) : null}
-          <RiskAlerts
-            alerts={riskAlerts}
-            language={language}
-            onNavigate={(tab) => { selectTab(tab); setIsSidebarOpen(false); }}
-          />
-          <div className="couple-profile-card">
-            <button type="button" className="couple-profile-main" onClick={() => setIsSettingsOpen(true)}>
-              <div className="couple-avatar" aria-hidden="true">{coupleInitials}</div>
-              <div className="couple-profile-copy">
+              <div className="gpt-avatar" aria-hidden="true">{coupleInitials}</div>
+              <div className="gpt-profile-info">
                 <strong>{coupleDisplayName}</strong>
                 <span>{coupleMeta}</span>
               </div>
             </button>
-            <div className="language-toggle compact" aria-label="Language">
-              {(['ms', 'en'] as AppLanguage[]).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={language === option ? 'active' : ''}
-                  onClick={() => setLanguage(option)}
-                  aria-pressed={language === option}
-                >
-                  {languageLabels[option]}
-                </button>
-              ))}
-            </div>
           </div>
         </aside>
         {isSidebarOpen ? (
@@ -2992,37 +3151,19 @@ export default function PlannerWorkspace() {
           <div className="workspace-titlebar">
             <button
               type="button"
-              className={`workspace-menu-button${activeTab === 'checklist' ? ' is-checklist-mode' : ''} ${isSidebarOpen ? 'active' : ''}`}
+              className={`workspace-menu-button ${isSidebarOpen ? 'active' : ''}`}
               aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isSidebarOpen}
-              onClick={() => {
-                const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches;
-                if (isMobile && activeTab === 'checklist') {
-                  setCatRailOpen((v) => !v);
-                } else {
-                  setIsSidebarOpen((current) => !current);
-                }
-              }}
+              onClick={() => setIsSidebarOpen((current) => !current)}
             >
-              Menu
+              <SidebarPanelIcon />
             </button>
             <div className="workspace-title-center">
               <Image src="/logo-mark.svg" width={40} height={40} className="sidebar-logo-mark" alt="" aria-hidden="true" />
               <strong>MajlisMate</strong>
             </div>
             <div className="workspace-title-actions">
-              {activeTab === 'chat' ? (
-                <button
-                  type="button"
-                  className="workspace-chat-action workspace-history-button"
-                  aria-label="Open chat history"
-                  aria-expanded={isChatHistoryOpen}
-                  title={language === 'ms' ? 'Chat history' : 'Chat history'}
-                  onClick={() => setIsChatHistoryOpen(true)}
-                >
-                  <HistoryIcon />
-                </button>
-              ) : null}
+              {null /* chat history is now in the sidebar */}
               {featureFlags.liveVoice ? (
                 <button
                   type="button"
@@ -3039,27 +3180,27 @@ export default function PlannerWorkspace() {
               ) : null}
               <button
                 type="button"
-                className="workspace-command-button"
+                className="workspace-command-button mm-circle-button"
                 aria-label="Open command search"
                 onClick={() => setIsCommandOpen(true)}
               >
-                Search
+                <SearchIcon />
               </button>
               {contextAssistantTab ? (
                 <button
                   type="button"
-                  className="workspace-ai-button"
+                  className="workspace-ai-button mm-circle-button"
                   aria-label="Open context assistant"
                   aria-expanded={isContextAssistantOpen}
                   onClick={() => setIsContextAssistantOpen(true)}
                 >
                   <span className="workspace-ai-icon"><RobotIcon /></span>
-                  {copy.askAi}
+                  <span className="workspace-ai-label">{copy.askAi}</span>
                 </button>
               ) : null}
               <button
                 type="button"
-                className="workspace-profile-button"
+                className="workspace-profile-button mm-circle-button"
                 aria-label="Open couple profile and settings"
                 onClick={() => setIsSettingsOpen(true)}
               >
@@ -3144,6 +3285,8 @@ export default function PlannerWorkspace() {
           activity={activity}
           language={language}
           briefing={weeklyBriefing}
+          riskAlerts={riskAlerts}
+          onNavigate={(tab) => selectTab(tab)}
         />
         {proactiveSuggestions.length > 0 ? (
           <ProactiveSuggestionCard
@@ -3200,9 +3343,10 @@ export default function PlannerWorkspace() {
         </div>
       ) : activeTab === 'checklist' ? (
         <div className="checklist-panel mm-checklist">
-          {/* Full-height category rail — mobile only when catRailOpen (column 1) */}
-          {checklistItems.length > 0 && checklistCategoryChips.length > 1 && catRailOpen ? (
-            <nav className="mm-cl__cat-rail" aria-label={language === 'ms' ? 'Kategori' : 'Categories'}>
+          {/* Category bottom bar — mobile only (CSS). Horizontal, fixed to the
+              bottom of the checklist; replaces the old left rail. */}
+          {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
+            <nav className="mm-cl__cat-bar" aria-label={language === 'ms' ? 'Kategori' : 'Categories'}>
               <button
                 type="button"
                 className={`mm-cl__cat-item${checklistCategoryFilter === null ? ' is-active' : ''}`}
@@ -3303,7 +3447,7 @@ export default function PlannerWorkspace() {
               <div className="mm-toolbar__tools">
                 <button
                   type="button"
-                  className={`mm-add-btn${quickAddOpen ? ' is-open' : ''}`}
+                  className={`mm-add-btn mm-circle-button${quickAddOpen ? ' is-open' : ''}`}
                   aria-expanded={quickAddOpen}
                   onClick={() => setQuickAddOpen((v) => !v)}
                 >
@@ -3313,7 +3457,7 @@ export default function PlannerWorkspace() {
                 {checklistCategoryChips.length > 1 ? (
                   <button
                     type="button"
-                    className={`mm-cl__filter${categoryFilterOpen || checklistCategoryFilter ? ' is-active' : ''}`}
+                    className={`mm-cl__filter mm-circle-button${categoryFilterOpen || checklistCategoryFilter ? ' is-active' : ''}`}
                     aria-expanded={categoryFilterOpen}
                     onClick={() => setCategoryFilterOpen((v) => !v)}
                   >
@@ -3322,7 +3466,7 @@ export default function PlannerWorkspace() {
                   </button>
                 ) : null}
                 <details className="mm-kebab">
-                  <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+                  <summary className="mm-circle-button" aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                   </summary>
                   <div className="mm-dropdown">
@@ -3336,7 +3480,6 @@ export default function PlannerWorkspace() {
                     <hr />
                     <button type="button" className="mm-dropdown__btn" onClick={copyChecklist}>{language === 'ms' ? 'Salin teks' : 'Copy text'}</button>
                     <button type="button" className="mm-dropdown__btn" onClick={() => exportChecklist('txt')}>{language === 'ms' ? 'Muat turun .txt' : 'Download .txt'}</button>
-                    <button type="button" className="mm-dropdown__btn" onClick={() => exportChecklist('json')}>{language === 'ms' ? 'Muat turun .json' : 'Download .json'}</button>
                     <button type="button" className="mm-dropdown__btn" onClick={printChecklist}>{language === 'ms' ? 'Cetak' : 'Print'}</button>
                   </div>
                 </details>
@@ -3651,12 +3794,12 @@ export default function PlannerWorkspace() {
               <button type="button" role="tab" className={`mm-views__btn${calendarView === 'proposed' ? ' is-active' : ''}`} aria-selected={calendarView === 'proposed'} onClick={() => setCalendarView('proposed')}>{language === 'ms' ? 'Cadangan' : 'Proposed'}</button>
             </div>
             <div className="mm-toolbar__tools">
-              <button type="button" className="mm-add-btn" onClick={startAppointmentAssistant}>
+              <button type="button" className="mm-add-btn mm-circle-button" onClick={startAppointmentAssistant}>
                 <span className="mm-add-btn__plus" aria-hidden="true">+</span>
                 <span className="mm-add-btn__label">{language === 'ms' ? 'Tambah' : 'Add'}</span>
               </button>
               <details className="mm-kebab">
-                <summary aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
+                <summary className="mm-circle-button" aria-label={language === 'ms' ? 'Lagi pilihan' : 'More options'}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
                 </summary>
                 <div className="mm-dropdown">
@@ -4105,8 +4248,6 @@ export default function PlannerWorkspace() {
           addVendorToBudget={addVendorToBudget}
           language={language}
           defaultNegeri={plannerProfile.negeri}
-          onSearchNearby={searchNearbyVendors}
-          searchLoading={vendorSearchLoading}
           searchInfo={vendorSearchInfo}
         />
       ) : null}
@@ -4146,57 +4287,7 @@ export default function PlannerWorkspace() {
             </aside>
           </>
         ) : null}
-        {isChatHistoryOpen ? (
-          <>
-            <button
-              type="button"
-              className="chat-history-backdrop"
-              aria-label="Close chat history"
-              onClick={() => setIsChatHistoryOpen(false)}
-            />
-            <aside className="chat-history-drawer" aria-label="Chat history">
-              <div className="chat-history-header">
-                <div>
-                  <p className="eyebrow">{language === 'ms' ? 'Chat history' : 'Chat history'}</p>
-                  <h3>{language === 'ms' ? 'Perbualan lama' : 'Previous chats'}</h3>
-                </div>
-                <button type="button" aria-label="Close chat history" onClick={() => setIsChatHistoryOpen(false)}>
-                  <CloseIcon />
-                </button>
-              </div>
-              <div className="chat-history-list">
-                {chatSessions.length > 0 ? (
-                  chatSessions.map((session) => (
-                    <article key={session.id} className={session.id === currentChatId ? 'active' : ''}>
-                      <button type="button" onClick={() => openChatSession(session)}>
-                        <strong>{session.title}</strong>
-                        <span>
-                          {new Date(session.updatedAt).toLocaleString(language === 'ms' ? 'ms-MY' : 'en-MY', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short'
-                          })}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className="chat-history-delete"
-                        aria-label={`Delete ${session.title}`}
-                        onClick={() => deleteChatSession(session.id)}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </article>
-                  ))
-                ) : (
-                  <div className="empty-state action-empty">
-                    <strong>{language === 'ms' ? 'Belum ada chat history.' : 'No chat history yet.'}</strong>
-                    <span>{language === 'ms' ? 'Mula chat dan ia akan disimpan di sini.' : 'Start chatting and conversations will appear here.'}</span>
-                  </div>
-                )}
-              </div>
-            </aside>
-          </>
-        ) : null}
+        {/* chat history is now inline in the sidebar */}
         {isSettingsOpen ? (
           <>
             <button
@@ -4207,13 +4298,34 @@ export default function PlannerWorkspace() {
             />
             <aside className="settings-drawer" aria-label="Couple profile and planner settings">
               <div className="settings-drawer-header">
-                <div>
+                <div className="settings-drawer-title">
                   <p className="eyebrow">{language === 'ms' ? 'Profil pasangan' : 'Couple profile'}</p>
                   <h3>{language === 'ms' ? 'Tetapan MajlisMate' : 'MajlisMate settings'}</h3>
                 </div>
                 <button type="button" className="settings-close-button" onClick={() => setIsSettingsOpen(false)} aria-label="Close settings">
                   <CloseIcon />
                 </button>
+              </div>
+
+              <div className="settings-profile-hero">
+                <div className="settings-profile-main">
+                  <div className="settings-profile-avatar" aria-hidden="true">{coupleInitials}</div>
+                  <div className="settings-profile-info">
+                    <strong className="settings-profile-name">{coupleDisplayName}</strong>
+                    <span className="settings-profile-date">{coupleMeta}</span>
+                    {plannerProfile.venueName ? (
+                      <span className="settings-profile-venue">{plannerProfile.venueName}</span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="settings-profile-stats" aria-label={language === 'ms' ? 'Ringkasan profil' : 'Profile summary'}>
+                  {settingsProfileStats.map((stat) => (
+                    <div key={stat.label} className="settings-profile-stat">
+                      <span>{stat.label}</span>
+                      <strong>{stat.value}</strong>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <form
@@ -4224,9 +4336,9 @@ export default function PlannerWorkspace() {
                 }}
               >
                 <div className="settings-section">
-                  <span>{language === 'ms' ? 'Maklumat utama' : 'Core details'}</span>
-                  <label>
-                    Couple display name
+                  <span className="settings-section-title">{language === 'ms' ? 'Maklumat utama' : 'Core details'}</span>
+                  <label className="settings-field">
+                    <span className="settings-field-label">{language === 'ms' ? 'Nama pasangan' : 'Couple display name'}</span>
                     <input
                       value={plannerProfile.coupleName}
                       onChange={(event) => setPlannerProfile((current) => ({ ...current, coupleName: event.target.value }))}
@@ -4234,26 +4346,26 @@ export default function PlannerWorkspace() {
                     />
                   </label>
                   <div className="settings-two-column">
-                    <label>
-                      Groom
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Nama pengantin lelaki' : 'Groom'}</span>
                       <input
                         value={plannerProfile.groomName}
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, groomName: event.target.value }))}
-                        placeholder="Groom name"
+                        placeholder={language === 'ms' ? 'Nama pengantin lelaki' : 'Groom name'}
                       />
                     </label>
-                    <label>
-                      Bride
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Nama pengantin perempuan' : 'Bride'}</span>
                       <input
                         value={plannerProfile.brideName}
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, brideName: event.target.value }))}
-                        placeholder="Bride name"
+                        placeholder={language === 'ms' ? 'Nama pengantin perempuan' : 'Bride name'}
                       />
                     </label>
                   </div>
                   <div className="settings-two-column">
-                    <label>
-                      Wedding date
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Tarikh majlis' : 'Wedding date'}</span>
                       <DatePicker
                         value={plannerProfile.majlisDate}
                         onChange={(v) => {
@@ -4268,28 +4380,28 @@ export default function PlannerWorkspace() {
                         ariaLabel="Wedding date"
                       />
                     </label>
-                    <label>
-                      Negeri
+                    <label className="settings-field">
+                      <span className="settings-field-label">Negeri</span>
                       <select
                         value={plannerProfile.negeri}
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, negeri: event.target.value }))}
                       >
-                        <option value="">Select negeri</option>
+                        <option value="">{language === 'ms' ? 'Pilih negeri' : 'Select negeri'}</option>
                         {profileStates.map((state) => <option key={state} value={state}>{state}</option>)}
                       </select>
                     </label>
                   </div>
                   <div className="settings-two-column">
-                    <label>
-                      {language === 'ms' ? 'Nama venue' : 'Venue name'}
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Nama venue' : 'Venue name'}</span>
                       <input
                         value={plannerProfile.venueName || ''}
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, venueName: event.target.value }))}
                         placeholder={language === 'ms' ? 'cth. Dewan Seksyen 21' : 'e.g. Dewan Seksyen 21'}
                       />
                     </label>
-                    <label>
-                      {language === 'ms' ? 'Masa majlis' : 'Event time'}
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Masa majlis' : 'Event time'}</span>
                       <input
                         value={plannerProfile.majlisTime || ''}
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, majlisTime: event.target.value }))}
@@ -4300,10 +4412,10 @@ export default function PlannerWorkspace() {
                 </div>
 
                 <div className="settings-section">
-                  <span>{language === 'ms' ? 'Perancangan' : 'Planning'}</span>
+                  <span className="settings-section-title">{language === 'ms' ? 'Perancangan' : 'Planning'}</span>
                   <div className="settings-two-column">
-                    <label>
-                      Budget target
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Sasaran bajet' : 'Budget target'}</span>
                       <input
                         type="number"
                         min="0"
@@ -4311,8 +4423,8 @@ export default function PlannerWorkspace() {
                         onChange={(event) => setPlannerProfile((current) => ({ ...current, totalBudget: Number(event.target.value) || 0 }))}
                       />
                     </label>
-                    <label>
-                      Guest target
+                    <label className="settings-field">
+                      <span className="settings-field-label">{language === 'ms' ? 'Sasaran tetamu' : 'Guest target'}</span>
                       <input
                         type="number"
                         min="0"
@@ -4321,39 +4433,41 @@ export default function PlannerWorkspace() {
                       />
                     </label>
                   </div>
-                  <label>
-                    Wedding style
+                  <label className="settings-field">
+                    <span className="settings-field-label">{language === 'ms' ? 'Gaya majlis' : 'Wedding style'}</span>
                     <input
                       value={plannerProfile.weddingStyle}
                       onChange={(event) => setPlannerProfile((current) => ({ ...current, weddingStyle: event.target.value }))}
-                      placeholder="Classic, garden, hotel, intimate..."
+                      placeholder={language === 'ms' ? 'Klasik, taman, hotel, mesra...' : 'Classic, garden, hotel, intimate...'}
                     />
                   </label>
-                  <label>
-                    Key contact
+                  <label className="settings-field">
+                    <span className="settings-field-label">{language === 'ms' ? 'Hubungan utama' : 'Key contact'}</span>
                     <input
                       value={plannerProfile.keyContact}
                       onChange={(event) => setPlannerProfile((current) => ({ ...current, keyContact: event.target.value }))}
-                      placeholder="Planner, family contact, or PIC"
+                      placeholder={language === 'ms' ? 'Perancang, keluarga, atau PIC' : 'Planner, family contact, or PIC'}
                     />
                   </label>
-                  <div className="settings-language-row">
-                    <span>Language</span>
-                    <div className="language-toggle compact" aria-label="Language">
-                      {(['ms', 'en'] as AppLanguage[]).map((option) => (
-                        <button
-                          key={option}
-                          type="button"
-                          className={language === option ? 'active' : ''}
-                          onClick={() => setLanguage(option)}
-                          aria-pressed={language === option}
-                        >
-                          {languageLabels[option]}
-                        </button>
-                      ))}
+                  <div className="settings-preferences">
+                    <div className="settings-language-row">
+                      <span>{language === 'ms' ? 'Bahasa' : 'Language'}</span>
+                      <div className="language-toggle compact" aria-label="Language">
+                        {(['ms', 'en'] as AppLanguage[]).map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            className={language === option ? 'active' : ''}
+                            onClick={() => setLanguage(option)}
+                            aria-pressed={language === option}
+                          >
+                            {languageLabels[option]}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+                    <ThemeToggle language={language} />
                   </div>
-                  <ThemeToggle language={language} />
                 </div>
 
                 <div className="settings-primary-actions">
@@ -4408,17 +4522,6 @@ export default function PlannerWorkspace() {
       </div>
 
 
-      {!isSidebarOpen && !isCommandOpen && !isSettingsOpen && !isContextAssistantOpen && !disambiguation ? (
-        <MobileBottomNav
-          activeTab={activeTab as MobileTab}
-          onChange={function handleMobileNavChange(tab) {
-            setActiveTab(tab);
-            setIsSidebarOpen(false);
-            setIsContextAssistantOpen(false);
-          }}
-          language={language}
-        />
-      ) : null}
       <SetupWizardModal
         isReady={checklistProfileReady}
         language={language}

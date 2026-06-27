@@ -20,6 +20,8 @@ import '../styles/calendar.css';
 import '../styles/guest.css';
 import '../styles/vendor.css';
 import '../styles/datepicker.css';
+import '../styles/sidebar.css';
+import '../styles/settings-drawer.css';
 import '../styles/mobile-app.css';
 
 /**

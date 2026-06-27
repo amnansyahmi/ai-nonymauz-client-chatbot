@@ -11,3 +11,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 tsconfig.tsbuildinfo
+
+# Vendored Claude Code skills (local tooling)
+.claude/skills/

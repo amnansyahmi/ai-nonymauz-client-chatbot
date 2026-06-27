@@ -453,20 +453,15 @@ body,
   width: 42px !important;
   min-width: 42px !important;
   padding: 0 !important;
-  overflow: hidden !important;
-  text-indent: -999px !important;
+  overflow: visible !important;
+  text-indent: 0 !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  color: var(--mm-text) !important;
 }
 
 .workspace-menu-button::before {
-  content: "" !important;
-  display: block !important;
-  width: 18px !important;
-  height: 12px !important;
-  background:
-    linear-gradient(var(--mm-text), var(--mm-text)) 0 0 / 18px 2px no-repeat,
-    linear-gradient(var(--mm-text), var(--mm-text)) 0 5px / 18px 2px no-repeat,
-    linear-gradient(var(--mm-text), var(--mm-text)) 0 10px / 18px 2px no-repeat !important;
-  text-indent: 0 !important;
+  display: none !important;
 }
 
 .workspace-menu-button:hover,
@@ -542,7 +537,9 @@ body,
 .vendor-detail-drawer button:not(.mm-add-btn):not(.mm-views__btn),
 
 .assistant-drawer button:not(.mm-add-btn):not(.mm-views__btn) {
-  border-radius: var(--mm-radius-card) !important;
+  /* No !important — lets targeted overrides in mobile-app.css win for specific
+     controls (language toggle, close button, primary actions). */
+  border-radius: var(--mm-radius-card);
 }
 
 /* Navigation / workspace chrome buttons — pill is correct here (icon-only
@@ -2555,9 +2552,22 @@ body,
   .planner-content > .calendar-panel,
   .planner-content > .budget-command-center,
   .planner-content > .guest-command-center,
-  .planner-content > .vendor-discovery-panel {
+  .planner-content > .vendor-discovery-panel,
+  .planner-content > .main-chat-panel {
     grid-row: 2 !important;
     min-height: 0 !important;
+  }
+
+  .planner-content > .main-chat-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .planner-content > .main-chat-panel .messages {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
   }
 
   /* Checklist panel must clip its flex children so mm-cl__main scrolls
@@ -3547,6 +3557,510 @@ body,
 
 .checklist-empty-actions button:last-child:hover {
   border-color: var(--mm-border-strong);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ChatGPT-style dark sidebar
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.planner-sidebar {
+  background: #171717 !important;
+  color: #ececec !important;
+  border-right: 0 !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  width: 260px !important;
+}
+
+/* ── Top bar ── */
+.gpt-sidebar-top {
+  display: flex !important;
+  align-items: center !important;
+  padding: 10px 12px 8px !important;
+  gap: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+.gpt-sidebar-brand {
+  flex: 1 !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #ececec !important;
+  padding: 0 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.gpt-sidebar-toggle,
+.gpt-sidebar-compose {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.55) !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  transition: background 0.12s, color 0.12s !important;
+}
+
+.gpt-sidebar-toggle:hover,
+.gpt-sidebar-compose:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ececec !important;
+}
+
+.gpt-sidebar-toggle svg,
+.gpt-sidebar-compose svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* ── Navigation ── */
+.gpt-sidebar-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  padding: 4px 8px 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.gpt-sidebar-nav button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 7px 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.84rem !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background 0.1s, color 0.1s !important;
+  white-space: nowrap !important;
+}
+
+.gpt-sidebar-nav button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ececec !important;
+}
+
+.gpt-sidebar-nav button.active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ececec !important;
+  font-weight: 500 !important;
+}
+
+.gpt-sidebar-nav .menu-icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+  opacity: 0.6 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.gpt-sidebar-nav button:hover .menu-icon,
+.gpt-sidebar-nav button.active .menu-icon {
+  opacity: 1 !important;
+}
+
+.gpt-sidebar-nav .menu-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* ── Chat history ── */
+.gpt-sidebar-history {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 4px 8px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.gpt-sidebar-history::-webkit-scrollbar { width: 4px; }
+.gpt-sidebar-history::-webkit-scrollbar-track { background: transparent; }
+.gpt-sidebar-history::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+}
+
+.gpt-sidebar-spacer {
+  flex: 1 !important;
+}
+
+.gpt-history-group {
+  margin-bottom: 2px;
+}
+
+.gpt-history-group-label {
+  display: block;
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: #6b6b7b;
+  padding: 8px 10px 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gpt-history-item {
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 8px !important;
+  position: relative !important;
+}
+
+.gpt-history-item:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.gpt-history-item.active {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.gpt-history-title {
+  flex: 1 !important;
+  min-width: 0 !important;
+  padding: 7px 4px 7px 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.8rem !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: color 0.1s !important;
+  border-radius: 8px 0 0 8px !important;
+}
+
+.gpt-history-item:hover .gpt-history-title,
+.gpt-history-item.active .gpt-history-title {
+  color: #ececec !important;
+}
+
+.gpt-history-delete {
+  opacity: 0 !important;
+  flex-shrink: 0 !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #6b6b7b !important;
+  cursor: pointer !important;
+  border-radius: 6px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin-right: 4px !important;
+  transition: opacity 0.1s, color 0.1s, background 0.1s !important;
+}
+
+.gpt-history-delete svg {
+  width: 14px !important;
+  height: 14px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 1.8px !important;
+}
+
+.gpt-history-item:hover .gpt-history-delete {
+  opacity: 1 !important;
+}
+
+.gpt-history-delete:hover {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+/* ── Profile footer ── */
+.gpt-sidebar-footer {
+  flex-shrink: 0 !important;
+  padding: 8px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.gpt-sidebar-profile {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 8px 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: background 0.1s !important;
+  text-align: left !important;
+}
+
+.gpt-sidebar-profile:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.gpt-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: #6b2d45 !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+
+.gpt-profile-info {
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.gpt-profile-info strong {
+  display: block !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #ececec !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.gpt-profile-info span {
+  display: block !important;
+  font-size: 0.72rem !important;
+  color: #8e8ea0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ── Titlebar panel-toggle icon ── */
+.workspace-menu-button svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  stroke-width: 1.8px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+/* ── Mobile: full-screen sidebar + safe-area footer padding ── */
+@media (max-width: 760px) {
+  .planner-sidebar {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+  }
+
+  .gpt-sidebar-footer {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ── Pinned + Recents sections ── */
+.gpt-history-section {
+  margin-bottom: 2px;
+}
+
+.gpt-section-label {
+  display: block;
+  font-size: 0.69rem;
+  font-weight: 600;
+  color: #6b6b7b;
+  padding: 8px 10px 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+.gpt-recents-toggle {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  width: 100% !important;
+  padding: 6px 10px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 0.69rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  transition: color 0.1s !important;
+  user-select: none !important;
+}
+
+.gpt-recents-toggle:hover {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.gpt-recents-toggle svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* ── History item actions (pin + dots) ── */
+.gpt-history-actions {
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  opacity: 0 !important;
+  transition: opacity 0.1s !important;
+  margin-right: 2px !important;
+}
+
+.gpt-history-item:hover .gpt-history-actions,
+.gpt-history-item.active .gpt-history-actions {
+  opacity: 1 !important;
+}
+
+.gpt-pin-btn,
+.gpt-menu-btn {
+  display: grid !important;
+  place-items: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: color 0.1s, background 0.1s !important;
+}
+
+.gpt-pin-btn:hover,
+.gpt-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.gpt-pin-btn.active {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.gpt-pin-btn svg,
+.gpt-menu-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* ── Inline rename input ── */
+.gpt-rename-input {
+  flex: 1 !important;
+  min-width: 0 !important;
+  margin: 2px 4px 2px 10px !important;
+  padding: 3px 6px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: #ececec !important;
+  font-size: 0.8rem !important;
+  font-family: inherit !important;
+  outline: none !important;
+  width: 100% !important;
+}
+
+.gpt-rename-input:focus {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ── Context menu (fixed, portal-level) ── */
+.gpt-chat-menu-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9998 !important;
+  background: transparent !important;
+}
+
+.gpt-chat-menu {
+  position: fixed !important;
+  z-index: 9999 !important;
+  width: 210px !important;
+  background: #2f2f2f !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  padding: 4px !important;
+  animation: gpt-menu-in 0.1s ease !important;
+}
+
+@keyframes gpt-menu-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gpt-chat-menu-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+  padding: 9px 12px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  text-align: left !important;
+  cursor: pointer !important;
+  transition: background 0.1s !important;
+}
+
+.gpt-chat-menu-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.gpt-chat-menu-item.danger {
+  color: #f87171 !important;
+}
+
+.gpt-chat-menu-item.danger:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.gpt-chat-menu-item svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+  stroke-width: 1.8px !important;
+  stroke-linecap: round !important;
+  stroke-linejoin: round !important;
+}
+
+.gpt-chat-menu-item.danger svg {
+  stroke: #f87171 !important;
+}
+
+.gpt-chat-menu-divider {
+  height: 1px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  margin: 4px !important;
 }
 
 /* Mobile improvements */
