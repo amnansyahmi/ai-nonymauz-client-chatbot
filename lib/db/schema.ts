@@ -5,9 +5,13 @@ import {
   integer,
   numeric,
   primaryKey,
-  uuid
+  uuid,
+  boolean,
+  jsonb,
+  index
 } from 'drizzle-orm/pg-core';
 import type { AdapterAccountType } from 'next-auth/adapters';
+import type { Message } from '@/components/planner/types';
 
 /* ============================================================
    Auth.js (NextAuth) tables — canonical Postgres schema.
@@ -160,6 +164,70 @@ export const commissions = pgTable('commission', {
   remark: text('remark'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
 });
+
+/* ============================================================
+   Chat persistence (/chat page).
+
+   Sessions are owned by an anonymous device key (httpOnly cookie)
+   so the feature works without forcing login, matching the app's
+   "real when configured, demo otherwise" pattern. When the visitor
+   is signed in, userId links the session to their Auth.js user.
+
+   Messages are stored as a JSONB array on the session row: the
+   client always reads/writes a whole session at once, so a single
+   upsert per save keeps the round-trips minimal and ordering exact.
+   ============================================================ */
+
+export const chatSessions = pgTable(
+  'chat_session',
+  {
+    // Client-generated id (e.g. "chat-1719500000000"). Text, not uuid, so
+    // existing localStorage sessions migrate without remapping ids.
+    id: text('id').primaryKey(),
+    // Device cookie id, or the user id once signed in. Always set.
+    ownerKey: text('owner_key').notNull(),
+    // Informational link to the signed-in identity (email or adapter user id).
+    // Not a FK: Credentials/demo logins have no `user` row, and ownership is
+    // already carried by ownerKey — so we never want a save to fail on a FK.
+    userId: text('user_id'),
+    title: text('title').notNull().default('Wedding planning chat'),
+    pinned: boolean('pinned').notNull().default(false),
+    messages: jsonb('messages').$type<Message[]>().notNull().default([]),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (session) => [index('chat_session_owner_idx').on(session.ownerKey, session.updatedAt)]
+);
+
+export type ChatSessionRow = typeof chatSessions.$inferSelect;
+export type NewChatSessionRow = typeof chatSessions.$inferInsert;
+
+/* ------------------------------------------------------------
+   Planner workspace — one row per owner holding every menu
+   domain as its own JSONB blob. The /planner page reads and
+   writes the whole row, mirroring the localStorage cache, so a
+   single table keeps saves to one upsert without N domain tables.
+   ------------------------------------------------------------ */
+export const userWorkspaces = pgTable('user_workspace', {
+  // Owner key: signed-in user id (email) or anonymous device id.
+  ownerKey: text('owner_key').primaryKey(),
+  // Informational link to the signed-in identity. Not a FK — see chat_session.
+  userId: text('user_id'),
+  // Each column holds the same JSON shape the client keeps in localStorage.
+  profile: jsonb('profile'),
+  checklist: jsonb('checklist'),
+  budget: jsonb('budget'),
+  appointments: jsonb('appointments'),
+  guests: jsonb('guests'),
+  vendors: jsonb('vendors'),
+  activity: jsonb('activity'),
+  settings: jsonb('settings'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
+});
+
+export type UserWorkspaceRow = typeof userWorkspaces.$inferSelect;
+export type NewUserWorkspaceRow = typeof userWorkspaces.$inferInsert;
 
 // A payout request / disbursement to an affiliate.
 export const payouts = pgTable('payout', {

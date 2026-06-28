@@ -16,6 +16,17 @@ import { useLiveVoice, type VoiceExchange } from './planner/hooks/useLiveVoice';
 import { usePlannerActions, type AmbiguousAction } from './planner/hooks/usePlannerActions';
 import LiveVoiceSheet from './planner/components/LiveVoiceSheet';
 import { askStream } from '@/lib/chatStream';
+import {
+  fetchRemoteSessions,
+  migrateRemoteSessions,
+  saveRemoteSession,
+  patchRemoteSession,
+  deleteRemoteSession
+} from '@/lib/chat/sync';
+import { fetchWorkspace, saveWorkspace as saveWorkspaceRemote } from '@/lib/workspace/sync';
+import type { WorkspaceData } from '@/lib/workspace/types';
+import AppAuthMenu from './auth/AppAuthMenu';
+import AppAuthSettingsRow from './auth/AppAuthSettingsRow';
 import MenuAssistant, {
   createMenuAssistantMessages,
   createMenuInputs,
@@ -293,7 +304,22 @@ type ChatSession = {
   updatedAt: string;
   messages: Message[];
   pinned?: boolean;
+  /** Set when the user renamed the chat, so auto-titling won't overwrite it. */
+  titleEdited?: boolean;
 };
+
+/** True when a loaded workspace holds anything worth treating as authoritative. */
+function workspaceHasData(w: WorkspaceData): boolean {
+  return Boolean(
+    w.profile ||
+    w.checklist?.items?.length ||
+    w.budget?.items?.length ||
+    w.appointments?.length ||
+    w.guests?.length ||
+    w.vendors?.saved?.length ||
+    w.activity?.length
+  );
+}
 
 const CATEGORY_ICON: Record<string, string> = {
   'keperluan-asas':    '📋',
@@ -307,7 +333,13 @@ const CATEGORY_ICON: Record<string, string> = {
   'jemputan-logistik': '💌',
 };
 
-export default function PlannerWorkspace() {
+type PlannerWorkspaceProps = {
+  /** When true, persist chat + planner state to the database (the /planner
+   *  cloud experience). When false (default, /chat), everything stays local. */
+  persist?: boolean;
+};
+
+export default function PlannerWorkspace({ persist = false }: PlannerWorkspaceProps) {
   const [messages, setMessages] = useState<Message[]>([defaultAssistantMessage]);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [currentChatId, setCurrentChatId] = useState('');
@@ -416,6 +448,17 @@ export default function PlannerWorkspace() {
   const [conversationFacts, setConversationFacts] = useState<MemoryFact[]>([]);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const activityIdRef = useRef(0);
+  // Chat DB persistence: mirror of chatSessions for async reads, plus flags and
+  // a debounce timer so streaming doesn't hammer the API on every token.
+  const chatSessionsRef = useRef<ChatSession[]>([]);
+  const remotePersistedRef = useRef(false);
+  const remoteHydratedRef = useRef(false);
+  const remoteSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Workspace (all-menu) DB persistence, cloud mode only.
+  const workspaceHydratedRef = useRef(false);
+  const workspacePersistedRef = useRef(false);
+  const workspaceSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestWorkspaceRef = useRef<WorkspaceData>({});
 
 
 
@@ -494,23 +537,178 @@ export default function PlannerWorkspace() {
     const fallbackTitle = messages.find((message) => message.content && message.content !== defaultAssistantMessage.content)?.content.trim();
     const titleSource = firstUserMessage || fallbackTitle || 'Wedding planning chat';
     const sessionTitle = titleSource.length > 56 ? `${titleSource.slice(0, 53)}...` : titleSource;
+    // Preserve an existing title (the user may have renamed it) and pin state.
+    const existing = chatSessionsRef.current.find((session) => session.id === sessionId);
     const nextSession: ChatSession = {
       id: sessionId,
-      title: sessionTitle,
+      title: existing?.title && existing.title !== sessionTitle && existing.titleEdited ? existing.title : sessionTitle,
       updatedAt: new Date().toISOString(),
-      messages
+      messages,
+      pinned: existing?.pinned,
+      titleEdited: existing?.titleEdited
     };
 
     setChatSessions((current) => {
       const withoutCurrent = current.filter((session) => session.id !== sessionId);
       return [nextSession, ...withoutCurrent].slice(0, 20);
     });
+
+    // Debounced DB save of the active session so streaming doesn't spam the API.
+    if (remotePersistedRef.current) {
+      if (remoteSaveTimerRef.current) clearTimeout(remoteSaveTimerRef.current);
+      remoteSaveTimerRef.current = setTimeout(() => {
+        void saveRemoteSession(nextSession);
+      }, 1200);
+    }
   }, [currentChatId, isHydrated, messages]);
 
   useEffect(() => {
+    chatSessionsRef.current = chatSessions;
     if (!isHydrated) return;
     localStorage.setItem(storageKeys.chatSessions, JSON.stringify(chatSessions));
   }, [chatSessions, isHydrated]);
+
+  // Flush a pending debounced save immediately when the tab is hidden/closed,
+  // so the last few tokens of a reply aren't lost on navigation.
+  useEffect(() => {
+    function flush() {
+      if (remotePersistedRef.current && remoteSaveTimerRef.current) {
+        clearTimeout(remoteSaveTimerRef.current);
+        remoteSaveTimerRef.current = null;
+        const active = chatSessionsRef.current.find((session) => session.id === currentChatId);
+        if (active) void saveRemoteSession(active);
+      }
+      if (workspacePersistedRef.current && workspaceSaveTimerRef.current) {
+        clearTimeout(workspaceSaveTimerRef.current);
+        workspaceSaveTimerRef.current = null;
+        void saveWorkspaceRemote(latestWorkspaceRef.current, { keepalive: true });
+      }
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'hidden') flush();
+    }
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [currentChatId]);
+
+  // Cross-tab: when another tab writes the chat-session cache, mirror it here so
+  // the sidebar history stays consistent. Only the list is synced (not the open
+  // conversation), so this can't clobber a reply being typed in this tab.
+  useEffect(() => {
+    if (!persist) return;
+    function onStorage(event: StorageEvent) {
+      if (event.key !== storageKeys.chatSessions || !event.newValue) return;
+      const incoming = safeJsonParse<ChatSession[]>(event.newValue, []);
+      if (Array.isArray(incoming)) setChatSessions(incoming);
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [persist]);
+
+  // After local hydration, reconcile with the database (one round-trip).
+  // First run with local data migrates it up; afterwards the DB is the source
+  // of truth. Best-effort: if there is no backend or the call fails, the app
+  // keeps working entirely from the localStorage cache above.
+  useEffect(() => {
+    if (!persist || !isHydrated || remoteHydratedRef.current) return;
+    remoteHydratedRef.current = true;
+    let cancelled = false;
+
+    (async () => {
+      const localSessions = chatSessionsRef.current;
+      const alreadyMigrated = Boolean(localStorage.getItem(storageKeys.chatMigratedAt));
+      const result = !alreadyMigrated && localSessions.length > 0
+        ? await migrateRemoteSessions(localSessions)
+        : await fetchRemoteSessions();
+
+      if (cancelled || !result.persisted) return;
+      remotePersistedRef.current = true;
+      localStorage.setItem(storageKeys.chatMigratedAt, new Date().toISOString());
+      // DB is now authoritative.
+      setChatSessions(result.sessions);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, persist]);
+
+  // ── Workspace (all-menu) persistence — cloud mode only ──────────────────
+  // Keep the latest gathered workspace in a ref and debounce-save it whenever
+  // any menu domain changes. The ref also feeds the one-time migration push.
+  useEffect(() => {
+    if (!persist || !isHydrated) return;
+    const data: WorkspaceData = {
+      profile: plannerProfile,
+      checklist: { title: checklistTitle, items: checklistItems },
+      budget: { items: budgetItems },
+      appointments,
+      guests,
+      vendors: { saved: savedVendors, rsvpFormUrl },
+      activity,
+      settings: { language }
+    };
+    latestWorkspaceRef.current = data;
+
+    if (!workspacePersistedRef.current) return;
+    if (workspaceSaveTimerRef.current) clearTimeout(workspaceSaveTimerRef.current);
+    workspaceSaveTimerRef.current = setTimeout(() => {
+      void saveWorkspaceRemote(data);
+    }, 1200);
+  }, [persist, isHydrated, plannerProfile, checklistTitle, checklistItems, budgetItems, appointments, guests, savedVendors, rsvpFormUrl, activity, language]);
+
+  // After local hydration, reconcile the workspace with the database. If the
+  // owner already has saved data the DB wins; otherwise push current local
+  // state up once. Best-effort — falls back to the localStorage cache.
+  useEffect(() => {
+    if (!persist || !isHydrated || workspaceHydratedRef.current) return;
+    workspaceHydratedRef.current = true;
+    let cancelled = false;
+
+    (async () => {
+      const res = await fetchWorkspace();
+      if (cancelled || !res.persisted) return;
+      workspacePersistedRef.current = true;
+      const migrated = Boolean(localStorage.getItem(storageKeys.workspaceMigratedAt));
+
+      if (res.workspace && workspaceHasData(res.workspace)) {
+        const w = res.workspace;
+        if (w.profile) {
+          setPlannerProfile((prev) => ({ ...defaultPlannerProfile, ...prev, ...w.profile }));
+        }
+        if (w.checklist?.title) setChecklistTitle(w.checklist.title);
+        if (w.checklist?.items) {
+          setChecklistItems(w.checklist.items.map((item) => ({
+            ...item,
+            status: item.status || (item.completed ? 'done' : 'not-started'),
+            category: item.category || categorizeTask(item.text)
+          })));
+        }
+        if (w.budget?.items) setBudgetItems(w.budget.items.length > 0 ? w.budget.items : defaultBudgetItems);
+        if (w.appointments) setAppointments(w.appointments);
+        if (w.guests) setGuests(w.guests);
+        if (w.vendors?.saved) setSavedVendors(w.vendors.saved);
+        if (typeof w.vendors?.rsvpFormUrl === 'string') setRsvpFormUrl(w.vendors.rsvpFormUrl);
+        if (w.activity) setActivity(w.activity);
+        if (w.settings?.language === 'ms' || w.settings?.language === 'en') setLanguage(w.settings.language);
+      } else if (!migrated) {
+        // DB empty for this owner — seed it from the current local state.
+        await saveWorkspaceRemote(latestWorkspaceRef.current);
+      }
+
+      if (!cancelled) {
+        localStorage.setItem(storageKeys.workspaceMigratedAt, new Date().toISOString());
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, persist]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -891,18 +1089,21 @@ export default function PlannerWorkspace() {
 
   function pinChat(id: string, pin: boolean) {
     setChatSessions((prev) => prev.map((s) => s.id === id ? { ...s, pinned: pin } : s));
+    if (remotePersistedRef.current) void patchRemoteSession(id, { pinned: pin });
   }
 
   function renameChat(id: string, newTitle: string) {
     const trimmed = newTitle.trim();
     if (trimmed) {
-      setChatSessions((prev) => prev.map((s) => s.id === id ? { ...s, title: trimmed } : s));
+      setChatSessions((prev) => prev.map((s) => s.id === id ? { ...s, title: trimmed, titleEdited: true } : s));
+      if (remotePersistedRef.current) void patchRemoteSession(id, { title: trimmed });
     }
     setRenamingChatId(null);
   }
 
   function deleteChatSession(sessionId: string) {
     setChatSessions((current) => current.filter((session) => session.id !== sessionId));
+    if (remotePersistedRef.current) void deleteRemoteSession(sessionId);
     if (currentChatId === sessionId) {
       setMessages([defaultAssistantMessage]);
       setCurrentChatId(`chat-${Date.now()}`);
@@ -3125,6 +3326,7 @@ export default function PlannerWorkspace() {
 
           {/* Profile footer */}
           <div className="gpt-sidebar-footer">
+            {persist ? <AppAuthMenu /> : null}
             <button
               type="button"
               className="gpt-sidebar-profile"
@@ -3163,7 +3365,6 @@ export default function PlannerWorkspace() {
               <strong>MajlisMate</strong>
             </div>
             <div className="workspace-title-actions">
-              {null /* chat history is now in the sidebar */}
               {featureFlags.liveVoice ? (
                 <button
                   type="button"
@@ -4484,6 +4685,8 @@ export default function PlannerWorkspace() {
                     {language === 'ms' ? 'Lihat hari majlis' : 'View wedding day'}
                   </button>
                 </div>
+
+                {persist ? <AppAuthSettingsRow language={language} /> : null}
               </form>
             </aside>
           </>

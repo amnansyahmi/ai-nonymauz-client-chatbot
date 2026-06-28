@@ -241,6 +241,78 @@
   padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* ── Auth strip (login / signup / account) ─────────────────── */
+.gpt-auth-menu {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 4px 10px !important;
+}
+
+.gpt-auth-menu--loading {
+  min-height: 34px !important;
+}
+
+.gpt-auth-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  min-height: 34px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  border: 1px solid transparent !important;
+  transition: background 120ms ease, border-color 120ms ease !important;
+}
+
+.gpt-auth-link--ghost {
+  background: transparent !important;
+  color: var(--mm-text) !important;
+  border-color: var(--mm-border, rgba(0,0,0,0.12)) !important;
+}
+
+.gpt-auth-link--ghost:hover {
+  background: var(--mm-surface-subtle, rgba(0,0,0,0.04)) !important;
+}
+
+.gpt-auth-link--solid {
+  background: var(--mm-text, #171717) !important;
+  color: var(--mm-on-brand, #fff) !important;
+}
+
+.gpt-auth-link--solid:hover {
+  opacity: 0.9 !important;
+}
+
+.gpt-auth-account {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.gpt-auth-account__dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #22c55e !important;
+  flex-shrink: 0 !important;
+}
+
+.gpt-auth-account__email {
+  font-size: 0.78rem !important;
+  font-weight: 500 !important;
+  color: var(--mm-text-muted, #6b6b6b) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
 .sidebar-profile-button {
   display: flex !important;
   align-items: center !important;

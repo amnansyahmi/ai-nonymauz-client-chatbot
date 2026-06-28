@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SessionProvider } from 'next-auth/react';
 import PwaRegister from '@/components/PwaRegister';
 import PwaInstallPrompt from '@/components/mobile/PwaInstallPrompt';
 import WebVitalsReporter from '@/components/ai/WebVitalsReporter';
@@ -35,7 +36,7 @@ const themeInit = `(function(){try{var t=localStorage.getItem('mm-theme');if(t==
 
 export default function AppShellLayout({ children }: { children: ReactNode }) {
   return (
-    <>
+    <SessionProvider>
       <script dangerouslySetInnerHTML={{ __html: themeInit }} />
       <a href="#main" className="skip-link">
         Skip to main content
@@ -46,6 +47,6 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
       <ShortcutsDialog />
       {children}
       <PwaInstallPrompt />
-    </>
+    </SessionProvider>
   );
 }

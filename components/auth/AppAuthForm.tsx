@@ -1,0 +1,155 @@
+'use client';
+
+import { FormEvent, useState } from 'react';
+import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+
+const CALLBACK = '/planner';
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+type Props = {
+  mode: 'login' | 'signup';
+  googleEnabled: boolean;
+  /** True when a mail service (Resend) is configured; false logs the link to the server console. */
+  emailConfigured: boolean;
+};
+
+/**
+ * Passwordless auth for the cloud planner. The email path sends a magic link
+ * (verified inbox ownership) rather than onboarding instantly; clicking the
+ * link signs in and redirects to /planner where data is saved under the email.
+ */
+export default function AppAuthForm({ mode, googleEnabled, emailConfigured }: Props) {
+  const isSignup = mode === 'signup';
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validEmail = /.+@.+\..+/.test(email);
+
+  function handleGoogle() {
+    setBusy(true);
+    if (googleEnabled) {
+      void signIn('google', { callbackUrl: CALLBACK });
+    } else {
+      // No Google OAuth configured — demo identity via the Credentials provider.
+      void signIn('email', {
+        email: 'demo.google@majlismate.ai',
+        name: 'Google Demo',
+        callbackUrl: CALLBACK
+      });
+    }
+  }
+
+  async function handleEmail(event: FormEvent) {
+    event.preventDefault();
+    if (!validEmail) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await signIn('magic-link', {
+        email: email.trim(),
+        redirect: false,
+        callbackUrl: CALLBACK
+      });
+      if (res?.error) {
+        setError('Maaf, gagal menghantar pautan log masuk. Sila cuba lagi.');
+      } else {
+        setSent(true);
+      }
+    } catch {
+      setError('Maaf, gagal menghantar pautan log masuk. Sila cuba lagi.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <div className="affiliate-apply__card affiliate-login__card">
+        <span className="eyebrow">Semak e-mel anda</span>
+        <h1>Pautan log masuk dihantar</h1>
+        <p>
+          Kami hantar pautan log masuk ke <strong>{email.trim()}</strong>. Buka e-mel
+          itu dan klik pautan untuk teruskan ke planner anda. Pautan sah selama 15 minit.
+        </p>
+        {!emailConfigured ? (
+          <p className="affiliate-login__demo-note">
+            Mod dev: tiada perkhidmatan e-mel disambungkan, jadi pautan log masuk
+            dipaparkan dalam <strong>konsol server</strong>. Tetapkan <code>RESEND_API_KEY</code> untuk
+            menghantar e-mel sebenar.
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="affiliate-login__google"
+          onClick={() => { setSent(false); setError(null); }}
+        >
+          <span>Guna e-mel lain</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="affiliate-apply__card affiliate-login__card">
+      <span className="eyebrow">{isSignup ? 'Daftar akaun' : 'Log masuk'}</span>
+      <h1>{isSignup ? 'Mula simpan rancangan majlis anda' : 'Selamat kembali'}</h1>
+      <p>
+        {isSignup
+          ? 'Daftar dengan e-mel untuk menyimpan checklist, bajet, kalendar dan chat anda dalam awan.'
+          : 'Log masuk untuk teruskan rancangan majlis yang tersimpan.'}
+      </p>
+
+      <button
+        type="button"
+        className="affiliate-login__google"
+        onClick={handleGoogle}
+        disabled={busy}
+      >
+        <GoogleIcon />
+        <span>Teruskan dengan Google</span>
+      </button>
+
+      <div className="affiliate-login__divider"><span>atau</span></div>
+
+      <form className="affiliate-apply__form" onSubmit={handleEmail}>
+        <label className="affiliate-apply__field">
+          <span>E-mel</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="nama@email.com"
+            autoComplete="email"
+            required
+          />
+        </label>
+        <button type="submit" className="primary-action" disabled={!validEmail || busy}>
+          {busy ? 'Menghantar…' : isSignup ? 'Hantar pautan daftar' : 'Hantar pautan log masuk'}
+        </button>
+      </form>
+
+      {error ? <p className="affiliate-login__demo-note" role="alert">{error}</p> : null}
+
+      <p className="affiliate-login__demo-note">
+        {isSignup ? (
+          <>Sudah ada akaun? <Link href="/login">Log masuk</Link></>
+        ) : (
+          <>Belum ada akaun? <Link href="/signup">Daftar</Link></>
+        )}
+      </p>
+    </div>
+  );
+}

@@ -4,6 +4,9 @@ import Credentials from 'next-auth/providers/credentials';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { db } from './lib/db';
 import { users, accounts, sessions, verificationTokens } from './lib/db/schema';
+import { magicLinkProvider, isEmailConfigured } from './lib/auth/magicLink';
+
+export { isEmailConfigured };
 
 /**
  * Auth.js (NextAuth v5) configuration for the affiliate area.
@@ -29,6 +32,8 @@ const providers = [
         })
       ]
     : []),
+  // Passwordless magic link for the app login (verified email ownership).
+  magicLinkProvider,
   Credentials({
     id: 'email',
     name: 'Email',

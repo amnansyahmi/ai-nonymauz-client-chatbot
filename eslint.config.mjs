@@ -4,7 +4,7 @@ import tsParser from '@typescript-eslint/parser';
 
 export default [
   {
-    ignores: ['.next/**', 'node_modules/**', 'out/**']
+    ignores: ['.next/**', 'node_modules/**', 'out/**', '.kilo/**']
   },
   nextPlugin.flatConfig.coreWebVitals,
   {

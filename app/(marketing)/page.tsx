@@ -92,8 +92,9 @@ export default function LandingPage() {
           <Link href="#faq">{/* ms */}Soalan</Link>
           <Link href="/affiliate">{/* ms */}Affiliate</Link>
           <Link href="/admin-login">{/* ms */}Admin</Link>
-          <Link href="/preview" className="landing__nav-cta">
-            {PLANS[0].ctaMs}
+          <Link href="/login">{/* ms */}Log masuk</Link>
+          <Link href="/signup" className="landing__nav-cta">
+            {/* ms */}Daftar percuma
           </Link>
         </nav>
       </header>

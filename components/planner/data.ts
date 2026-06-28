@@ -37,6 +37,8 @@ export const storageKeys = {
   messages: 'majlismate.messages',
   chatSessions: 'majlismate.chatSessions',
   currentChatId: 'majlismate.currentChatId',
+  chatMigratedAt: 'majlismate.chatMigratedAt',
+  workspaceMigratedAt: 'majlismate.workspaceMigratedAt',
   activeTab: 'majlismate.activeTab',
   checklistTitle: 'majlismate.checklistTitle',
   checklistItems: 'majlismate.checklistItems',

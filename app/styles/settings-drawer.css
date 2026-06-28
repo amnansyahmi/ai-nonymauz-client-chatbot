@@ -805,3 +805,73 @@
   background: var(--settings-hover) !important;
   border-color: var(--settings-border-strong) !important;
 }
+
+/* ── Account / log out row ─────────────────────────────────── */
+.settings-auth-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid var(--settings-border, rgba(0, 0, 0, 0.1)) !important;
+}
+
+.settings-auth-row__info {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  min-width: 0 !important;
+}
+
+.settings-auth-row__label {
+  font-size: 0.72rem !important;
+  color: var(--settings-text-muted, #8a8a8a) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.03em !important;
+}
+
+.settings-auth-row__email {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: var(--settings-text, #1a1a1a) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.settings-auth-row__hint {
+  font-size: 0.8rem !important;
+  color: var(--settings-text-muted, #8a8a8a) !important;
+}
+
+.settings-logout-btn,
+.settings-login-link {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 10px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  border: 1px solid var(--settings-border-strong, rgba(0, 0, 0, 0.16)) !important;
+  background: transparent !important;
+  color: var(--settings-text, #1a1a1a) !important;
+  transition: background 120ms ease !important;
+}
+
+.settings-logout-btn:hover,
+.settings-login-link:hover {
+  background: var(--settings-hover, rgba(0, 0, 0, 0.05)) !important;
+}
+
+.settings-login-link {
+  background: var(--mm-text, #171717) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
