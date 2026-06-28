@@ -186,6 +186,93 @@ function MenuIcon({ name }: { name: 'dashboard' | 'chat' | 'checklist' | 'calend
   }
 }
 
+function CategoryIcon({ id }: { id: string | null }) {
+  const common = {
+    'aria-hidden': true,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: '1.9',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round'
+  } as const;
+
+  switch (id) {
+    case null:
+      return (
+        <svg {...common}>
+          <rect x="4" y="4" width="6" height="6" rx="1" />
+          <rect x="14" y="4" width="6" height="6" rx="1" />
+          <rect x="4" y="14" width="6" height="6" rx="1" />
+          <rect x="14" y="14" width="6" height="6" rx="1" />
+        </svg>
+      );
+    case 'nikah-protokol':
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="12" r="4.5" />
+          <circle cx="15" cy="12" r="4.5" />
+        </svg>
+      );
+    case 'media-dokumentasi':
+      return (
+        <svg {...common}>
+          <path d="M4 8h4l1.5-2h5L16 8h4v11H4z" />
+          <circle cx="12" cy="13.5" r="3.25" />
+        </svg>
+      );
+    case 'makanan-katering':
+      return (
+        <svg {...common}>
+          <path d="M7 3v8M4 3v8a3 3 0 0 0 6 0V3M7 14v7" />
+          <path d="M17 3v18M14 3h3a3 3 0 0 1 3 3v5a3 3 0 0 1-3 3h-3" />
+        </svg>
+      );
+    case 'pelamin-dekorasi':
+      return (
+        <svg {...common}>
+          <path d="M12 5c2 0 3.5 1.5 3.5 3.5S14 12 12 12s-3.5-1.5-3.5-3.5S10 5 12 5Z" />
+          <path d="M12 12v7M8 16h8M5 9c0 4 3 7 7 7s7-3 7-7" />
+        </svg>
+      );
+    case 'solekan-pakaian':
+      return (
+        <svg {...common}>
+          <path d="M9 4h6l2 6-2 10H9L7 10z" />
+          <path d="M9 4c0 2 1 3 3 3s3-1 3-3" />
+        </svg>
+      );
+    case 'tempat-venue':
+      return (
+        <svg {...common}>
+          <path d="M4 20h16M5 9h14M7 9v9M12 9v9M17 9v9M4 9l8-5 8 5" />
+        </svg>
+      );
+    case 'hiburan-aturcara':
+      return (
+        <svg {...common}>
+          <path d="M9 18V6l10-2v12" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="16" cy="16" r="3" />
+        </svg>
+      );
+    case 'jemputan-logistik':
+      return (
+        <svg {...common}>
+          <path d="M4 7h16v12H4z" />
+          <path d="m4 8 8 6 8-6" />
+        </svg>
+      );
+    case 'keperluan-asas':
+    default:
+      return (
+        <svg {...common}>
+          <path d="m5 7 2 2 4-4M13 8h6M5 15l2 2 4-4M13 16h6" />
+        </svg>
+      );
+  }
+}
+
 function RobotIcon() {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -321,18 +408,6 @@ function workspaceHasData(w: WorkspaceData): boolean {
   );
 }
 
-const CATEGORY_ICON: Record<string, string> = {
-  'keperluan-asas':    '📋',
-  'nikah-protokol':    '📜',
-  'tempat-venue':      '🏛️',
-  'makanan-katering':  '🍽️',
-  'solekan-pakaian':   '👗',
-  'pelamin-dekorasi':  '💐',
-  'media-dokumentasi': '📸',
-  'hiburan-aturcara':  '🎵',
-  'jemputan-logistik': '💌',
-};
-
 type PlannerWorkspaceProps = {
   /** When true, persist chat + planner state to the database (the /planner
    *  cloud experience). When false (default, /chat), everything stays local. */
@@ -349,6 +424,8 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
   const [isContextAssistantOpen, setIsContextAssistantOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [recentsExpanded, setRecentsExpanded] = useState(true);
+  const [pinnedExpanded, setPinnedExpanded] = useState(true);
+  const [checklistCategoriesOpen, setChecklistCategoriesOpen] = useState(false);
   const [chatMenu, setChatMenu] = useState<{ id: string; pinned: boolean; top: number; left: number } | null>(null);
   const [renamingChatId, setRenamingChatId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -371,7 +448,6 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
   const [newItemCategory, setNewItemCategory] = useState<ChecklistCategoryId | null>(null);
   const [categoryManuallySet, setCategoryManuallySet] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
-  const [categoryFilterOpen, setCategoryFilterOpen] = useState(false);
   const [checklistSelectMode, setChecklistSelectMode] = useState(false);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<Set<string>>(new Set());
   const [expandedChecklistItem, setExpandedChecklistItem] = useState<ChecklistItem | null>(null);
@@ -3124,7 +3200,7 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
         <div className="pwa-banner">Offline mode: templates and saved planning data are available. AI replies need internet.</div>
       ) : null}
 
-      {statusMessage ? <div className="pwa-banner success">{statusMessage}</div> : null}
+      {statusMessage ? <div className="pwa-banner success" role="status" aria-live="polite">{statusMessage}</div> : null}
 
       {featureFlags.liveVoice && isLiveVoiceOpen ? (
         <LiveVoiceSheet
@@ -3247,8 +3323,16 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
               {/* Pinned section */}
               {pinnedSessions.length > 0 ? (
                 <div className="gpt-history-section">
-                  <span className="gpt-section-label">{language === 'ms' ? 'Disematkan' : 'Pinned'}</span>
-                  {pinnedSessions.map((session) => (
+                  <button
+                    type="button"
+                    className="gpt-recents-toggle gpt-pinned-toggle"
+                    aria-expanded={pinnedExpanded}
+                    onClick={() => setPinnedExpanded((v) => !v)}
+                  >
+                    <span>{language === 'ms' ? 'Disematkan' : 'Pinned'}</span>
+                    <ChevronSmallIcon down={pinnedExpanded} />
+                  </button>
+                  {pinnedExpanded ? pinnedSessions.map((session) => (
                     <div key={session.id} className={`gpt-history-item${session.id === currentChatId ? ' active' : ''}`}>
                       {renamingChatId === session.id ? (
                         <input
@@ -3274,7 +3358,7 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
                         </>
                       )}
                     </div>
-                  ))}
+                  )) : null}
                 </div>
               ) : null}
 
@@ -3547,14 +3631,29 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
           {/* Category bottom bar — mobile only (CSS). Horizontal, fixed to the
               bottom of the checklist; replaces the old left rail. */}
           {checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
-            <nav className="mm-cl__cat-bar" aria-label={language === 'ms' ? 'Kategori' : 'Categories'}>
+            <>
+            <button
+              type="button"
+              className={`mm-cl__cat-toggle${checklistCategoriesOpen ? ' is-open' : ''}`}
+              aria-expanded={checklistCategoriesOpen}
+              aria-controls="checklist-category-drawer"
+              onClick={() => setChecklistCategoriesOpen((open) => !open)}
+            >
+              <span>{language === 'ms' ? 'Kategori' : 'Categories'}</span>
+              <ChevronSmallIcon down={checklistCategoriesOpen} />
+            </button>
+            <nav
+              id="checklist-category-drawer"
+              className={`mm-cl__cat-bar${checklistCategoriesOpen ? ' is-open' : ' is-collapsed'}`}
+              aria-label={language === 'ms' ? 'Kategori' : 'Categories'}
+            >
               <button
                 type="button"
                 className={`mm-cl__cat-item${checklistCategoryFilter === null ? ' is-active' : ''}`}
                 onClick={() => setChecklistCategoryFilter(null)}
                 aria-pressed={checklistCategoryFilter === null}
               >
-                <span className="mm-cl__cat-icon" aria-hidden="true">📋</span>
+                <span className="mm-cl__cat-icon" aria-hidden="true"><CategoryIcon id={null} /></span>
                 <span className="mm-cl__cat-name">{language === 'ms' ? 'Semua' : 'All'}</span>
                 <span className="mm-cl__cat-count">{checklistItems.length}</span>
               </button>
@@ -3566,12 +3665,13 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
                   onClick={() => setChecklistCategoryFilter((cur) => (cur === chip.id ? null : chip.id))}
                   aria-pressed={checklistCategoryFilter === chip.id}
                 >
-                  <span className="mm-cl__cat-icon" aria-hidden="true">{CATEGORY_ICON[chip.id] ?? '📝'}</span>
+                  <span className="mm-cl__cat-icon" aria-hidden="true"><CategoryIcon id={chip.id} /></span>
                   <span className="mm-cl__cat-name">{chip.label}</span>
                   <span className="mm-cl__cat-count">{chip.done}/{chip.total}</span>
                 </button>
               ))}
             </nav>
+            </>
           ) : null}
 
           <div className="mm-cl__main">
@@ -3658,9 +3758,10 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
                 {checklistCategoryChips.length > 1 ? (
                   <button
                     type="button"
-                    className={`mm-cl__filter mm-circle-button${categoryFilterOpen || checklistCategoryFilter ? ' is-active' : ''}`}
-                    aria-expanded={categoryFilterOpen}
-                    onClick={() => setCategoryFilterOpen((v) => !v)}
+                    className={`mm-cl__filter mm-circle-button${checklistCategoriesOpen || checklistCategoryFilter ? ' is-active' : ''}`}
+                    aria-expanded={checklistCategoriesOpen}
+                    aria-controls="checklist-category-drawer"
+                    onClick={() => setChecklistCategoriesOpen((v) => !v)}
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 5h18M6 12h12M10 19h4" /></svg>
                     {checklistCategoryFilter ? <span className="mm-cl__filter-dot" aria-hidden="true" /> : null}
@@ -3731,32 +3832,6 @@ export default function PlannerWorkspace({ persist = false }: PlannerWorkspacePr
                 </div>
               </form>
             </>
-          ) : null}
-
-          {categoryFilterOpen && checklistItems.length > 0 && checklistCategoryChips.length > 1 ? (
-            <div className="mm-cl__chips" role="group" aria-label={language === 'ms' ? 'Tapis ikut kategori' : 'Filter by category'}>
-              <button
-                type="button"
-                className={checklistCategoryFilter === null ? 'is-active' : ''}
-                aria-pressed={checklistCategoryFilter === null}
-                onClick={() => setChecklistCategoryFilter(null)}
-              >
-                {language === 'ms' ? 'Semua' : 'All'}
-                <span>{checklistItems.length}</span>
-              </button>
-              {checklistCategoryChips.map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  className={checklistCategoryFilter === chip.id ? 'is-active' : ''}
-                  aria-pressed={checklistCategoryFilter === chip.id}
-                  onClick={() => setChecklistCategoryFilter((current) => (current === chip.id ? null : chip.id))}
-                >
-                  {chip.label}
-                  <span>{chip.done}/{chip.total}</span>
-                </button>
-              ))}
-            </div>
           ) : null}
 
           {checklistSelectMode && selectedChecklistIds.size > 0 ? (
